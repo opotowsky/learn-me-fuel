@@ -8,6 +8,11 @@ import glob
 import os
 
 class LearnSet(object):
+    """
+    A set of parameters (i.e., training and labels) for training or prediction 
+    for a machine learning algorithm.
+    """
+
     def __init__(self, nuc_concs, reactor, enrichment, burnup):
         self.nuc_concs = nuc_concs
         self.reactor = reactor
@@ -66,9 +71,18 @@ test_label = {'ReactorType': ['phwr']*2 + ['pwr']*3 + ['bwr']*3,
 
 def format_df(filename):
     """
-    This takes a csv filename and reads the data in as a dataframe, which it 
-    returns as data.
+    This takes a csv file and reads the data in as a dataframe.
+
+    Parameters
+    ----------
+    filename : str of simulation output in a csv file
+
+    Returns
+    -------
+    data : pandas dataframe containing csv entries
+
     """
+    
     data = pd.read_csv(filename).T
     data.columns = data.iloc[0]
     data.drop(data.index[0], inplace=True)
@@ -76,9 +90,20 @@ def format_df(filename):
 
 def get_labels(filename, rxtrs):
     """
-    This takes a filename and a testing or training label, and searches for all 
-    the expected labels for prediction; returns a dict of this information.
+    This takes a filename and a dict with all simulation parameters, and 
+    searches for the entries relevant to the given simulation (file).
+
+    Parameters
+    ----------
+    filename : str of simulation output in a csv file
+    rxtrs : dict of a data set detailing simulation parameters in ORIGEN
+    
+    Returns
+    -------
+    rxtr_info : dict of all the labels for a given simulation data set
+
     """
+    
     tail, _ = os.path.splitext(os.path.basename(filename))
     i = rxtrs['OrigenReactor'].index(tail)
     rxtr_info = {'ReactorType': rxtrs['ReactorType'][i], 
@@ -90,10 +115,20 @@ def get_labels(filename, rxtrs):
 
 def label_data(label, data):
     """
-    Takes the label for a given simulation in the form of a dict and a dataframe
-    of the simulation results; adds these labels as additional columns to the 
-    dataframe and returns another dataframe.
+    Takes the labels for and a dataframe of the simulation results; 
+    adds these labels as additional columns to the dataframe.
+
+    Parameters
+    ----------
+    label : dict representing the labels for a simulation
+    data : dataframe of simulation results
+
+    Returns
+    -------
+    data : dataframe of simulation results + label entries in columns
+
     """
+    
     col = len(data.columns)
     data.insert(loc = col, column = 'ReactorType', value = label['ReactorType'])
     data.insert(loc = col+1, column = 'Enrichment', value = label['Enrichment'])
@@ -103,11 +138,22 @@ def label_data(label, data):
 
 def burnup_label(burn_steps, cooling_ints):
     """
-    Takes the number of burnup steps and cooling steps for each case within the 
+    Takes the burnup steps and cooling intervals for each case within the 
     simulation and creates a list of the burnup of the irradiated and cooled/ 
     decayed fuels; returns a list to be added as the burnup label to the main 
     dataframe.
+
+    Parameters
+    ----------
+    burn_steps : list of the steps of burnup from the simulation parameters
+    cooling_ints : list of the cooling intervals from the simulation parameters
+
+    Returns
+    -------
+    burnup_list : list of burnups to be applied as a label for a given simulation
+
     """
+    
     num_cases = len(burn_steps)
     steps_per_case = len(cooling_ints) + 2
     burnup_list = [0, ]
@@ -125,11 +171,21 @@ def burnup_label(burn_steps, cooling_ints):
 
 def dataframeXY(all_files, rxtr_label):
     """"
-    Takes the glob of files in a directory as well as the reactor label (dict)
-    that represents the relevant inputs to the simulations and produces a 
-    dataframe that has both the data features (X) and labeled data (Y) for each
-    instance.
+    Takes the glob of files in a directory as well as the dict of labels and 
+    produces a dataframe that has both the data features (X) and labeled data (Y).
+
+    Parameters
+    ----------
+    all_files : list of str holding all simulation file names in a directory
+    rxtr_label : dict holding all parameters for all simulations in a directory
+
+    Returns
+    -------
+    dfXY : dataframe that has all features and labels for all simulations in a 
+           directory
+
     """
+
     all_data = []
     for f in all_files:
         data = format_df(f)
@@ -141,11 +197,24 @@ def dataframeXY(all_files, rxtr_label):
 
 def splitXY(dfXY):
     """
-    Takes a dataframe with a few input-related columns, nuclide concentrations, 
-    and 3 labels and produces four different dataframes:
-    nuclide concentrations only (input-related columns deleted) + 1 dataframe 
-    for each label column.
+    Takes a dataframe with all X (features) and Y (labels) information and 
+    produces four different dataframes: nuclide concentrations only (with 
+    input-related columns deleted) + 1 dataframe for each label column.
+
+    Parameters
+    ----------
+    dfXY : dataframe with several input-related columns, nuclide concentraations, 
+           and 3 labels: reactor type, enrichment, and burnup
+
+    Returns
+    -------
+    dfX : dataframe with only nuclide concentrations for each instance
+    r_dfY : dataframe with reactor type for each instance
+    e_dfY : dataframe with fuel enrichment for each instance
+    b_dfY : dataframe with fuel burnup for each instance
+
     """
+
     x = len(dfXY.columns)-3
     y = x
     # Need better way to know when the nuclide columns start (6 for now)
@@ -164,6 +233,7 @@ def main():
     training and testing sets. Then splits those dataframes into the appropriate 
     X and Ys for prediction of reactor type, fuel enrichment, and burnup.
     """
+    
     print("Did you check your training and testing data paths?\n")
     ### Right now this workflow is copied for the testing set but in the future
     ### this will be a loop because I will be doing cross-validation.
