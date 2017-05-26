@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
 from __future__ import print_function
-from preds import reactor, enrichment, burnup
+from cv_preds import reactor, enrichment, burnup
 import numpy as np
 import pandas as pd
 import glob
@@ -9,8 +9,8 @@ import os
 
 class LearnSet(object):
     """
-    A set of parameters (i.e., training and labels) for training or prediction 
-    for a machine learning algorithm.
+    A set of parameters (i.e., features and labels) for a machine learning 
+    algorithm.
     """
 
     def __init__(self, nuc_concs, reactor, enrichment, burnup):
@@ -255,8 +255,8 @@ def main():
     test_set = LearnSet(nuc_concs = testX, reactor = r, enrichment = e, burnup = b)
     
     # Predict!
-    reactor(train_set, test_set)
-    enrichment(train_set, test_set)
+    #reactor(train_set, test_set)
+    #enrichment(train_set, test_set)
     burnup(train_set, test_set)
     
     return

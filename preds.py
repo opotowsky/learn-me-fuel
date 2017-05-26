@@ -7,8 +7,9 @@ from sklearn import metrics
 
 def reactor(train, test):
     """
+    Training for Reactor Type
     """
-    # Training for Reactor Type
+    
     # L1 norm is Manhattan Distance
     # L2 norm is Euclidian Distance 
     # Ridge Regression is Linear + L2 regularization
@@ -32,8 +33,9 @@ def reactor(train, test):
 
 def enrichment(train, test):
     """
+    Training for Enrichment
     """
-    # Training for Enrichment
+    
     # L1 norm is Manhattan Distance
     # L2 norm is Euclidian Distance 
     # Ridge Regression is Linear + L2 regularization
@@ -57,8 +59,9 @@ def enrichment(train, test):
 
 def burnup(train, test):
     """
+    Training for Burnup
     """
-    # Training for Burnup
+
     # L1 norm is Manhattan Distance
     # L2 norm is Euclidian Distance 
     # Ridge Regression is Linear + L2 regularization
