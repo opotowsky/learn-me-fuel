@@ -3,6 +3,7 @@ from sklearn.linear_model import RidgeClassifier
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.linear_model import Ridge
 from sklearn import metrics
+from math import sqrt
 
 
 def reactor(train, test):
@@ -25,11 +26,12 @@ def reactor(train, test):
     predict2 = l2.predict(test.nuc_concs)
     predict3 = rc.predict(test.nuc_concs)
     expected = test.reactor
-    print(metrics.classification_report(expected, predict1))
-    print(metrics.classification_report(expected, predict2))
-    print(metrics.classification_report(expected, predict3))
-    
-    return
+    acc_l1 = metrics.accuracy_score(expected, predict1)
+    acc_l2 = metrics.accuracy_score(expected, predict2)
+    acc_rc = metrics.accuracy_score(expected, predict3)
+    acc_reactor = (acc_l1, acc_l2, acc_rc)
+
+    return acc_reactor
 
 def enrichment(train, test):
     """
@@ -51,11 +53,12 @@ def enrichment(train, test):
     predict2 = l2.predict(test.nuc_concs)
     predict3 = rr.predict(test.nuc_concs)
     expected = test.enrichment
-    print(metrics.mean_absolute_error(expected, predict1))
-    print(metrics.mean_absolute_error(expected, predict2))
-    print(metrics.mean_absolute_error(expected, predict3))
+    err_l1 = sqrt(metrics.mean_squared_error(expected, predict1))
+    err_l2 = sqrt(metrics.mean_squared_error(expected, predict2))
+    err_rr = sqrt(metrics.mean_squared_error(expected, predict3))
+    err_enrichment = (err_l1, err_l2, err_rr)
 
-    return
+    return err_enrichment
 
 def burnup(train, test):
     """
@@ -77,12 +80,10 @@ def burnup(train, test):
     predict2 = l2.predict(test.nuc_concs)
     predict3 = rr.predict(test.nuc_concs)
     expected = test.burnup
-    print(metrics.mean_absolute_error(expected, predict1))
-    print(metrics.mean_absolute_error(expected, predict2))
-    print(metrics.mean_absolute_error(expected, predict3))
-    print(metrics.r2_score(expected, predict1))
-    print(metrics.r2_score(expected, predict2))
-    print(metrics.r2_score(expected, predict3))
+    err_l1 = sqrt(metrics.mean_squared_error(expected, predict1))
+    err_l2 = sqrt(metrics.mean_squared_error(expected, predict2))
+    err_rr = sqrt(metrics.mean_squared_error(expected, predict3))
+    err_burnup = (err_l1, err_l2, err_rr)
     
-    return
+    return err_burnup
 

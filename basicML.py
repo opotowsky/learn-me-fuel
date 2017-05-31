@@ -1,7 +1,8 @@
 #! /usr/bin/env python
 
 from __future__ import print_function
-from cv_preds import reactor, enrichment, burnup
+from preds import reactor, enrichment, burnup
+#from cv_preds import reactor, enrichment, burnup
 import numpy as np
 import pandas as pd
 import glob
@@ -227,6 +228,32 @@ def splitXY(dfXY):
     b_dfY = dfXY.iloc[:, y+2]
     return dfX, r_dfY, e_dfY, b_dfY
 
+def random_error(percent_err, df):
+    """
+    Given a dataframe of nuclide vectors, add error to each element in each 
+    nuclide vector that has a random value within the range [1-err, 1+err]
+
+    Parameters
+    ----------
+    percent_err : a float indicating the maximum error that can be added to the nuclide 
+                  vectors
+    df : dataframe of only nuclide concentrations
+
+    Returns
+    -------
+    df_err : dataframe with nuclide concentrations altered by some error
+
+    """
+    x = len(df)
+    y = len(df.columns)
+    err = percent_err / 100.0
+    low = 1 - err
+    high = 1 + err
+    errs = np.random.uniform(low, high, (x, y))
+    df_err = df * errs
+    
+    return df_err
+
 def main():
     """
     Takes all origen files and compiles them into the appropriate dataframes for 
@@ -234,11 +261,9 @@ def main():
     X and Ys for prediction of reactor type, fuel enrichment, and burnup.
     """
     
-    print("Did you check your training and testing data paths?\n")
-    ### Right now this workflow is copied for the testing set but in the future
-    ### this will be a loop because I will be doing cross-validation.
+    #print("Did you check your training and testing data paths?\n")
     
-    # Training Dataset
+    # Training Datasets
     trainpath = "../origen/origen-data/training/9may2017/csv/"
     train_files = glob.glob(os.path.join(trainpath, "*.csv"))
     trainXY = dataframeXY(train_files, train_label)
@@ -251,14 +276,36 @@ def main():
     test_files = glob.glob(os.path.join(testpath, "*.csv"))
     testXY = dataframeXY(test_files, test_label)
     testXY.reset_index(inplace=True)
-    testX, r, e, b = splitXY(testXY)
-    test_set = LearnSet(nuc_concs = testX, reactor = r, enrichment = e, burnup = b)
+    testX, rr, ee, bb = splitXY(testXY)
     
-    # Predict!
-    #reactor(train_set, test_set)
-    #enrichment(train_set, test_set)
-    burnup(train_set, test_set)
+    # Add random errors of varying percents to nuclide vectors in the test set 
+    # to mimic measurement error
+    percent_err = np.arange(0.0, 1.25, 0.25)
+    reactor_acc = []
+    enrichment_err = []
+    burnup_err = []
+    for err in percent_err:
+        if err == 0.0:
+            test_set = LearnSet(nuc_concs = testX, reactor = rr, enrichment = ee, burnup = bb)
+        else:
+            testX_err = random_error(err, testX)
+            test_set = LearnSet(nuc_concs = testX_err, reactor = rr, enrichment = ee, burnup = bb)
+        # Predict!
+        # l1 nn, l2 nn, ridge for each
+        # reactor type is accuracy, e and b are RMSE
+        rp = reactor(train_set, test_set)
+        ep = enrichment(train_set, test_set)
+        bp = burnup(train_set, test_set)
+        reactor_acc.append(rp)
+        enrichment_err.append(ep)
+        burnup_err.append(bp)
     
+    # Save results
+    cols = ['L1NN', 'L2NN', 'RIDGE']
+    pd.DataFrame(reactor_acc, columns=cols, index=percent_err).to_csv('reactor.csv')
+    pd.DataFrame(enrichment_err, columns=cols, index=percent_err).to_csv('enrichment.csv')
+    pd.DataFrame(burnup_err, columns=cols, index=percent_err).to_csv('burnup.csv')
+
     return
 
 if __name__ == "__main__":
