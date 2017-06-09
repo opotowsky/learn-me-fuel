@@ -2,6 +2,9 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.linear_model import RidgeClassifier
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.linear_model import Ridge
+from sklearn.neural_network import MLPClassifier
+from sklearn.neural_network import MLPRegressor
+from sklearn.preprocessing import StandardScaler  
 from sklearn import metrics
 from math import sqrt
 import numpy as np
@@ -33,6 +36,35 @@ def random_error(percent_err, df):
     
     return df_err
 
+def ann_classification(trainX, trainY, testX, expected):
+    """
+    
+    """
+    
+    ann = MLPClassifier(hidden_layer_sizes=(500,), tol=0.01)
+    ann.fit(trainX, trainY)
+    predict = ann.predict(testX)
+    accuracy = metrics.accuracy_score(expected, predict)
+    
+    return accuracy
+
+def ann_regression(trainX, trainY, testX, expected):
+    """
+    
+    """
+    # Scale the data
+    scaler = StandardScaler()  
+    scaler.fit(trainX)  
+    trainX = scaler.transform(trainX)  
+    testX = scaler.transform(testX)
+
+    ann = MLPRegressor(hidden_layer_sizes=(500,), tol=0.01)
+    ann.fit(trainX, trainY)
+    predict = ann.predict(testX)
+    error = sqrt(metrics.mean_squared_error(expected, predict))
+    
+    return error
+
 def classification(trainX, trainY, testX, expected):
     """
     Training for Classification
@@ -55,6 +87,8 @@ def classification(trainX, trainY, testX, expected):
     acc_l1 = metrics.accuracy_score(expected, predict1)
     acc_l2 = metrics.accuracy_score(expected, predict2)
     acc_rc = metrics.accuracy_score(expected, predict3)
+    #acc_ann = ann_classification(trainX, trainY, testX, expected)
+    #accuracy = (acc_l1, acc_l2, acc_rc, acc_ann)
     accuracy = (acc_l1, acc_l2, acc_rc)
 
     return accuracy
@@ -75,12 +109,14 @@ def regression(trainX, trainY, testX, expected):
     rr.fit(trainX, trainY)
     
     # Predictions
-    predict3 = rr.predict(testX)
     predict1 = l1.predict(testX)
     predict2 = l2.predict(testX)
+    predict3 = rr.predict(testX)
     err_l1 = sqrt(metrics.mean_squared_error(expected, predict1))
     err_l2 = sqrt(metrics.mean_squared_error(expected, predict2))
     err_rr = sqrt(metrics.mean_squared_error(expected, predict3))
+    #err_ann = ann_regression(trainX, trainY, testX, expected)
+    #rmse = (err_l1, err_l2, err_rr, err_ann)
     rmse = (err_l1, err_l2, err_rr)
 
     return rmse
@@ -96,9 +132,9 @@ def train_and_predict(train, test):
 
     Outputs
     -------
-    reactor.csv : accuracy for 1nn, l2nn, ridge
-    enrichment.csv : RMSE for 1nn, l2nn, ridge
-    burnup.csv : RMSE for 1nn, l2nn, ridge
+    reactor.csv : accuracy for 1nn, l2nn, ridge, ann
+    enrichment.csv : RMSE for 1nn, l2nn, ridge, ann
+    burnup.csv : RMSE for 1nn, l2nn, ridge, ann
 
     """
     
@@ -123,6 +159,7 @@ def train_and_predict(train, test):
     
     # Save results
     cols = ['L1NN', 'L2NN', 'RIDGE']
+    #cols = ['L1NN', 'L2NN', 'RIDGE', 'ANN']
     pd.DataFrame(reactor_acc, columns=cols, index=percent_err).to_csv('reactor.csv')
     pd.DataFrame(enrichment_err, columns=cols, index=percent_err).to_csv('enrichment.csv')
     pd.DataFrame(burnup_err, columns=cols, index=percent_err).to_csv('burnup.csv')
