@@ -2,6 +2,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.linear_model import RidgeClassifier
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.linear_model import Ridge
+from sklearn.model_selection import cross_val_predict
 from sklearn.neural_network import MLPClassifier
 from sklearn.neural_network import MLPRegressor
 from sklearn.preprocessing import StandardScaler  
@@ -84,12 +85,18 @@ def classification(trainX, trainY, testX, expected):
     predict1 = l1.predict(testX)
     predict2 = l2.predict(testX)
     predict3 = rc.predict(testX)
+    cv_predict1 = cross_val_predict(l1, trainX, trainY, cv = 5)
+    cv_predict2 = cross_val_predict(l2, trainX, trainY, cv = 5)
+    cv_predict3 = cross_val_predict(rc, trainX, trainY, cv = 5)
     acc_l1 = metrics.accuracy_score(expected, predict1)
     acc_l2 = metrics.accuracy_score(expected, predict2)
     acc_rc = metrics.accuracy_score(expected, predict3)
+    cv_acc_l1 = metrics.accuracy_score(trainY, cv_predict1)
+    cv_acc_l2 = metrics.accuracy_score(trainY, cv_predict2)
+    cv_acc_rc = metrics.accuracy_score(trainY, cv_predict3)
     #acc_ann = ann_classification(trainX, trainY, testX, expected)
     #accuracy = (acc_l1, acc_l2, acc_rc, acc_ann)
-    accuracy = (acc_l1, acc_l2, acc_rc)
+    accuracy = (acc_l1, acc_l2, acc_rc, cv_acc_l1, cv_acc_l2, cv_acc_rc)
 
     return accuracy
 
@@ -112,56 +119,43 @@ def regression(trainX, trainY, testX, expected):
     predict1 = l1.predict(testX)
     predict2 = l2.predict(testX)
     predict3 = rr.predict(testX)
+    cv_predict1 = cross_val_predict(l1, trainX, trainY, cv = 5)
+    cv_predict2 = cross_val_predict(l2, trainX, trainY, cv = 5)
+    cv_predict3 = cross_val_predict(rr, trainX, trainY, cv = 5)
     err_l1 = sqrt(metrics.mean_squared_error(expected, predict1))
     err_l2 = sqrt(metrics.mean_squared_error(expected, predict2))
     err_rr = sqrt(metrics.mean_squared_error(expected, predict3))
+    cv_err_l1 = sqrt(metrics.mean_squared_error(trainY, cv_predict1))
+    cv_err_l2 = sqrt(metrics.mean_squared_error(trainY, cv_predict2))
+    cv_err_rr = sqrt(metrics.mean_squared_error(trainY, cv_predict3))
     #err_ann = ann_regression(trainX, trainY, testX, expected)
     #rmse = (err_l1, err_l2, err_rr, err_ann)
-    rmse = (err_l1, err_l2, err_rr)
+    rmse = (err_l1, err_l2, err_rr, cv_err_l1, cv_err_l2, cv_err_rr)
 
     return rmse
 
 def train_and_predict(train, test):
     """
-    Add deets, saves csv files
+    Add deets, returns 
 
     Parameters
     ----------
     train :
     test : 
 
-    Outputs
+    Returns
     -------
-    reactor.csv : accuracy for 1nn, l2nn, ridge, ann
-    enrichment.csv : RMSE for 1nn, l2nn, ridge, ann
-    burnup.csv : RMSE for 1nn, l2nn, ridge, ann
+    reactor : tuple of accuracy for 1nn, l2nn, ridge, ann
+    enrichment : tuple of RMSE for 1nn, l2nn, ridge, ann
+    burnup : tuple of RMSE for 1nn, l2nn, ridge, ann
 
     """
     
-    # Add random errors of varying percents to nuclide vectors in the test set 
-    # to mimic measurement error
-    percent_err = np.arange(0.0, 10.25, 0.25)
-    reactor_acc = []
-    enrichment_err = []
-    burnup_err = []
-    for err in percent_err:
-        test.nuc_concs = random_error(err, test.nuc_concs)
-        # Predict
-        reactor = classification(train.nuc_concs, train.reactor, 
-                                 test.nuc_concs, test.reactor)
-        enrichment = regression(train.nuc_concs, train.enrichment, 
-                                test.nuc_concs, test.enrichment)
-        burnup = regression(train.nuc_concs, train.burnup, 
-                            test.nuc_concs, test.burnup)
-        reactor_acc.append(reactor)
-        enrichment_err.append(enrichment)
-        burnup_err.append(burnup)
+    reactor = classification(train.nuc_concs, train.reactor, 
+                             test.nuc_concs, test.reactor)
+    enrichment = regression(train.nuc_concs, train.enrichment, 
+                            test.nuc_concs, test.enrichment)
+    burnup = regression(train.nuc_concs, train.burnup, 
+                        test.nuc_concs, test.burnup)
     
-    # Save results
-    cols = ['L1NN', 'L2NN', 'RIDGE']
-    #cols = ['L1NN', 'L2NN', 'RIDGE', 'ANN']
-    pd.DataFrame(reactor_acc, columns=cols, index=percent_err).to_csv('reactor.csv')
-    pd.DataFrame(enrichment_err, columns=cols, index=percent_err).to_csv('enrichment.csv')
-    pd.DataFrame(burnup_err, columns=cols, index=percent_err).to_csv('burnup.csv')
-
-    return 
+    return reactor, enrichment, burnup 

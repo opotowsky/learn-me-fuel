@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 from __future__ import print_function
+from __future__ import division
 from preds import train_and_predict
 import numpy as np
 import pandas as pd
@@ -239,22 +240,56 @@ def main():
     trainpath = "../origen/origen-data/training/9may2017/csv/"
     train_files = glob.glob(os.path.join(trainpath, "*.csv"))
     trainXY = dataframeXY(train_files, train_label)
-    trainXY.reset_index(inplace=True)
-    trainX, trainYr, trainYe, trainYb = splitXY(trainXY)
-    train_set = LearnSet(nuc_concs = trainX, reactor = trainYr, 
-                         enrichment = trainYe, burnup = trainYb)
+    trainXY.reset_index(inplace = True)
     
     # Testing Dataset (for now)
     testpath = "../origen/origen-data/testing/10may2017_2/csv/"
     test_files = glob.glob(os.path.join(testpath, "*.csv"))
     testXY = dataframeXY(test_files, test_label)
-    testXY.reset_index(inplace=True)
+    testXY.reset_index(inplace = True)
     testX, testYr, testYe, testYb = splitXY(testXY)
     test_set = LearnSet(nuc_concs = testX, reactor = testYr, 
                         enrichment = testYe, burnup = testYb)
 
-    # Predict!
-    train_and_predict(train_set, test_set)
+    # Cut training set to create a learning curve
+    n_trials = 3
+    percent_set = np.arange(0.15, 1.05, 0.05)
+    reactor_acc = []
+    enrichment_err = []
+    burnup_err = []
+    idx = []
+    for per in percent_set:
+        # weak point in code
+        r_sum = (0, 0, 0, 0, 0, 0)
+        e_sum = (0, 0, 0, 0, 0, 0)
+        b_sum = (0, 0, 0, 0, 0, 0)
+        for i in range(0, n_trials):
+            # could use frac in df.sample too, but think I want to see absolute 
+            # training set size instead in the future
+            n_sample = int(per * len(trainXY))
+            subXY = trainXY.sample(n = n_sample)
+            trainX, trainYr, trainYe, trainYb = splitXY(subXY)
+            subset = LearnSet(nuc_concs = trainX, reactor = trainYr, 
+                              enrichment = trainYe, burnup = trainYb)
+            r, e, b = train_and_predict(subset, test_set)
+            r_sum = [sum(x) for x in zip(r, r_sum)]
+            e_sum = [sum(x) for x in zip(e, e_sum)]
+            b_sum = [sum(x) for x in zip(b, b_sum)]
+        reactor = [x / n_trials for x in r_sum]
+        enrichment = [x / n_trials for x in e_sum]
+        burnup = [x / n_trials for x in b_sum]
+        reactor_acc.append(reactor)
+        enrichment_err.append(enrichment)
+        burnup_err.append(burnup)
+        idx.append(n_sample)
+    
+    # Save results
+    cols = ['L1NN', 'L2NN', 'RIDGE', 'CVL1', 'CVL2', 'CVRR']
+    #cols = ['L1NN', 'L2NN', 'RIDGE', 'ANN']
+    pd.DataFrame(reactor_acc, columns = cols, index = idx).to_csv('reactor.csv')
+    pd.DataFrame(enrichment_err, columns = cols, index = idx).to_csv('enrichment.csv')
+    pd.DataFrame(burnup_err, columns = cols, index = idx).to_csv('burnup.csv')
+    
     print("All csv files are saved in this directory!\n")
 
     return
