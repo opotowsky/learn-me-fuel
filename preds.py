@@ -141,18 +141,32 @@ def train_and_predict(train, test):
     # Add random errors of varying percents to nuclide vectors in the test set 
     # to mimic measurement error
     percent_err = np.arange(0.0, 10.25, 0.25)
+    n_trials = 50
     reactor_acc = []
     enrichment_err = []
     burnup_err = []
     for err in percent_err:
-        test.nuc_concs = random_error(err, test.nuc_concs)
-        # Predict
-        reactor = classification(train.nuc_concs, train.reactor, 
-                                 test.nuc_concs, test.reactor)
-        enrichment = regression(train.nuc_concs, train.enrichment, 
-                                test.nuc_concs, test.enrichment)
-        burnup = regression(train.nuc_concs, train.burnup, 
-                            test.nuc_concs, test.burnup)
+        # warning: weak point
+        r_sum = (0, 0, 0)
+        e_sum = (0, 0, 0)
+        b_sum = (0, 0, 0)
+        for n in range(0, n_trials):
+            # Add Error
+            test.nuc_concs = random_error(err, test.nuc_concs)
+            # Predict
+            r = classification(train.nuc_concs, train.reactor, 
+                               test.nuc_concs, test.reactor)
+            e = regression(train.nuc_concs, train.enrichment, 
+                           test.nuc_concs, test.enrichment)
+            b = regression(train.nuc_concs, train.burnup, 
+                           test.nuc_concs, test.burnup)
+            r_sum = [sum(x) for x in zip(r, r_sum)]
+            e_sum = [sum(x) for x in zip(e, e_sum)]
+            b_sum = [sum(x) for x in zip(b, b_sum)]
+        # Take Average
+        reactor = [x / n_trials for x in r_sum]
+        enrichment = [x / n_trials for x in e_sum]
+        burnup = [x / n_trials for x in b_sum]
         reactor_acc.append(reactor)
         enrichment_err.append(enrichment)
         burnup_err.append(burnup)
