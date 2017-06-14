@@ -217,6 +217,8 @@ def splitXY(dfXY):
 
     x = len(dfXY.columns)-3
     y = x
+    # Filter out 0 burnup here
+    dfXY = dfXY.loc[dfXY.Burnup > 0, :]
     # Need better way to know when the nuclide columns start (6 for now)
     # Prob will just search for column idx that starts with str(1)?
     dfX = dfXY.iloc[:, 6:x]
