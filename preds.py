@@ -36,7 +36,7 @@ def random_error(percent_err, df):
     
     return df_err
 
-def ann_classification(trainX, trainY, testX, expected):
+def ann_classification(trainX, trainY, testX, testY):
     """
     
     """
@@ -44,11 +44,11 @@ def ann_classification(trainX, trainY, testX, expected):
     ann = MLPClassifier(hidden_layer_sizes=(500,), tol=0.01)
     ann.fit(trainX, trainY)
     predict = ann.predict(testX)
-    accuracy = metrics.accuracy_score(expected, predict)
+    accuracy = metrics.accuracy_score(testY, predict)
     
     return accuracy
 
-def ann_regression(trainX, trainY, testX, expected):
+def ann_regression(trainX, trainY, testX, testY):
     """
     
     """
@@ -61,11 +61,19 @@ def ann_regression(trainX, trainY, testX, expected):
     ann = MLPRegressor(hidden_layer_sizes=(500,), tol=0.01)
     ann.fit(trainX, trainY)
     predict = ann.predict(testX)
-    error = sqrt(metrics.mean_squared_error(expected, predict))
+    error = sqrt(metrics.mean_squared_error(testY, predict))
     
     return error
 
-def classification(trainX, trainY, testX, expected):
+def mean_absolute_percentage_error(true, pred):
+    """
+    """
+
+    mape = np.mean(np.abs((true - pred) / true)) * 100
+
+    return mape
+
+def classification(trainX, trainY, testX, testY):
     """
     Training for Classification
     """
@@ -84,16 +92,16 @@ def classification(trainX, trainY, testX, expected):
     predict1 = l1.predict(testX)
     predict2 = l2.predict(testX)
     predict3 = rc.predict(testX)
-    acc_l1 = metrics.accuracy_score(expected, predict1)
-    acc_l2 = metrics.accuracy_score(expected, predict2)
-    acc_rc = metrics.accuracy_score(expected, predict3)
-    #acc_ann = ann_classification(trainX, trainY, testX, expected)
+    acc_l1 = metrics.accuracy_score(testY, predict1)
+    acc_l2 = metrics.accuracy_score(testY, predict2)
+    acc_rc = metrics.accuracy_score(testY, predict3)
+    #acc_ann = ann_classification(trainX, trainY, testX, testY)
     #accuracy = (acc_l1, acc_l2, acc_rc, acc_ann)
     accuracy = (acc_l1, acc_l2, acc_rc)
 
     return accuracy
 
-def regression(trainX, trainY, testX, expected):
+def regression(trainX, trainY, testX, testY):
     """
     Training for Regression
     """
@@ -112,10 +120,13 @@ def regression(trainX, trainY, testX, expected):
     predict1 = l1.predict(testX)
     predict2 = l2.predict(testX)
     predict3 = rr.predict(testX)
-    err_l1 = sqrt(metrics.mean_squared_error(expected, predict1))
-    err_l2 = sqrt(metrics.mean_squared_error(expected, predict2))
-    err_rr = sqrt(metrics.mean_squared_error(expected, predict3))
-    #err_ann = ann_regression(trainX, trainY, testX, expected)
+    err_l1 = mean_absolute_percentage_error(testY, predict1)
+    err_l2 = mean_absolute_percentage_error(testY, predict2)
+    err_rr = mean_absolute_percentage_error(testY, predict3)
+    #err_l1 = sqrt(metrics.mean_squared_error(testY, predict1))
+    #err_l2 = sqrt(metrics.mean_squared_error(testY, predict2))
+    #err_rr = sqrt(metrics.mean_squared_error(testY, predict3))
+    #err_ann = ann_regression(trainX, trainY, testX, testY)
     #rmse = (err_l1, err_l2, err_rr, err_ann)
     rmse = (err_l1, err_l2, err_rr)
 
@@ -141,7 +152,7 @@ def train_and_predict(train, test):
     # Add random errors of varying percents to nuclide vectors in the test set 
     # to mimic measurement error
     percent_err = np.arange(0.0, 10.25, 0.25)
-    n_trials = 50
+    n_trials = 1
     reactor_acc = []
     enrichment_err = []
     burnup_err = []
