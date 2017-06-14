@@ -260,9 +260,9 @@ def main():
     idx = []
     for per in percent_set:
         # weak point in code
-        r_sum = (0, 0, 0, 0, 0, 0)
-        e_sum = (0, 0, 0, 0, 0, 0)
-        b_sum = (0, 0, 0, 0, 0, 0)
+        r_sum = (0, 0, 0, 0, 0, 0, 0, 0, 0)
+        e_sum = (0, 0, 0, 0, 0, 0, 0, 0, 0)
+        b_sum = (0, 0, 0, 0, 0, 0, 0, 0, 0)
         for i in range(0, n_trials):
             # could use frac in df.sample too, but think I want to see absolute 
             # training set size instead in the future
@@ -284,8 +284,7 @@ def main():
         idx.append(n_sample)
     
     # Save results
-    cols = ['L1NN', 'L2NN', 'RIDGE', 'CVL1', 'CVL2', 'CVRR']
-    #cols = ['L1NN', 'L2NN', 'RIDGE', 'ANN']
+    cols = ['TrainL1', 'TrainL2', 'TrainRR', 'TestL1', 'TestL2', 'TestRR', 'CVL1', 'CVL2', 'CVRR']
     pd.DataFrame(reactor_acc, columns = cols, index = idx).to_csv('reactor.csv')
     pd.DataFrame(enrichment_err, columns = cols, index = idx).to_csv('enrichment.csv')
     pd.DataFrame(burnup_err, columns = cols, index = idx).to_csv('burnup.csv')

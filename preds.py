@@ -66,7 +66,7 @@ def ann_regression(trainX, trainY, testX, expected):
     
     return error
 
-def classification(trainX, trainY, testX, expected):
+def classification(trainX, trainY, testX, testY):
     """
     Training for Classification
     """
@@ -80,27 +80,33 @@ def classification(trainX, trainY, testX, expected):
     l1.fit(trainX, trainY)
     l2.fit(trainX, trainY)
     rc.fit(trainX, trainY)
-    
-    # Predictions
-    predict1 = l1.predict(testX)
-    predict2 = l2.predict(testX)
-    predict3 = rc.predict(testX)
+
+    # Predictions for training, testing, and cross validation 
+    train_predict1 = l1.predict(trainX)
+    train_predict2 = l2.predict(trainX)
+    train_predict3 = rc.predict(trainX)
+    test_predict1 = l1.predict(testX)
+    test_predict2 = l2.predict(testX)
+    test_predict3 = rc.predict(testX)
     cv_predict1 = cross_val_predict(l1, trainX, trainY, cv = 5)
     cv_predict2 = cross_val_predict(l2, trainX, trainY, cv = 5)
     cv_predict3 = cross_val_predict(rc, trainX, trainY, cv = 5)
-    acc_l1 = metrics.accuracy_score(expected, predict1)
-    acc_l2 = metrics.accuracy_score(expected, predict2)
-    acc_rc = metrics.accuracy_score(expected, predict3)
-    cv_acc_l1 = metrics.accuracy_score(trainY, cv_predict1)
-    cv_acc_l2 = metrics.accuracy_score(trainY, cv_predict2)
-    cv_acc_rc = metrics.accuracy_score(trainY, cv_predict3)
+    train_acc1 = metrics.accuracy_score(trainY, train_predict1)
+    train_acc2 = metrics.accuracy_score(trainY, train_predict2)
+    train_acc3 = metrics.accuracy_score(trainY, train_predict3)
+    test_acc1 = metrics.accuracy_score(testY, test_predict1)
+    test_acc2 = metrics.accuracy_score(testY, test_predict2)
+    test_acc3 = metrics.accuracy_score(testY, test_predict3)
+    cv_acc1 = metrics.accuracy_score(trainY, cv_predict1)
+    cv_acc2 = metrics.accuracy_score(trainY, cv_predict2)
+    cv_acc3 = metrics.accuracy_score(trainY, cv_predict3)
     #acc_ann = ann_classification(trainX, trainY, testX, expected)
-    #accuracy = (acc_l1, acc_l2, acc_rc, acc_ann)
-    accuracy = (acc_l1, acc_l2, acc_rc, cv_acc_l1, cv_acc_l2, cv_acc_rc)
+    accuracy = (train_acc1, train_acc2, train_acc3, test_acc1, test_acc2, 
+                test_acc3, cv_acc1, cv_acc2, cv_acc3)
 
     return accuracy
 
-def regression(trainX, trainY, testX, expected):
+def regression(trainX, trainY, testX, testY):
     """
     Training for Regression
     """
@@ -115,22 +121,28 @@ def regression(trainX, trainY, testX, expected):
     l2.fit(trainX, trainY)
     rr.fit(trainX, trainY)
     
-    # Predictions
-    predict1 = l1.predict(testX)
-    predict2 = l2.predict(testX)
-    predict3 = rr.predict(testX)
+    # Predictions for training, testing, and cross validation 
+    train_predict1 = l1.predict(trainX)
+    train_predict2 = l2.predict(trainX)
+    train_predict3 = rr.predict(trainX)
+    test_predict1 = l1.predict(testX)
+    test_predict2 = l2.predict(testX)
+    test_predict3 = rr.predict(testX)
     cv_predict1 = cross_val_predict(l1, trainX, trainY, cv = 5)
     cv_predict2 = cross_val_predict(l2, trainX, trainY, cv = 5)
     cv_predict3 = cross_val_predict(rr, trainX, trainY, cv = 5)
-    err_l1 = sqrt(metrics.mean_squared_error(expected, predict1))
-    err_l2 = sqrt(metrics.mean_squared_error(expected, predict2))
-    err_rr = sqrt(metrics.mean_squared_error(expected, predict3))
-    cv_err_l1 = sqrt(metrics.mean_squared_error(trainY, cv_predict1))
-    cv_err_l2 = sqrt(metrics.mean_squared_error(trainY, cv_predict2))
-    cv_err_rr = sqrt(metrics.mean_squared_error(trainY, cv_predict3))
+    train_err1 = sqrt(metrics.mean_squared_error(trainY, train_predict1))
+    train_err2 = sqrt(metrics.mean_squared_error(trainY, train_predict2))
+    train_err3 = sqrt(metrics.mean_squared_error(trainY, train_predict3))
+    test_err1 = sqrt(metrics.mean_squared_error(testY, test_predict1))
+    test_err2 = sqrt(metrics.mean_squared_error(testY, test_predict2))
+    test_err3 = sqrt(metrics.mean_squared_error(testY, test_predict3))
+    cv_err1 = sqrt(metrics.mean_squared_error(trainY, cv_predict1))
+    cv_err2 = sqrt(metrics.mean_squared_error(trainY, cv_predict2))
+    cv_err3 = sqrt(metrics.mean_squared_error(trainY, cv_predict3))
     #err_ann = ann_regression(trainX, trainY, testX, expected)
-    #rmse = (err_l1, err_l2, err_rr, err_ann)
-    rmse = (err_l1, err_l2, err_rr, cv_err_l1, cv_err_l2, cv_err_rr)
+    rmse = (train_err1, train_err2, train_err3, test_err1, test_err2, test_err3, 
+            cv_err1, cv_err2, cv_err3)
 
     return rmse
 
@@ -145,9 +157,9 @@ def train_and_predict(train, test):
 
     Returns
     -------
-    reactor : tuple of accuracy for 1nn, l2nn, ridge, ann
-    enrichment : tuple of RMSE for 1nn, l2nn, ridge, ann
-    burnup : tuple of RMSE for 1nn, l2nn, ridge, ann
+    reactor : tuple of accuracy 
+    enrichment : tuple of RMSE 
+    burnup : tuple of RMSE 
 
     """
     
