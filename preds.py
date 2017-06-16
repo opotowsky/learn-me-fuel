@@ -62,9 +62,17 @@ def ann_regression(trainX, trainY, testX, expected):
     ann = MLPRegressor(hidden_layer_sizes=(500,), tol=0.01)
     ann.fit(trainX, trainY)
     predict = ann.predict(testX)
-    error = sqrt(metrics.mean_squared_error(expected, predict))
+    error = mean_absolute_percentage_error(expected, predict)
     
     return error
+
+def mean_absolute_percentage_error(true, pred):
+    """
+    """
+
+    mape = np.mean(np.abs((true - pred) / true)) * 100
+
+    return mape
 
 def classification(trainX, trainY, testX, testY):
     """
@@ -131,15 +139,15 @@ def regression(trainX, trainY, testX, testY):
     cv_predict1 = cross_val_predict(l1, trainX, trainY, cv = 5)
     cv_predict2 = cross_val_predict(l2, trainX, trainY, cv = 5)
     cv_predict3 = cross_val_predict(rr, trainX, trainY, cv = 5)
-    train_err1 = sqrt(metrics.mean_squared_error(trainY, train_predict1))
-    train_err2 = sqrt(metrics.mean_squared_error(trainY, train_predict2))
-    train_err3 = sqrt(metrics.mean_squared_error(trainY, train_predict3))
-    test_err1 = sqrt(metrics.mean_squared_error(testY, test_predict1))
-    test_err2 = sqrt(metrics.mean_squared_error(testY, test_predict2))
-    test_err3 = sqrt(metrics.mean_squared_error(testY, test_predict3))
-    cv_err1 = sqrt(metrics.mean_squared_error(trainY, cv_predict1))
-    cv_err2 = sqrt(metrics.mean_squared_error(trainY, cv_predict2))
-    cv_err3 = sqrt(metrics.mean_squared_error(trainY, cv_predict3))
+    train_err1 = mean_absolute_percentage_error(trainY, train_predict1)
+    train_err2 = mean_absolute_percentage_error(trainY, train_predict2)
+    train_err3 = mean_absolute_percentage_error(trainY, train_predict3)
+    test_err1 = mean_absolute_percentage_error(testY, test_predict1)
+    test_err2 = mean_absolute_percentage_error(testY, test_predict2)
+    test_err3 = mean_absolute_percentage_error(testY, test_predict3)
+    cv_err1 = mean_absolute_percentage_error(trainY, cv_predict1)
+    cv_err2 = mean_absolute_percentage_error(trainY, cv_predict2)
+    cv_err3 = mean_absolute_percentage_error(trainY, cv_predict3)
     #err_ann = ann_regression(trainX, trainY, testX, expected)
     rmse = (train_err1, train_err2, train_err3, test_err1, test_err2, test_err3, 
             cv_err1, cv_err2, cv_err3)
