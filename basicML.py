@@ -194,7 +194,61 @@ def dataframeXY(all_files, rxtr_label):
         labeled = label_data(labels, data)
         all_data.append(labeled)
     dfXY = pd.concat(all_data)
+    ##FILTERING STUFFS##
+    # Delete sim columns
+    # Need better way to know when the nuclide columns start (6 for now)
+    # Prob will just search for column idx that starts with str(1)?
+    cols = len(dfXY.columns)
+    dfXY = dfXY.iloc[:, 6:cols]
+    # Filter out 0 burnups so MAPE can be calc'd
+    dfXY = dfXY.loc[dfXY.Burnup > 0, :]
     return dfXY
+
+def top_nucs(dfXY):
+    """
+    for each instance (row), keep only top 200 values, replace rest with 0 (scikit-learn won't accept NaN)
+    
+    Parameters
+    ----------
+    dfX : dataframe 
+
+    Returns
+    -------
+    nuc_set : set
+
+    """
+    
+    x = len(dfXY.columns)-3
+    dfX = dfXY.iloc[:, 0:x]
+    top_n = 200
+    # Get a set of top n nucs from each row (instance)
+    nuc_set = set()
+    for nuc, conc in dfX.iterrows():
+        top_n_series = conc.sort_values(ascending=False)[:top_n]
+        nuc_list = list(top_n_series.index.values)
+        nuc_set.update(nuc_list)
+    return nuc_set
+
+def filter_nucs(df, nuc_set):
+    """
+    for each instance (row), keep only top 200 values, replace rest with 0 (scikit-learn won't accept NaN)
+    
+    Parameters
+    ----------
+    df : dataframe 
+    nuc_set : set
+
+    Returns
+    -------
+    df : dataframe
+
+    """
+    
+    # Using the set to filter the dataframe, keeping only top 200 nucs in the set for each instance
+    df = df.filter(items=nuc_set)
+    # replace NaNs with 0, bc scikit don't take no NaN
+    df.fillna(value=0, inplace=True)
+    return df
 
 def splitXY(dfXY):
     """
@@ -204,8 +258,8 @@ def splitXY(dfXY):
 
     Parameters
     ----------
-    dfXY : dataframe with several input-related columns, nuclide concentraations, 
-           and 3 labels: reactor type, enrichment, and burnup
+    dfXY : dataframe with nuclide concentraations and 3 labels: reactor type, 
+           enrichment, and burnup
 
     Returns
     -------
@@ -217,15 +271,10 @@ def splitXY(dfXY):
     """
 
     x = len(dfXY.columns)-3
-    y = x
-    # Need better way to know when the nuclide columns start (6 for now)
-    # Prob will just search for column idx that starts with str(1)?
-    dfX = dfXY.iloc[:, 6:x]
-    # Best place to filter for top 200 nuclides is here 
-    # (but spent 6 hours trying to figure out and failed)
-    r_dfY = dfXY.iloc[:, y]
-    e_dfY = dfXY.iloc[:, y+1]
-    b_dfY = dfXY.iloc[:, y+2]
+    dfX = dfXY.iloc[:, 0:x]
+    r_dfY = dfXY.iloc[:, x]
+    e_dfY = dfXY.iloc[:, x+1]
+    b_dfY = dfXY.iloc[:, x+2]
     return dfX, r_dfY, e_dfY, b_dfY
 
 def main():
@@ -242,12 +291,16 @@ def main():
     trainXY = dataframeXY(train_files, train_label)
     trainXY.reset_index(inplace = True)
     
+    # Get set of top 200 nucs from training set
+    nuc_set = top_nucs(trainXY)
+    
     # Testing Dataset (for now)
     testpath = "../origen/origen-data/testing/10may2017_2/csv/"
     test_files = glob.glob(os.path.join(testpath, "*.csv"))
     testXY = dataframeXY(test_files, test_label)
     testXY.reset_index(inplace = True)
     testX, testYr, testYe, testYb = splitXY(testXY)
+    testX = filter_nucs(testX, nuc_set)
     test_set = LearnSet(nuc_concs = testX, reactor = testYr, 
                         enrichment = testYe, burnup = testYb)
 
@@ -269,6 +322,7 @@ def main():
             n_sample = int(per * len(trainXY))
             subXY = trainXY.sample(n = n_sample)
             trainX, trainYr, trainYe, trainYb = splitXY(subXY)
+            trainX = filter_nucs(trainX, nuc_set)
             subset = LearnSet(nuc_concs = trainX, reactor = trainYr, 
                               enrichment = trainYe, burnup = trainYb)
             r, e, b = train_and_predict(subset, test_set)
