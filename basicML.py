@@ -293,7 +293,7 @@ def main():
     nuc_set = top_nucs(trainXY)
     trainX, trainYr, trainYe, trainYb = splitXY(trainXY)
     trainX = filter_nucs(trainX, nuc_set)
-    trainX = trainX.convert_objects(convert_numeric=True)
+    trainX = pd.to_numeric(trainX)
     train_set = LearnSet(nuc_concs = trainX, reactor = trainYr, 
                          enrichment = trainYe, burnup = trainYb)
     
@@ -304,7 +304,7 @@ def main():
     testXY.reset_index(inplace=True)
     testX, testYr, testYe, testYb = splitXY(testXY)
     testX = filter_nucs(testX, nuc_set)
-    testX = testX.convert_objects(convert_numeric=True)
+    testX = pd.to_numeric(testX)
     test_set = LearnSet(nuc_concs = testX, reactor = testYr, 
                         enrichment = testYe, burnup = testYb)
 
