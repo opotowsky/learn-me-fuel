@@ -148,11 +148,10 @@ def train_and_predict(train, test):
     burnup.csv : RMSE for 1nn, l2nn, ridge, ann
 
     """
-    
     # Add random errors of varying percents to nuclide vectors in the test set 
     # to mimic measurement error
     percent_err = np.arange(0.0, 10.25, 0.25)
-    n_trials = 1
+    n_trials = 50 
     reactor_acc = []
     enrichment_err = []
     burnup_err = []
