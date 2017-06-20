@@ -203,13 +203,14 @@ def dataframeXY(all_files, rxtr_label):
     dfXY = dfXY.loc[dfXY.Burnup > 0, :]
     return dfXY
 
-def top_nucs(dfXY):
+def top_nucs(dfXY, top_n):
     """
     for each instance (row), keep only top 200 values, replace rest with 0 (scikit-learn won't accept NaN)
     
     Parameters
     ----------
-    dfX : dataframe 
+    dfX : dataframe
+    top_n : number of nuclides to sort and filter by
 
     Returns
     -------
@@ -219,16 +220,15 @@ def top_nucs(dfXY):
     
     x = len(dfXY.columns)-3
     dfX = dfXY.iloc[:, 0:x]
-    top_n = 200
     # Get a set of top n nucs from each row (instance)
     nuc_set = set()
-    for nuc, conc in dfX.iterrows():
+    for case, conc in dfX.iterrows():
         top_n_series = conc.sort_values(ascending=False)[:top_n]
         nuc_list = list(top_n_series.index.values)
         nuc_set.update(nuc_list)
     return nuc_set
 
-def filter_nucs(df, nuc_set):
+def filter_nucs(df, nuc_set, top_n):
     """
     for each instance (row), keep only top 200 values, replace rest with 0 (scikit-learn won't accept NaN)
     
@@ -236,18 +236,28 @@ def filter_nucs(df, nuc_set):
     ----------
     df : dataframe 
     nuc_set : set
+    top_n : number of nuclides to sort and filter by
 
     Returns
     -------
-    df : dataframe
+    top_n_df : dataframe
 
     """
     
-    # Using the set to filter the dataframe, keeping only top 200 nucs in the set for each instance
-    df = df.filter(items=nuc_set)
+    # To filter further, have to reconstruct the df into a new one
+    # Found success appending each row to a new df as a series
+    top_n_df = pd.DataFrame(columns=tuple(nuc_set))
+    for case, conc in df.iterrows():
+        top_n_series = conc.sort_values(ascending=False)[:top_n]
+        nucs = top_n_series.index.values
+        # some top values in test set aren't in nuc set, so need to delete those
+        del_list = list(set(nucs) - nuc_set)
+        top_n_series.drop(del_list, inplace=True)
+        filtered_row = conc.filter(items=top_n_series.index.values)
+        top_n_df = top_n_df.append(filtered_row)
     # replace NaNs with 0, bc scikit don't take no NaN
-    df.fillna(value=0, inplace=True)
-    return df
+    top_n_df.fillna(value=0, inplace=True)
+    return top_n_df
 
 def splitXY(dfXY):
     """
@@ -289,27 +299,31 @@ def main():
     train_files = glob.glob(os.path.join(trainpath, "*.csv"))
     trainXY = dataframeXY(train_files, train_label)
     trainXY.reset_index(inplace=True)
-    # Get set of top 200 nucs from training set
-    nuc_set = top_nucs(trainXY)
-    trainX, trainYr, trainYe, trainYb = splitXY(trainXY)
-    trainX = filter_nucs(trainX, nuc_set)
-    trainX = trainX.astype(float)
-    train_set = LearnSet(nuc_concs = trainX, reactor = trainYr, 
-                         enrichment = trainYe, burnup = trainYb)
-    
     # Testing Dataset (for now)
     testpath = "../origen/origen-data/testing/10may2017_2/csv/"
     test_files = glob.glob(os.path.join(testpath, "*.csv"))
     testXY = dataframeXY(test_files, test_label)
     testXY.reset_index(inplace=True)
+    
+    # Get set of top 200 nucs from training set
+    top_n = 200
+    nuc_set = top_nucs(trainXY, top_n)
+    
+    # formulate filtered training and testing sets
+    trainX, trainYr, trainYe, trainYb = splitXY(trainXY)
+    trainX = filter_nucs(trainX, nuc_set, top_n)
+    trainX = trainX.astype(float)
+    train_set = LearnSet(nuc_concs = trainX, reactor = trainYr, 
+                         enrichment = trainYe, burnup = trainYb)    
     testX, testYr, testYe, testYb = splitXY(testXY)
-    testX = filter_nucs(testX, nuc_set)
+    testX = filter_nucs(testX, nuc_set, top_n)
     testX = testX.astype(float)
     test_set = LearnSet(nuc_concs = testX, reactor = testYr, 
                         enrichment = testYe, burnup = testYb)
 
     # Predict!
     train_and_predict(train_set, test_set)
+
     print("All csv files are saved in this directory!\n")
 
     return
