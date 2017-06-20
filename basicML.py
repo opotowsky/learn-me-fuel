@@ -204,13 +204,14 @@ def dataframeXY(all_files, rxtr_label):
     dfXY = dfXY.loc[dfXY.Burnup > 0, :]
     return dfXY
 
-def top_nucs(dfXY):
+def top_nucs(dfXY, top_n):
     """
     for each instance (row), keep only top 200 values, replace rest with 0 (scikit-learn won't accept NaN)
     
     Parameters
     ----------
-    dfX : dataframe 
+    dfX : dataframe
+    top_n : number of nuclides to sort and filter by
 
     Returns
     -------
@@ -220,16 +221,15 @@ def top_nucs(dfXY):
     
     x = len(dfXY.columns)-3
     dfX = dfXY.iloc[:, 0:x]
-    top_n = 200
     # Get a set of top n nucs from each row (instance)
     nuc_set = set()
-    for nuc, conc in dfX.iterrows():
+    for case, conc in dfX.iterrows():
         top_n_series = conc.sort_values(ascending=False)[:top_n]
         nuc_list = list(top_n_series.index.values)
         nuc_set.update(nuc_list)
     return nuc_set
 
-def filter_nucs(df, nuc_set):
+def filter_nucs(df, nuc_set, top_n):
     """
     for each instance (row), keep only top 200 values, replace rest with 0 (scikit-learn won't accept NaN)
     
@@ -237,18 +237,28 @@ def filter_nucs(df, nuc_set):
     ----------
     df : dataframe 
     nuc_set : set
+    top_n : number of nuclides to sort and filter by
 
     Returns
     -------
-    df : dataframe
+    top_n_df : dataframe
 
     """
     
-    # Using the set to filter the dataframe, keeping only top 200 nucs in the set for each instance
-    df = df.filter(items=nuc_set)
+    # To filter further, have to reconstruct the df into a new one
+    # Found success appending each row to a new df as a series
+    top_n_df = pd.DataFrame(columns=tuple(nuc_set))
+    for case, conc in df.iterrows():
+        top_n_series = conc.sort_values(ascending=False)[:top_n]
+        nucs = top_n_series.index.values
+        # some top values in test set aren't in nuc set, so need to delete those
+        del_list = list(set(nucs) - nuc_set)
+        top_n_series.drop(del_list, inplace=True)
+        filtered_row = conc.filter(items=top_n_series.index.values)
+        top_n_df = top_n_df.append(filtered_row)
     # replace NaNs with 0, bc scikit don't take no NaN
-    df.fillna(value=0, inplace=True)
-    return df
+    top_n_df.fillna(value=0, inplace=True)
+    return top_n_df
 
 def splitXY(dfXY):
     """
@@ -292,7 +302,11 @@ def main():
     trainXY.reset_index(inplace = True)
     
     # Get set of top 200 nucs from training set
-    nuc_set = top_nucs(trainXY)
+    # The filter_nuc func repeats stuff from top_nucs but it is needed because
+    # the nuc_set needs to be determined from the training set for the test set
+    # and the training set is filtered within each loop
+    top_n = 200
+    nuc_set = top_nucs(trainXY, top_n)
     
     # Testing Dataset (for now)
     testpath = "../origen/origen-data/testing/10may2017_2/csv/"
@@ -300,12 +314,12 @@ def main():
     testXY = dataframeXY(test_files, test_label)
     testXY.reset_index(inplace = True)
     testX, testYr, testYe, testYb = splitXY(testXY)
-    testX = filter_nucs(testX, nuc_set)
+    testX = filter_nucs(testX, nuc_set, top_n)
     test_set = LearnSet(nuc_concs = testX, reactor = testYr, 
                         enrichment = testYe, burnup = testYb)
 
     # Cut training set to create a learning curve
-    n_trials = 3
+    n_trials = 1 
     percent_set = np.arange(0.15, 1.05, 0.05)
     reactor_acc = []
     enrichment_err = []
@@ -322,7 +336,7 @@ def main():
             n_sample = int(per * len(trainXY))
             subXY = trainXY.sample(n = n_sample)
             trainX, trainYr, trainYe, trainYb = splitXY(subXY)
-            trainX = filter_nucs(trainX, nuc_set)
+            trainX = filter_nucs(trainX, nuc_set, top_n)
             subset = LearnSet(nuc_concs = trainX, reactor = trainYr, 
                               enrichment = trainYe, burnup = trainYb)
             r, e, b = train_and_predict(subset, test_set)
