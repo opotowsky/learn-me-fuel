@@ -73,7 +73,7 @@ def mean_absolute_percentage_error(true, pred):
 
     return mape
 
-def classification(trainX, trainY, testX, testY):
+def classification(trainX, trainY, testX, testY, k_l1, k_l2, a_rc):
     """
     Training for Classification
     """
@@ -81,9 +81,9 @@ def classification(trainX, trainY, testX, testY):
     # L1 norm is Manhattan Distance
     # L2 norm is Euclidian Distance 
     # Ridge Regression is Linear + L2 regularization
-    l1 = KNeighborsClassifier(metric='l1', p=1)
-    l2 = KNeighborsClassifier(metric='l2', p=2)
-    rc = RidgeClassifier()
+    l1 = KNeighborsClassifier(n_neighbors = k_l1, metric='l1', p=1)
+    l2 = KNeighborsClassifier(n_neighbors = k_l2, metric='l2', p=2)
+    rc = RidgeClassifier(alpha = a_rc)
     l1.fit(trainX, trainY)
     l2.fit(trainX, trainY)
     rc.fit(trainX, trainY)
@@ -95,13 +95,11 @@ def classification(trainX, trainY, testX, testY):
     acc_l1 = metrics.accuracy_score(testY, predict1)
     acc_l2 = metrics.accuracy_score(testY, predict2)
     acc_rc = metrics.accuracy_score(testY, predict3)
-    #acc_ann = ann_classification(trainX, trainY, testX, testY)
-    #accuracy = (acc_l1, acc_l2, acc_rc, acc_ann)
     accuracy = (acc_l1, acc_l2, acc_rc)
 
     return accuracy
 
-def regression(trainX, trainY, testX, testY):
+def regression(trainX, trainY, testX, testY, k_l1, k_l2, a_rr):
     """
     Training for Regression
     """
@@ -109,9 +107,9 @@ def regression(trainX, trainY, testX, testY):
     # L1 norm is Manhattan Distance
     # L2 norm is Euclidian Distance 
     # Ridge Regression is Linear + L2 regularization
-    l1 = KNeighborsRegressor(metric='l1', p=1)
-    l2 = KNeighborsRegressor(metric='l2', p=2)
-    rr = Ridge()
+    l1 = KNeighborsRegressor(n_neighbors = k_l1, metric='l1', p=1)
+    l2 = KNeighborsRegressor(n_neighbors = k_l2, metric='l2', p=2)
+    rr = Ridge(alpha = a_rr)
     l1.fit(trainX, trainY)
     l2.fit(trainX, trainY)
     rr.fit(trainX, trainY)
@@ -123,14 +121,9 @@ def regression(trainX, trainY, testX, testY):
     err_l1 = mean_absolute_percentage_error(testY, predict1)
     err_l2 = mean_absolute_percentage_error(testY, predict2)
     err_rr = mean_absolute_percentage_error(testY, predict3)
-    #err_l1 = sqrt(metrics.mean_squared_error(testY, predict1))
-    #err_l2 = sqrt(metrics.mean_squared_error(testY, predict2))
-    #err_rr = sqrt(metrics.mean_squared_error(testY, predict3))
-    #err_ann = ann_regression(trainX, trainY, testX, testY)
-    #rmse = (err_l1, err_l2, err_rr, err_ann)
-    rmse = (err_l1, err_l2, err_rr)
+    mape = (err_l1, err_l2, err_rr)
 
-    return rmse
+    return mape
 
 def train_and_predict(train, test):
     """
@@ -148,6 +141,12 @@ def train_and_predict(train, test):
     burnup.csv : RMSE for 1nn, l2nn, ridge, ann
 
     """
+    
+    # regularization parameters (k and alpha (a) differ for each)
+    reg = {'r_l1_k' : 15, 'r_l2_k' : 20, 'r_rc_a' : 0.1, 
+           'e_l1_k' : 7, 'e_l2_k' : 10, 'e_rr_a' : 100, 
+           'b_l1_k' : 30, 'b_l2_k' : 35, 'b_rr_a' : 100}
+    
     # Add random errors of varying percents to nuclide vectors in the test set 
     # to mimic measurement error
     percent_err = np.arange(0.0, 10.25, 0.25)
@@ -165,11 +164,14 @@ def train_and_predict(train, test):
             test.nuc_concs = random_error(err, test.nuc_concs)
             # Predict
             r = classification(train.nuc_concs, train.reactor, 
-                               test.nuc_concs, test.reactor)
-            e = regression(train.nuc_concs, train.enrichment, 
-                           test.nuc_concs, test.enrichment)
+                               test.nuc_concs, test.reactor, 
+                               reg['r_l1_k'], reg['r_l2_k'], reg['r_rc_a'])
+            e= regression(train.nuc_concs, train.enrichment, 
+                          test.nuc_concs, test.enrichment, 
+                          reg['e_l1_k'], reg['e_l2_k'], reg['e_rr_a'])
             b = regression(train.nuc_concs, train.burnup, 
-                           test.nuc_concs, test.burnup)
+                           test.nuc_concs, test.burnup, 
+                           reg['b_l1_k'], reg['b_l2_k'], reg['b_rr_a'])
             r_sum = [sum(x) for x in zip(r, r_sum)]
             e_sum = [sum(x) for x in zip(e, e_sum)]
             b_sum = [sum(x) for x in zip(b, b_sum)]
