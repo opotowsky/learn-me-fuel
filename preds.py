@@ -74,7 +74,7 @@ def mean_absolute_percentage_error(true, pred):
 
     return mape
 
-def classification(trainX, trainY, testX, testY):
+def classification(trainX, trainY, testX, testY, k_l1, k_l2, a_rc):
     """
     Training for Classification
     """
@@ -82,9 +82,9 @@ def classification(trainX, trainY, testX, testY):
     # L1 norm is Manhattan Distance
     # L2 norm is Euclidian Distance 
     # Ridge Regression is Linear + L2 regularization
-    l1 = KNeighborsClassifier(metric='l1', p=1)
-    l2 = KNeighborsClassifier(metric='l2', p=2)
-    rc = RidgeClassifier()
+    l1 = KNeighborsClassifier(n_neighbors = k_l1, metric='l1', p=1)
+    l2 = KNeighborsClassifier(n_neighbors = k_l2, metric='l2', p=2)
+    rc = RidgeClassifier(alpha = a_rc)
     l1.fit(trainX, trainY)
     l2.fit(trainX, trainY)
     rc.fit(trainX, trainY)
@@ -114,7 +114,7 @@ def classification(trainX, trainY, testX, testY):
 
     return accuracy
 
-def regression(trainX, trainY, testX, testY):
+def regression(trainX, trainY, testX, testY, k_l1, k_l2, a_rr):
     """
     Training for Regression
     """
@@ -122,9 +122,9 @@ def regression(trainX, trainY, testX, testY):
     # L1 norm is Manhattan Distance
     # L2 norm is Euclidian Distance 
     # Ridge Regression is Linear + L2 regularization
-    l1 = KNeighborsRegressor(metric='l1', p=1)
-    l2 = KNeighborsRegressor(metric='l2', p=2)
-    rr = Ridge()
+    l1 = KNeighborsRegressor(n_neighbors = k_l1, metric='l1', p=1)
+    l2 = KNeighborsRegressor(n_neighbors = k_l2, metric='l2', p=2)
+    rr = Ridge(alpha = a_rr)
     l1.fit(trainX, trainY)
     l2.fit(trainX, trainY)
     rr.fit(trainX, trainY)
@@ -170,12 +170,19 @@ def train_and_predict(train, test):
     burnup : tuple of RMSE 
 
     """
-    
+    # regularization parameters (k and alpha (a) differ for each)
+    reg = {'r_l1_k' : 15, 'r_l2_k' : 20, 'r_rc_a' : 0.1, 
+           'e_l1_k' : 7, 'e_l2_k' : 10, 'e_rr_a' : 100, 
+           'b_l1_k' : 30, 'b_l2_k' : 35, 'b_rr_a' : 100}
+
     reactor = classification(train.nuc_concs, train.reactor, 
-                             test.nuc_concs, test.reactor)
+                             test.nuc_concs, test.reactor, 
+                             reg['r_l1_k'], reg['r_l2_k'], reg['r_rc_a'])
     enrichment = regression(train.nuc_concs, train.enrichment, 
-                            test.nuc_concs, test.enrichment)
+                            test.nuc_concs, test.enrichment, 
+                            reg['e_l1_k'], reg['e_l2_k'], reg['e_rr_a'])
     burnup = regression(train.nuc_concs, train.burnup, 
-                        test.nuc_concs, test.burnup)
+                        test.nuc_concs, test.burnup, 
+                        reg['b_l1_k'], reg['b_l2_k'], reg['b_rr_a'])
     
     return reactor, enrichment, burnup 
