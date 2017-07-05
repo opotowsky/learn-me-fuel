@@ -38,7 +38,7 @@ def random_error(percent_err, df):
 
 def ann_classification(trainX, trainY, testX, testY):
     """
-    
+    Old code, keeping for future reference    
     """
     
     ann = MLPClassifier(hidden_layer_sizes=(500,), tol=0.01)
@@ -50,7 +50,7 @@ def ann_classification(trainX, trainY, testX, testY):
 
 def ann_regression(trainX, trainY, testX, testY):
     """
-    
+    Old code, keeping for future reference    
     """
     # Scale the data
     scaler = StandardScaler()  
@@ -67,6 +67,8 @@ def ann_regression(trainX, trainY, testX, testY):
 
 def mean_absolute_percentage_error(true, pred):
     """
+    Given 2 vectors of values, true and pred, calculate the MAP error
+
     """
 
     mape = np.mean(np.abs((true - pred) / true)) * 100
@@ -75,7 +77,9 @@ def mean_absolute_percentage_error(true, pred):
 
 def classification(trainX, trainY, testX, testY, k_l1, k_l2, a_rc):
     """
-    Training for Classification
+    Training for Classification: predicts a model using three algorithms, returning
+    the training, testing, and cross validation accuracies for each. 
+    
     """
     
     # L1 norm is Manhattan Distance
@@ -96,12 +100,13 @@ def classification(trainX, trainY, testX, testY, k_l1, k_l2, a_rc):
     acc_l2 = metrics.accuracy_score(testY, predict2)
     acc_rc = metrics.accuracy_score(testY, predict3)
     accuracy = (acc_l1, acc_l2, acc_rc)
-
     return accuracy
 
 def regression(trainX, trainY, testX, testY, k_l1, k_l2, a_rr):
-    """
-    Training for Regression
+    """ 
+    Training for Regression: predicts a model using three algorithms, returning
+    the training error, testing error, and cross validation error for each. 
+
     """
     
     # L1 norm is Manhattan Distance
@@ -127,18 +132,24 @@ def regression(trainX, trainY, testX, testY, k_l1, k_l2, a_rr):
 
 def train_and_predict(train, test):
     """
-    Add deets, saves csv files
+    Given training and testing data, this script runs some ML algorithms
+    (currently, this is nearest neighbors with 2 distance metrics and ridge
+    regression) for each prediction category: reactor type, enrichment, and
+    burnup
 
-    Parameters
-    ----------
-    train :
-    test : 
+    Parameters 
+    ---------- 
+    
+    train : group of dataframes that include training data and the three
+            labels 
+    test : group of dataframes that has the training instances and the three
+           labels
 
     Outputs
     -------
-    reactor.csv : accuracy for 1nn, l2nn, ridge, ann
-    enrichment.csv : RMSE for 1nn, l2nn, ridge, ann
-    burnup.csv : RMSE for 1nn, l2nn, ridge, ann
+    reactor.csv : accuracy for 1nn, l2nn, ridge
+    enrichment.csv : MAPE for 1nn, l2nn, ridge
+    burnup.csv : MAPE for 1nn, l2nn, ridge
 
     """
     
@@ -185,7 +196,6 @@ def train_and_predict(train, test):
     
     # Save results
     cols = ['L1NN', 'L2NN', 'RIDGE']
-    #cols = ['L1NN', 'L2NN', 'RIDGE', 'ANN']
     pd.DataFrame(reactor_acc, columns=cols, index=percent_err).to_csv('reactor.csv')
     pd.DataFrame(enrichment_err, columns=cols, index=percent_err).to_csv('enrichment.csv')
     pd.DataFrame(burnup_err, columns=cols, index=percent_err).to_csv('burnup.csv')
