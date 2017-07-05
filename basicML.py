@@ -206,16 +206,17 @@ def dataframeXY(all_files, rxtr_label):
 
 def top_nucs(dfXY, top_n):
     """
-    for each instance (row), keep only top 200 values, replace rest with 0 (scikit-learn won't accept NaN)
+    loops through the rows of a dataframe and keeps the top_n nuclides 
+    (by concentration) from each row
     
     Parameters
     ----------
-    dfX : dataframe
+    dfXY : dataframe of nuclide concentrations + labels
     top_n : number of nuclides to sort and filter by
 
     Returns
     -------
-    nuc_set : set
+    nuc_set : set of the top_n nucs as determined 
 
     """
     
@@ -231,17 +232,18 @@ def top_nucs(dfXY, top_n):
 
 def filter_nucs(df, nuc_set, top_n):
     """
-    for each instance (row), keep only top 200 values, replace rest with 0 (scikit-learn won't accept NaN)
+    for each instance (row), keep only top 200 values, replace rest with 0
     
     Parameters
     ----------
-    df : dataframe 
-    nuc_set : set
+    df : dataframe of nuclide concentrations
+    nuc_set : set of top_n nuclides
     top_n : number of nuclides to sort and filter by
 
     Returns
     -------
-    top_n_df : dataframe
+    top_n_df : dataframe that has values only for the top_n nuclides of the set 
+               nuc_set in each row
 
     """
     
@@ -291,7 +293,11 @@ def main():
     """
     Takes all origen files and compiles them into the appropriate dataframes for 
     training and testing sets. Then splits those dataframes into the appropriate 
-    X and Ys for prediction of reactor type, fuel enrichment, and burnup.
+    X and Ys for prediction of reactor type, fuel enrichment, and burnup. 
+
+    The training set is varied by number of features included in trainX to
+    create a learning curve.
+
     """
     
     print("Did you check your training and testing data paths?\n")    

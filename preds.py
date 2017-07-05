@@ -38,8 +38,8 @@ def random_error(percent_err, df):
     return df_err
 
 def ann_classification(trainX, trainY, testX, expected):
-    """
-    
+    """ 
+    Old code, keeping for future reference    
     """
     
     ann = MLPClassifier(hidden_layer_sizes=(500,), tol=0.01)
@@ -51,7 +51,7 @@ def ann_classification(trainX, trainY, testX, expected):
 
 def ann_regression(trainX, trainY, testX, expected):
     """
-    
+    Old code, keeping for future reference    
     """
     # Scale the data
     scaler = StandardScaler()  
@@ -68,6 +68,8 @@ def ann_regression(trainX, trainY, testX, expected):
 
 def mean_absolute_percentage_error(true, pred):
     """
+    Given 2 vectors of values, true and pred, calculate the MAP error
+
     """
 
     mape = np.mean(np.abs((true - pred) / true)) * 100
@@ -76,7 +78,9 @@ def mean_absolute_percentage_error(true, pred):
 
 def classification(trainX, trainY, testX, testY, k_l1, k_l2, a_rc):
     """
-    Training for Classification
+    Training for Classification: predicts a model using three algorithms, returning
+    the training, testing, and cross validation accuracies for each. 
+    
     """
     
     # L1 norm is Manhattan Distance
@@ -108,15 +112,16 @@ def classification(trainX, trainY, testX, testY, k_l1, k_l2, a_rc):
     cv_acc1 = metrics.accuracy_score(trainY, cv_predict1)
     cv_acc2 = metrics.accuracy_score(trainY, cv_predict2)
     cv_acc3 = metrics.accuracy_score(trainY, cv_predict3)
-    #acc_ann = ann_classification(trainX, trainY, testX, expected)
     accuracy = (train_acc1, train_acc2, train_acc3, test_acc1, test_acc2, 
                 test_acc3, cv_acc1, cv_acc2, cv_acc3)
 
     return accuracy
 
 def regression(trainX, trainY, testX, testY, k_l1, k_l2, a_rr):
-    """
-    Training for Regression
+    """ 
+    Training for Regression: predicts a model using three algorithms, returning
+    the training error, testing error, and cross validation error for each. 
+
     """
     
     # L1 norm is Manhattan Distance
@@ -148,7 +153,6 @@ def regression(trainX, trainY, testX, testY, k_l1, k_l2, a_rr):
     cv_err1 = mean_absolute_percentage_error(trainY, cv_predict1)
     cv_err2 = mean_absolute_percentage_error(trainY, cv_predict2)
     cv_err3 = mean_absolute_percentage_error(trainY, cv_predict3)
-    #err_ann = ann_regression(trainX, trainY, testX, expected)
     rmse = (train_err1, train_err2, train_err3, test_err1, test_err2, test_err3, 
             cv_err1, cv_err2, cv_err3)
 
@@ -156,20 +160,30 @@ def regression(trainX, trainY, testX, testY, k_l1, k_l2, a_rr):
 
 def train_and_predict(train, test):
     """
-    Add deets, returns 
+    Given training and testing data, this script runs some ML algorithms
+    (currently, this is nearest neighbors with 2 distance metrics and ridge
+    regression) for each prediction category: reactor type, enrichment, and
+    burnup
 
-    Parameters
-    ----------
-    train :
-    test : 
+    Parameters 
+    ---------- 
+    
+    train : group of dataframes that include training data and the three
+            labels 
+    test : group of dataframes that has the training instances and the three
+           labels
 
     Returns
     -------
-    reactor : tuple of accuracy 
-    enrichment : tuple of RMSE 
-    burnup : tuple of RMSE 
+    reactor : tuple of accuracy for training, testing, and cross validation
+              accuracies for all three algorithms
+    enrichment : tuple of MAPE for training, testing, and cross validation
+                 errors for all three algorithms
+    burnup : tuple of MAPE for training, testing, and cross validation errors
+             for all three algorithms
 
     """
+
     # regularization parameters (k and alpha (a) differ for each)
     reg = {'r_l1_k' : 15, 'r_l2_k' : 20, 'r_rc_a' : 0.1, 
            'e_l1_k' : 7, 'e_l2_k' : 10, 'e_rr_a' : 100, 
