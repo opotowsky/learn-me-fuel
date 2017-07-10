@@ -1,10 +1,12 @@
+from __future__ import print_function
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.linear_model import RidgeClassifier
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.linear_model import Ridge
 from sklearn.neural_network import MLPClassifier
 from sklearn.neural_network import MLPRegressor
-from sklearn.preprocessing import StandardScaler  
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
 from sklearn import metrics
 from math import sqrt
 import numpy as np
@@ -153,15 +155,24 @@ def train_and_predict(train, test):
 
     """
     
+    # Apply PCA dimension reduction 
+    #pca = PCA(n_components=50)
+    #pca.fit(train.nuc_concs, train.burnup)
+    #train.nuc_concs = pd.DataFrame(pca.transform(train.nuc_concs))
+    # transform test set by the above pca fit as well
+    #test.nuc_concs = pd.DataFrame(pca.transform(test.nuc_concs))
+    #ncomp = pca.n_components_
+    #print(ncomp)
+
     # regularization parameters (k and alpha (a) differ for each)
-    reg = {'r_l1_k' : 15, 'r_l2_k' : 20, 'r_rc_a' : 0.1, 
-           'e_l1_k' : 7, 'e_l2_k' : 10, 'e_rr_a' : 100, 
-           'b_l1_k' : 30, 'b_l2_k' : 35, 'b_rr_a' : 100}
+    reg = {'r_l1_k' : 1, 'r_l2_k' : 1, 'r_rc_a' : 0.1, 
+           'e_l1_k' : 1, 'e_l2_k' : 1, 'e_rr_a' : 100, 
+           'b_l1_k' : 1, 'b_l2_k' : 1, 'b_rr_a' : 100}
     
     # Add random errors of varying percents to nuclide vectors in the test set 
     # to mimic measurement error
     percent_err = np.arange(0.0, 10.25, 0.25)
-    n_trials = 50 
+    n_trials = 3 
     reactor_acc = []
     enrichment_err = []
     burnup_err = []
