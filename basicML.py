@@ -2,6 +2,7 @@
 
 from __future__ import print_function
 from preds import train_and_predict
+from training_set import *
 import numpy as np
 import pandas as pd
 import glob
@@ -18,56 +19,6 @@ class LearnSet(object):
         self.reactor = reactor
         self.enrichment = enrichment
         self.burnup = burnup
-
-
-###################################################
-# TODO: Leaving the following global for now; fix!#
-###################################################
-
-# Info for labeling the simulation values in the training set
-pwrburn = (600, 1550, 2500, 3450, 4400, 5350, 6300, 7250, 8200, 9150, 10100, 
-           11050, 12000, 12950, 13900, 14850, 15800, 16750, 17700
-           )
-bwrburn = (600, 1290, 1980, 2670, 3360, 4050, 4740, 5430, 6120, 6810, 7500, 
-           8190, 8880, 9570, 10260, 10950, 11640, 12330
-           )
-phwrburn = (600, 1290, 1980, 2670, 3360, 4050, 4740, 5430, 6120, 6810, 7500, 
-            8190, 8880, 9570, 10260, 10950, 11640, 12330
-            )
-o_rxtrs = ('ce14x14', 'ce16x16', 'w14x14', 'w15x15', 'w17x17', 's14x14', 
-           'vver440', 'vver440_3.82', 'vver440_4.25', 'vver440_4.38', 
-           'vver1000', 'ge7x7-0', 'ge8x8-1', 'ge9x9-2', 'ge10x10-8', 
-           'abb8x8-1', 'atrium9x9-9', 'svea64-1', 'svea100-0', 'candu28', 
-           'candu37'
-           )
-enrich =  (2.8, 2.8, 2.8, 2.8, 2.8, 2.8, 3.6, 3.82, 4.25, 4.38, 2.8, 2.9, 
-           2.9, 2.9, 2.9, 2.9, 2.9, 2.9, 2.9, 0.711, 0.711
-           )
-train_label = {'ReactorType': ['pwr']*11 + ['bwr']*8 + ['phwr']*2,
-               'OrigenReactor': o_rxtrs,
-               'Enrichment': enrich,
-               'Burnup': [pwrburn]*11 + [bwrburn]*8 + [phwrburn]*2,
-               'CoolingInts': [(0.000694, 7, 30, 365.25)]*21
-               }
-
-# Info for labeling the simulated/expected values in the testing set
-t_burns = ((1400, 5000, 11000), (5000, 6120), (1700, 8700, 17000),
-           (8700, 9150), (8700, 9150), (2000, 7200, 10800),
-           (7200, 8800), (7200, 8800)
-           )
-cool1 = (0.000694, 7, 30, 365.25) #1 min, 1 week, 1 month, 1 year in days
-cool2 = (0.002082, 9, 730.5) #3 min, 9 days, 2 years in days
-cool3 = (7, 9) #7 and 9 days
-t_o_rxtrs = ('candu28_0', 'candu28_1', 'ce16x16_2', 'ce16x16_3', 'ce16x16_4', 
-             'ge7x7-0_5','ge7x7-0_6', 'ge7x7-0_7'
-             )
-t_enrich =  (0.711, 0.711, 2.8, 2.8, 3.1, 2.9, 2.9, 3.2)
-test_label = {'ReactorType': ['phwr']*2 + ['pwr']*3 + ['bwr']*3,
-              'OrigenReactor': t_o_rxtrs,
-              'Enrichment': t_enrich,
-              'Burnup': t_burns, 
-              'CoolingInts': [cool1, cool2, cool1, cool2, cool3, cool1, cool2, cool3]
-              }
 
 def format_df(filename):
     """
@@ -109,7 +60,7 @@ def get_labels(filename, rxtrs):
     rxtr_info = {'ReactorType': rxtrs['ReactorType'][i], 
                  'Enrichment': rxtrs['Enrichment'][i], 
                  'Burnup': rxtrs['Burnup'][i], 
-                 'CoolingInts': rxtrs['CoolingInts'][i]
+                 'CoolingInts': COOLING_INTERVALS
                  }
     return rxtr_info
 
@@ -203,64 +154,6 @@ def dataframeXY(all_files, rxtr_label):
     dfXY = dfXY.loc[dfXY.Burnup > 0, :]
     return dfXY
 
-def top_nucs(dfXY, top_n):
-    """
-    loops through the rows of a dataframe and keeps the top_n nuclides 
-    (by concentration) from each row
-    
-    Parameters
-    ----------
-    dfXY : dataframe of nuclide concentrations + labels
-    top_n : number of nuclides to sort and filter by
-
-    Returns
-    -------
-    nuc_set : set of the top_n nucs as determined 
-
-    """
-    
-    x = len(dfXY.columns)-3
-    dfX = dfXY.iloc[:, 0:x]
-    # Get a set of top n nucs from each row (instance)
-    nuc_set = set()
-    for case, conc in dfX.iterrows():
-        top_n_series = conc.sort_values(ascending=False)[:top_n]
-        nuc_list = list(top_n_series.index.values)
-        nuc_set.update(nuc_list)
-    return nuc_set
-
-def filter_nucs(df, nuc_set, top_n):
-    """
-    for each instance (row), keep only top 200 values, replace rest with 0
-    
-    Parameters
-    ----------
-    df : dataframe of nuclide concentrations
-    nuc_set : set of top_n nuclides
-    top_n : number of nuclides to sort and filter by
-
-    Returns
-    -------
-    top_n_df : dataframe that has values only for the top_n nuclides of the set 
-               nuc_set in each row
-
-    """
-    
-    # To filter further, have to reconstruct the df into a new one
-    # Found success appending each row to a new df as a series
-    top_n_df = pd.DataFrame(columns=tuple(nuc_set))
-    for case, conc in df.iterrows():
-        top_n_series = conc.sort_values(ascending=False)[:top_n]
-        nucs = top_n_series.index.values
-        # some top values in test set aren't in nuc set, so need to delete those
-        del_list = list(set(nucs) - nuc_set)
-        top_n_series.drop(del_list, inplace=True)
-        filtered_row = conc.filter(items=top_n_series.index.values)
-        top_n_df = top_n_df.append(filtered_row)
-    # replace NaNs with 0, bc scikit don't take no NaN
-    top_n_df.fillna(value=0, inplace=True)
-    return top_n_df
-
 def splitXY(dfXY):
     """
     Takes a dataframe with all X (features) and Y (labels) information and 
@@ -290,30 +183,18 @@ def splitXY(dfXY):
 
 def main():
     """
-    Takes all origen files and compiles them into the appropriate dataframes for 
-    training and testing sets. Then splits those dataframes into the appropriate 
-    X and Ys for prediction of reactor type, fuel enrichment, and burnup. 
-
-    The training set is varied by number of features included in trainX to
-    create a learning curve.
+    Takes all origen files and compiles them into the appropriate dataframe for 
+    the training set. Then splits the dataframe into the appropriate X and Ys 
+    for prediction of reactor type, cooling time, fuel enrichment, and burnup. 
 
     """
     
     print("Did you check your training and testing data paths?\n")    
     # Training Datasets
-    trainpath = "../origen/origen-data/training/9may2017/csv/"
+    trainpath = "../origen-data/14nov2017/"
     train_files = glob.glob(os.path.join(trainpath, "*.csv"))
     trainXY = dataframeXY(train_files, train_label)
     trainXY.reset_index(inplace=True)
-    # Testing Dataset (for now)
-    testpath = "../origen/origen-data/testing/10may2017_2/csv/"
-    test_files = glob.glob(os.path.join(testpath, "*.csv"))
-    testXY = dataframeXY(test_files, test_label)
-    testXY.reset_index(inplace=True)
-    
-    # Get set of top 200 nucs from training set
-    top_n = 200
-    nuc_set = top_nucs(trainXY, top_n)
     
     # formulate filtered training and testing sets
     trainX, trainYr, trainYe, trainYb = splitXY(trainXY)
