@@ -192,7 +192,8 @@ def main():
     print("Did you check your training and testing data paths?\n")    
     # Training Datasets
     trainpath = "../origen-data/14nov2017/"
-    train_files = glob.glob(os.path.join(trainpath, "*.csv"))
+    for o_rxtr in O_RXTRS:
+        train_files = glob.glob(os.path.join(trainpath, "*.csv"))
     trainXY = dataframeXY(train_files, train_label)
     trainXY.reset_index(inplace=True)
     
@@ -202,12 +203,6 @@ def main():
     trainX = trainX.astype(float)
     train_set = LearnSet(nuc_concs = trainX, reactor = trainYr, 
                          enrichment = trainYe, burnup = trainYb)    
-    testX, testYr, testYe, testYb = splitXY(testXY)
-    testX = filter_nucs(testX, nuc_set, top_n)
-    testX = testX.astype(float)
-    test_set = LearnSet(nuc_concs = testX, reactor = testYr, 
-                        enrichment = testYe, burnup = testYb)
-
     # Predict!
     train_and_predict(train_set, test_set)
 
