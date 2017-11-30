@@ -2,6 +2,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.linear_model import RidgeClassifier
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.linear_model import Ridge
+from sklearn.svm import SVR
 from sklearn.model_selection import cross_val_predict
 from sklearn.neural_network import MLPClassifier
 from sklearn.neural_network import MLPRegressor
@@ -49,7 +50,7 @@ def ann_classification(trainX, trainY, testX, expected):
     
     return accuracy
 
-def ann_regression(trainX, trainY, testX, expected):
+def ann_regression(trainX, trainY, testX, testY):
     """
     Old code, keeping for future reference    
     """
@@ -59,11 +60,13 @@ def ann_regression(trainX, trainY, testX, expected):
     trainX = scaler.transform(trainX)  
     testX = scaler.transform(testX)
 
-    ann = MLPRegressor(hidden_layer_sizes=(500,), tol=0.01)
+    ann = MLPRegressor()
     ann.fit(trainX, trainY)
-    predict = ann.predict(testX)
-    error = mean_absolute_percentage_error(expected, predict)
-    
+    train_predict = ann.predict(trainX)
+    test_predict = ann.predict(testX)
+    train_error = mean_absolute_percentage_error(trainY, train_predict)
+    test_error = mean_absolute_percentage_error(testY, test_predict)
+    error = (train_error, test_error)
     return error
 
 def mean_absolute_percentage_error(true, pred):
@@ -124,39 +127,53 @@ def regression(trainX, trainY, testX, testY, k_l1, k_l2, a_rr):
 
     """
     
-    # L1 norm is Manhattan Distance
-    # L2 norm is Euclidian Distance 
-    # Ridge Regression is Linear + L2 regularization
-    l1 = KNeighborsRegressor(n_neighbors = k_l1, metric='l1', p=1)
-    l2 = KNeighborsRegressor(n_neighbors = k_l2, metric='l2', p=2)
-    rr = Ridge(alpha = a_rr)
-    l1.fit(trainX, trainY)
-    l2.fit(trainX, trainY)
-    rr.fit(trainX, trainY)
+    ## L1 norm is Manhattan Distance
+    ## L2 norm is Euclidian Distance 
+    ## Ridge Regression is Linear + L2 regularization
+    #l1 = KNeighborsRegressor(n_neighbors = k_l1, metric='l1', p=1)
+    #l2 = KNeighborsRegressor(n_neighbors = k_l2, metric='l2', p=2)
+    #rr = Ridge(alpha = a_rr)
+    #l1.fit(trainX, trainY)
+    #l2.fit(trainX, trainY)
+    #rr.fit(trainX, trainY)
     
-    # Predictions for training, testing, and cross validation 
-    train_predict1 = l1.predict(trainX)
-    train_predict2 = l2.predict(trainX)
-    train_predict3 = rr.predict(trainX)
-    test_predict1 = l1.predict(testX)
-    test_predict2 = l2.predict(testX)
-    test_predict3 = rr.predict(testX)
-    cv_predict1 = cross_val_predict(l1, trainX, trainY, cv = 5)
-    cv_predict2 = cross_val_predict(l2, trainX, trainY, cv = 5)
-    cv_predict3 = cross_val_predict(rr, trainX, trainY, cv = 5)
-    train_err1 = mean_absolute_percentage_error(trainY, train_predict1)
-    train_err2 = mean_absolute_percentage_error(trainY, train_predict2)
-    train_err3 = mean_absolute_percentage_error(trainY, train_predict3)
-    test_err1 = mean_absolute_percentage_error(testY, test_predict1)
-    test_err2 = mean_absolute_percentage_error(testY, test_predict2)
-    test_err3 = mean_absolute_percentage_error(testY, test_predict3)
-    cv_err1 = mean_absolute_percentage_error(trainY, cv_predict1)
-    cv_err2 = mean_absolute_percentage_error(trainY, cv_predict2)
-    cv_err3 = mean_absolute_percentage_error(trainY, cv_predict3)
-    rmse = (train_err1, train_err2, train_err3, test_err1, test_err2, test_err3, 
-            cv_err1, cv_err2, cv_err3)
+    # Testing SVR
+    C = 100.0
+    gamma = 0.001
+    svr = SVR(C=C, gamma=gamma)
+    svr.fit(trainX, trainY)
+    train_pred = svr.predict(trainX)
+    test_pred = svr.predict(testX)
+    cv_pred = cross_val_predict(svr, trainX, trainY, cv = 5)
+    train_err = mean_absolute_percentage_error(trainY, train_pred)
+    test_err = mean_absolute_percentage_error(testY, test_pred)
+    cv_err = mean_absolute_percentage_error(trainY, cv_pred)
+    
+    return (train_err, test_err, cv_err)
 
-    return rmse
+    ## Predictions for training, testing, and cross validation 
+    #train_predict1 = l1.predict(trainX)
+    #train_predict2 = l2.predict(trainX)
+    #train_predict3 = rr.predict(trainX)
+    #test_predict1 = l1.predict(testX)
+    #test_predict2 = l2.predict(testX)
+    #test_predict3 = rr.predict(testX)
+    #cv_predict1 = cross_val_predict(l1, trainX, trainY, cv = 5)
+    #cv_predict2 = cross_val_predict(l2, trainX, trainY, cv = 5)
+    #cv_predict3 = cross_val_predict(rr, trainX, trainY, cv = 5)
+    #train_err1 = mean_absolute_percentage_error(trainY, train_predict1)
+    #train_err2 = mean_absolute_percentage_error(trainY, train_predict2)
+    #train_err3 = mean_absolute_percentage_error(trainY, train_predict3)
+    #test_err1 = mean_absolute_percentage_error(testY, test_predict1)
+    #test_err2 = mean_absolute_percentage_error(testY, test_predict2)
+    #test_err3 = mean_absolute_percentage_error(testY, test_predict3)
+    #cv_err1 = mean_absolute_percentage_error(trainY, cv_predict1)
+    #cv_err2 = mean_absolute_percentage_error(trainY, cv_predict2)
+    #cv_err3 = mean_absolute_percentage_error(trainY, cv_predict3)
+    #rmse = (train_err1, train_err2, train_err3, test_err1, test_err2, test_err3, 
+    #        cv_err1, cv_err2, cv_err3)
+
+    #return rmse
 
 def train_and_predict(train, test):
     """
@@ -184,19 +201,26 @@ def train_and_predict(train, test):
 
     """
 
-    # regularization parameters (k and alpha (a) differ for each)
-    reg = {'r_l1_k' : 15, 'r_l2_k' : 20, 'r_rc_a' : 0.1, 
-           'e_l1_k' : 7, 'e_l2_k' : 10, 'e_rr_a' : 100, 
-           'b_l1_k' : 30, 'b_l2_k' : 35, 'b_rr_a' : 100}
+    ## regularization parameters (k and alpha (a) differ for each)
+    #reg = {'r_l1_k' : 15, 'r_l2_k' : 20, 'r_rc_a' : 0.1, 
+    #       'e_l1_k' : 7, 'e_l2_k' : 10, 'e_rr_a' : 100, 
+    #       'b_l1_k' : 30, 'b_l2_k' : 35, 'b_rr_a' : 100}
 
-    reactor = classification(train.nuc_concs, train.reactor, 
-                             test.nuc_concs, test.reactor, 
-                             reg['r_l1_k'], reg['r_l2_k'], reg['r_rc_a'])
-    enrichment = regression(train.nuc_concs, train.enrichment, 
-                            test.nuc_concs, test.enrichment, 
-                            reg['e_l1_k'], reg['e_l2_k'], reg['e_rr_a'])
+    #reactor = classification(train.nuc_concs, train.reactor, 
+    #                         test.nuc_concs, test.reactor, 
+    #                         reg['r_l1_k'], reg['r_l2_k'], reg['r_rc_a'])
+    #enrichment = regression(train.nuc_concs, train.enrichment, 
+    #                        test.nuc_concs, test.enrichment, 
+    #                        reg['e_l1_k'], reg['e_l2_k'], reg['e_rr_a'])
+    #burnup = regression(train.nuc_concs, train.burnup, 
+    #                    test.nuc_concs, test.burnup, 
+    #                    reg['b_l1_k'], reg['b_l2_k'], reg['b_rr_a'])
     burnup = regression(train.nuc_concs, train.burnup, 
                         test.nuc_concs, test.burnup, 
-                        reg['b_l1_k'], reg['b_l2_k'], reg['b_rr_a'])
+                        30, 35, 300000)
     
-    return reactor, enrichment, burnup 
+    #return reactor, enrichment, burnup 
+    
+    #burnup = ann_regression(train.nuc_concs, train.burnup, test.nuc_concs, test.burnup)
+
+    return burnup
