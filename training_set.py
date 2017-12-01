@@ -1,10 +1,14 @@
-#! python
+#!/usr/bin/python3
 
 ########################################
 ### Input parameters for ORIGEN sims ###
 ### for training set labels: burnup, ###
 # cooling time, enrichment, rxtr type ##
 ########################################
+
+NUM_CYCLES = 21
+LWR_BURN = 3000
+PHWR_BURN = 500
 
 # order of O_RXTRS matters and all other ordering must follow
 # hence, using tuples for everything
