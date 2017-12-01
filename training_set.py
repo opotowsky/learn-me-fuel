@@ -40,10 +40,18 @@ PHWRBURN = (500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500,
             6000, 6500, 7000, 7500, 8000, 8500, 9000, 9500, 10000, 10500
             )
 
+# for this purpose we want just this in order, not separated tuples
+RXTRLBL = (('pwr',)*len(LWR_ENR)*8 + ('pwr',)*len(VVER_ENR) + 
+           ('pwr',)*len(LWR_ENR)*1 + ('bwr',)*len(LWR_ENR)*9 + 
+           ('phwr',)*len(PHWR_ENR)*3
+           )
+ENRICHLBL = (LWR_ENR*8 + VVER_ENR + LWR_ENR*10 + PHWR_ENR*3)
+BURNLBL = ((LWRBURN,)*len(LWR_ENR)*19 + (PHWRBURN,)*len(PHWR_ENR)*3)
+
 # Dict for labelinig the training set using the simulation inputs
-TRAIN_LABELS = {'ReactorType': RXTR_TYPES,
+TRAIN_LABELS = {'ReactorType': RXTRLBL,
                 'OrigenReactor': O_RXTRS,
-                'Enrichment': ENRICH,
-                'Burnup': ((LWRBURN,)*19 + (PHWRBURN,)*3),
+                'Enrichment': ENRICHLBL,
+                'Burnup': BURNLBL,
                 }
 

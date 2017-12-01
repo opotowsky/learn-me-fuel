@@ -1,24 +1,10 @@
 #! /usr/bin/env python
 
-from __future__ import print_function
-from preds import train_and_predict
 from training_set import *
 import numpy as np
 import pandas as pd
 import glob
 import os
-
-class LearnSet(object):
-    """
-    A set of parameters (i.e., features and labels) for a machine learning 
-    algorithm, each in the format of a pandas dataframe
-    """
-
-    def __init__(self, nuc_concs, reactor, enrichment, burnup):
-        self.nuc_concs = nuc_concs
-        self.reactor = reactor
-        self.enrichment = enrichment
-        self.burnup = burnup
 
 def format_df(filename):
     """
@@ -34,44 +20,19 @@ def format_df(filename):
 
     """
     
-    data = pd.read_csv(filename).T
-    data.columns = data.iloc[0]
-    data.drop(data.index[0], inplace=True)
+    data = pd.read_csv(filename, header=5, index_col=0).T
+    data.drop_duplicates(inplace=True)
+    data.drop('subtotal', axis=1, inplace=True)
     return data
 
-def get_labels(filename, rxtrs):
-    """
-    This takes a filename and a dict with all simulation parameters, and 
-    searches for the entries relevant to the given simulation (file).
-
-    Parameters
-    ----------
-    filename : str of simulation output in a csv file
-    rxtrs : dict of a data set detailing simulation parameters in ORIGEN
-    
-    Returns
-    -------
-    rxtr_info : dict of all the labels for a given simulation data set
-
-    """
-    
-    tail, _ = os.path.splitext(os.path.basename(filename))
-    i = rxtrs['OrigenReactor'].index(tail)
-    rxtr_info = {'ReactorType': rxtrs['ReactorType'][i], 
-                 'Enrichment': rxtrs['Enrichment'][i], 
-                 'Burnup': rxtrs['Burnup'][i], 
-                 'CoolingInts': COOLING_INTERVALS
-                 }
-    return rxtr_info
-
-def label_data(label, data):
+def label_data(labels, data):
     """
     Takes the labels for and a dataframe of the simulation results; 
     adds these labels as additional columns to the dataframe.
 
     Parameters
     ----------
-    label : dict representing the labels for a simulation
+    labels : dict representing the labels for a simulation
     data : dataframe of simulation results
 
     Returns
@@ -81,54 +42,54 @@ def label_data(label, data):
     """
     
     col = len(data.columns)
-    data.insert(loc = col, column = 'ReactorType', value = label['ReactorType'])
-    data.insert(loc = col+1, column = 'Enrichment', value = label['Enrichment'])
-    burnup = burnup_label(label['Burnup'], label['CoolingInts'])
-    data.insert(loc = col+2, column = 'Burnup', value = burnup)
+    burnups, coolings = loop_labels(labels['Burnup'], labels['CoolingInts'])
+    # inserting 4 labels into columns
+    data.insert(loc = col, column = 'ReactorType', value = labels['ReactorType'])
+    data.insert(loc = col+1, column = 'Enrichment', value = labels['Enrichment'])
+    data.insert(loc = col+2, column = 'Burnup', value = burnups)
+    data.insert(loc = col+3, column = 'CoolingTime', value = coolings)
     return data
 
-def burnup_label(burn_steps, cooling_ints):
+def loop_label(burnup, cooling):
     """
-    Takes the burnup steps and cooling intervals for each case within the 
-    simulation and creates a list of the burnup of the irradiated and cooled/ 
-    decayed fuels; returns a list to be added as the burnup label to the main 
-    dataframe.
+    Takes the burnups and cooling time for each case within the simulation and
+    creates a list of the burnup of the irradiated and cooled/ decayed fuels;
+    returns a list to be added as the burnup label to the main dataframe.
 
     Parameters
     ----------
-    burn_steps : list of the steps of burnup from the simulation parameters
-    cooling_ints : list of the cooling intervals from the simulation parameters
+    burnup : list of the steps of burnup from the simulation parameters
+    cooling : list of the cooling intervals from the simulation parameters
 
     Returns
     -------
-    burnup_list : list of burnups to be applied as a label for a given simulation
+    burnup_lbl : list of burnups to be applied as a label for a given simulation
+    cooling_lbl : list of cooling times to be applied as a label for a given simulation
 
     """
     
-    num_cases = len(burn_steps)
-    steps_per_case = len(cooling_ints) + 2
-    burnup_list = [0, ]
-    for case in range(0, num_cases):
+    steps_per_case = len(COOLING_INTERVALS) + 1
+    burnup_lbl = [0, ]
+    cooling_lbl = [0, ]
+    for case in range(0, len(burnup)):
         for step in range(0, steps_per_case):
-            if (case == 0 and step == 0):
-                continue
-            elif (case > 0 and step == 0):
-                burn_step = burn_steps[case-1]
-                burnup_list.append(burn_step)
+            if (step == 0):
+                burnup_lbl.append(burnup[case])
+                cooling_lbl.append(0)
             else:
-                burn_step = burn_steps[case]
-                burnup_list.append(burn_step)
+                burnup_lbl.append(burnup[case])
+                cooling_lbl.append(COOLING_INTERVALS[step-1])
     return burnup_list
 
 def dataframeXY(all_files, rxtr_label):
-    """"
-    Takes the glob of files in a directory as well as the dict of labels and 
-    produces a dataframe that has both the data features (X) and labeled data (Y).
+    """" 
+    Takes list of all files in a directory (and rxtr-labeled subdirectories) 
+    and produces a dataframe that has both the data features (X) and labeled 
+    data (Y).
 
     Parameters
     ----------
     all_files : list of str holding all simulation file names in a directory
-    rxtr_label : dict holding all parameters for all simulations in a directory
 
     Returns
     -------
@@ -139,47 +100,48 @@ def dataframeXY(all_files, rxtr_label):
 
     all_data = []
     for f in all_files:
+        idx = all_files.index(f)
         data = format_df(f)
-        labels = get_labels(f, rxtr_label)
+        labels = {'ReactorType': TRAIN_LABELS['ReactorType'][idx],
+                  #'OrigenReactor': TRAIN_LABELS['OrigenReactor'][idx],
+                  'Enrichment': TRAIN_LABELS['Enrichment'][idx], 
+                  'Burnup': TRAIN_LABELS['Burnup'][idx], 
+                  'CoolingInts': COOLING_INTERVALS
+                  }
         labeled = label_data(labels, data)
         all_data.append(labeled)
     dfXY = pd.concat(all_data)
-    ##FILTERING STUFFS##
-    # Delete sim columns
-    # Need better way to know when the nuclide columns start (6 for now)
-    # Prob will just search for column idx that starts with str(1)?
-    cols = len(dfXY.columns)
-    dfXY = dfXY.iloc[:, 6:cols]
-    # Filter out 0 burnups so MAPE can be calc'd
-    dfXY = dfXY.loc[dfXY.Burnup > 0, :]
+    dfXY.fillna(value=0, inplace=True)
     return dfXY
 
 def splitXY(dfXY):
     """
     Takes a dataframe with all X (features) and Y (labels) information and 
-    produces four different dataframes: nuclide concentrations only (with 
-    input-related columns deleted) + 1 dataframe for each label column.
+    produces five different pandas datatypes: a dataframe with nuclide info 
+    only + a series for each label column.
 
     Parameters
     ----------
-    dfXY : dataframe with nuclide concentraations and 3 labels: reactor type, 
-           enrichment, and burnup
+    dfXY : dataframe with nuclide concentraations and 4 labels: reactor type, 
+           cooling time, enrichment, and burnup
 
     Returns
     -------
     dfX : dataframe with only nuclide concentrations for each instance
-    r_dfY : dataframe with reactor type for each instance
-    e_dfY : dataframe with fuel enrichment for each instance
-    b_dfY : dataframe with fuel burnup for each instance
+    rY : dataframe with reactor type for each instance
+    cY : dataframe with cooling time for each instance
+    eY : dataframe with fuel enrichment for each instance
+    bY : dataframe with fuel burnup for each instance
 
     """
 
-    x = len(dfXY.columns)-3
-    dfX = dfXY.iloc[:, 0:x]
-    r_dfY = dfXY.iloc[:, x]
-    e_dfY = dfXY.iloc[:, x+1]
-    b_dfY = dfXY.iloc[:, x+2]
-    return dfX, r_dfY, e_dfY, b_dfY
+    lbls = ['ReactorType', 'CoolingTime', 'Enrichment', 'Burnup', 'total']
+    dfX = dfXY.drop(lbls, axis=1)
+    r_dfY = dfXY.loc[:, lbls[0]]
+    c_dfY = dfXY.loc[:, lbls[1]]
+    e_dfY = dfXY.loc[:, lbls[2]]
+    b_dfY = dfXY.loc[:, lbls[3]]
+    return dfX, r_dfY, c_dfY, e_dfY, b_dfY
 
 def main():
     """
@@ -190,20 +152,21 @@ def main():
     """
     
     print("Did you check your training and testing data paths?\n")    
-    # Training Datasets
-    trainpath = "../origen-data/14nov2017/"
-    for o_rxtr in O_RXTRS:
-        train_files = glob.glob(os.path.join(trainpath, "*.csv"))
-    trainXY = dataframeXY(train_files, train_label)
-    trainXY.reset_index(inplace=True)
+    train_files = []
+    #datapath = "../origen/origen-data/30nov2017_actinides/"
+    datapath = "../origen-data/30nov2017_actinides/"
+    for i in range(0, len(O_RXTRS)):
+        o_rxtr = O_RXTRS[i]
+        for j in range(0, len(ENRICH[i])):
+            enrich = ENRICH[i][j]
+            rxtrpath = datapath + o_rxtr + "/"
+            csv = o_rxtr + "_enr" + str(enrich) + "_nucs.csv"
+            trainpath = os.path.join(rxtrpath, csv)
+            train_files.append(trainpath)
     
-    # formulate filtered training and testing sets
-    trainX, trainYr, trainYe, trainYb = splitXY(trainXY)
-    trainX = filter_nucs(trainX, nuc_set, top_n)
-    trainX = trainX.astype(float)
-    train_set = LearnSet(nuc_concs = trainX, reactor = trainYr, 
-                         enrichment = trainYe, burnup = trainYb)    
-    # Predict!
+    trainXY = dataframeXY(train_files)
+    trainX, rY, cY, eY, bY = splitXY(trainXY)
+    
     train_and_predict(train_set, test_set)
 
     print("All csv files are saved in this directory!\n")
