@@ -24,8 +24,8 @@ COOLING_INTERVALS = (0.000694, 7, 30, 365.25, 2292)
 # enrichments %U235
 LWR_ENR = (1.5, 3.0, 4.0, 5.0)
 PHWR_ENR = (0.711,)
-VVER_ENR = (2.4, 3.6, 3.82, 4.25, 4.38)
-ENRICH = (LWR_ENR*8 + VVER_ENR + LWR_ENR*10 + PHWR_ENR*3)
+VVER_ENR = (2.4, 3.6)#, 3.82, 4.25, 4.38)
+ENRICH = ((LWR_ENR,)*8 + (VVER_ENR,) + (LWR_ENR,)*10 + (PHWR_ENR,)*3)
 
 # burnups (same for PWR/BWR)
 LWRBURN = (3000, 6000, 9000, 12000, 15000, 18000, 21000, 24000, 27000,    
@@ -36,10 +36,10 @@ PHWRBURN = (500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500,
             6000, 6500, 7000, 7500, 8000, 8500, 9000, 9500, 10000, 10500
             )
 
-# Dict for labeling the training set using the simulation inputs
-TRAIN_LABEL = {'ReactorType': RXTR_TYPES,
-               'OrigenReactor': O_RXTRS,
-               'Enrichment': ENRICH,
-               'Burnup': (LWRBURN*19 + PHWRBURN*3),
-               }
+# Dict for labelinig the training set using the simulation inputs
+TRAIN_LABELS = {'ReactorType': RXTR_TYPES,
+                'OrigenReactor': O_RXTRS,
+                'Enrichment': ENRICH,
+                'Burnup': ((LWRBURN,)*19 + (PHWRBURN,)*3),
+                }
 
