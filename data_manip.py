@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 from training_set import *
+from preds import train_and_predict
 import numpy as np
 import pandas as pd
 import glob
@@ -50,7 +51,7 @@ def label_data(labels, data):
     data.insert(loc = col+3, column = 'CoolingTime', value = coolings)
     return data
 
-def loop_label(burnup, cooling):
+def loop_labels(burnup, cooling):
     """
     Takes the burnups and cooling time for each case within the simulation and
     creates a list of the burnup of the irradiated and cooled/ decayed fuels;
@@ -79,9 +80,9 @@ def loop_label(burnup, cooling):
             else:
                 burnup_lbl.append(burnup[case])
                 cooling_lbl.append(COOLING_INTERVALS[step-1])
-    return burnup_list
+    return burnup_lbl, cooling_lbl
 
-def dataframeXY(all_files, rxtr_label):
+def dataframeXY(all_files):
     """" 
     Takes list of all files in a directory (and rxtr-labeled subdirectories) 
     and produces a dataframe that has both the data features (X) and labeled 
@@ -166,10 +167,7 @@ def main():
     
     trainXY = dataframeXY(train_files)
     trainX, rY, cY, eY, bY = splitXY(trainXY)
-    
-    train_and_predict(train_set, test_set)
-
-    print("All csv files are saved in this directory!\n")
+    train_and_predict(trainX, rY, cY, eY, bY)
 
     return
 
