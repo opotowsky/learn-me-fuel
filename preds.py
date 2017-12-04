@@ -1,188 +1,129 @@
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.linear_model import RidgeClassifier
 from sklearn.neighbors import KNeighborsRegressor
-from sklearn.linear_model import Ridge
 from sklearn.model_selection import cross_val_predict
-from sklearn.neural_network import MLPClassifier
-from sklearn.neural_network import MLPRegressor
-from sklearn.preprocessing import StandardScaler  
+from sklearn.preprocessing import scale
 from sklearn import metrics
-from math import sqrt
 import numpy as np
 import pandas as pd
 
-def random_error(percent_err, df):
+def classification(X, Y, k, cv_fold):
     """
-    Given a dataframe of nuclide vectors, add error to each element in each 
-    nuclide vector that has a random value within the range [1-err, 1+err]
-
-    Parameters
-    ----------
-    percent_err : a float indicating the maximum error that can be added to the nuclide 
-                  vectors
-    df : dataframe of only nuclide concentrations
-
-    Returns
-    -------
-    df_err : dataframe with nuclide concentrations altered by some error
-
-    """
-    x = len(df)
-    y = len(df.columns)
-    err = percent_err / 100.0
-    low = 1 - err
-    high = 1 + err
-    errs = np.random.uniform(low, high, (x, y))
-    df_err = df * errs
+    Training for Classification: predicts a model using two knn algorithms, 
+    returning the training and cross validation accuracies for each. 
     
-    return df_err
-
-def ann_classification(trainX, trainY, testX, expected):
-    """
-    
-    """
-    
-    ann = MLPClassifier(hidden_layer_sizes=(500,), tol=0.01)
-    ann.fit(trainX, trainY)
-    predict = ann.predict(testX)
-    accuracy = metrics.accuracy_score(expected, predict)
-    
-    return accuracy
-
-def ann_regression(trainX, trainY, testX, expected):
-    """
-    
-    """
-    # Scale the data
-    scaler = StandardScaler()  
-    scaler.fit(trainX)  
-    trainX = scaler.transform(trainX)  
-    testX = scaler.transform(testX)
-
-    ann = MLPRegressor(hidden_layer_sizes=(500,), tol=0.01)
-    ann.fit(trainX, trainY)
-    predict = ann.predict(testX)
-    error = mean_absolute_percentage_error(expected, predict)
-    
-    return error
-
-def mean_absolute_percentage_error(true, pred):
-    """
-    """
-
-    mape = np.mean(np.abs((true - pred) / true)) * 100
-
-    return mape
-
-def classification(trainX, trainY, testX, testY, k_l1, k_l2, a_rc):
-    """
-    Training for Classification
     """
     
     # L1 norm is Manhattan Distance
     # L2 norm is Euclidian Distance 
-    # Ridge Regression is Linear + L2 regularization
-    l1 = KNeighborsClassifier(n_neighbors = k_l1, metric='l1', p=1)
-    l2 = KNeighborsClassifier(n_neighbors = k_l2, metric='l2', p=2)
-    rc = RidgeClassifier(alpha = a_rc)
-    l1.fit(trainX, trainY)
-    l2.fit(trainX, trainY)
-    rc.fit(trainX, trainY)
-
-    # Predictions for training, testing, and cross validation 
-    train_predict1 = l1.predict(trainX)
-    train_predict2 = l2.predict(trainX)
-    train_predict3 = rc.predict(trainX)
-    test_predict1 = l1.predict(testX)
-    test_predict2 = l2.predict(testX)
-    test_predict3 = rc.predict(testX)
-    cv_predict1 = cross_val_predict(l1, trainX, trainY, cv = 5)
-    cv_predict2 = cross_val_predict(l2, trainX, trainY, cv = 5)
-    cv_predict3 = cross_val_predict(rc, trainX, trainY, cv = 5)
-    train_acc1 = metrics.accuracy_score(trainY, train_predict1)
-    train_acc2 = metrics.accuracy_score(trainY, train_predict2)
-    train_acc3 = metrics.accuracy_score(trainY, train_predict3)
-    test_acc1 = metrics.accuracy_score(testY, test_predict1)
-    test_acc2 = metrics.accuracy_score(testY, test_predict2)
-    test_acc3 = metrics.accuracy_score(testY, test_predict3)
-    cv_acc1 = metrics.accuracy_score(trainY, cv_predict1)
-    cv_acc2 = metrics.accuracy_score(trainY, cv_predict2)
-    cv_acc3 = metrics.accuracy_score(trainY, cv_predict3)
-    #acc_ann = ann_classification(trainX, trainY, testX, expected)
-    accuracy = (train_acc1, train_acc2, train_acc3, test_acc1, test_acc2, 
-                test_acc3, cv_acc1, cv_acc2, cv_acc3)
-
+    l1 = KNeighborsClassifier(n_neighbors = k, metric='l1', p=1)
+    l2 = KNeighborsClassifier(n_neighbors = k, metric='l2', p=2)
+    l1_pred = cross_val_predict(l1, X, Y, cv=cv_fold)
+    l2_pred = cross_val_predict(l2, X, Y, cv=cv_fold)
+    # for diagnostic curves 
+    l1.fit(X, Y)
+    l2.fit(X, Y)
+    tr1_pred = l1.predict(X)
+    tr2_pred = l2.predict(X)
+    # Accuracies
+    cvl1 = metrics.accuracy_score(Y, l1_pred)
+    cvl2 = metrics.accuracy_score(Y, l2_pred)
+    trl1 = metrics.accuracy_score(Y, tr1_pred)
+    trl2 = metrics.accuracy_score(Y, tr2_pred)
+    # accuracies for csv
+    accuracy = (cvl1, trl1, cvl2, trl2)
     return accuracy
 
-def regression(trainX, trainY, testX, testY, k_l1, k_l2, a_rr):
-    """
-    Training for Regression
+def regression(X, Y, k, cv_fold):
+    """ 
+    Training for Regression: predicts a model using two knn algorithms, 
+    returning the training and cross validation errors for each. 
+
     """
     
     # L1 norm is Manhattan Distance
     # L2 norm is Euclidian Distance 
-    # Ridge Regression is Linear + L2 regularization
-    l1 = KNeighborsRegressor(n_neighbors = k_l1, metric='l1', p=1)
-    l2 = KNeighborsRegressor(n_neighbors = k_l2, metric='l2', p=2)
-    rr = Ridge(alpha = a_rr)
-    l1.fit(trainX, trainY)
-    l2.fit(trainX, trainY)
-    rr.fit(trainX, trainY)
-    
-    # Predictions for training, testing, and cross validation 
-    train_predict1 = l1.predict(trainX)
-    train_predict2 = l2.predict(trainX)
-    train_predict3 = rr.predict(trainX)
-    test_predict1 = l1.predict(testX)
-    test_predict2 = l2.predict(testX)
-    test_predict3 = rr.predict(testX)
-    cv_predict1 = cross_val_predict(l1, trainX, trainY, cv = 5)
-    cv_predict2 = cross_val_predict(l2, trainX, trainY, cv = 5)
-    cv_predict3 = cross_val_predict(rr, trainX, trainY, cv = 5)
-    train_err1 = mean_absolute_percentage_error(trainY, train_predict1)
-    train_err2 = mean_absolute_percentage_error(trainY, train_predict2)
-    train_err3 = mean_absolute_percentage_error(trainY, train_predict3)
-    test_err1 = mean_absolute_percentage_error(testY, test_predict1)
-    test_err2 = mean_absolute_percentage_error(testY, test_predict2)
-    test_err3 = mean_absolute_percentage_error(testY, test_predict3)
-    cv_err1 = mean_absolute_percentage_error(trainY, cv_predict1)
-    cv_err2 = mean_absolute_percentage_error(trainY, cv_predict2)
-    cv_err3 = mean_absolute_percentage_error(trainY, cv_predict3)
-    #err_ann = ann_regression(trainX, trainY, testX, expected)
-    rmse = (train_err1, train_err2, train_err3, test_err1, test_err2, test_err3, 
-            cv_err1, cv_err2, cv_err3)
+    l1 = KNeighborsRegressor(n_neighbors = k, metric='l1', p=1)
+    l2 = KNeighborsRegressor(n_neighbors = k, metric='l2', p=2)
+    l1_pred = cross_val_predict(l1, X, Y, cv=cv_fold)
+    l2_pred = cross_val_predict(l2, X, Y, cv=cv_fold)
+    # for diagnostic curves
+    l1.fit(X, Y)
+    l2.fit(X, Y)
+    tr1_pred = l1.predict(X)
+    tr2_pred = l2.predict(X)
+    # Errors
+    cvl1 = metrics.mean_squared_error(Y, l1_pred)
+    cvl2 = metrics.mean_squared_error(Y, l2_pred)
+    trl1 = metrics.mean_squared_error(Y, tr1_pred)
+    trl2 = metrics.mean_squared_error(Y, tr2_pred)
+    # mean squared error for csv
+    mse = (cvl1, trl1, cvl2, trl2)
+    return mse
 
-    return rmse
-
-def train_and_predict(train, test):
+def train_and_predict(X, rY, cY, eY, bY):
     """
-    Add deets, returns 
+    Given training and testing data, this script runs some ML algorithms
+    (currently, this is k nearest neighbors with 2 distance metrics) 
+    for each prediction category: reactor type, cooling time, enrichment, 
+    and burnup
 
-    Parameters
-    ----------
-    train :
-    test : 
+    Parameters 
+    ---------- 
+    
+    X : dataframe that includes all training data
+    *Y : series with labels for training data
 
     Returns
     -------
-    reactor : tuple of accuracy 
-    enrichment : tuple of RMSE 
-    burnup : tuple of RMSE 
+    reactor.csv : accuracy for l1nn & l2nn
+    cooling.csv : error for l1nn & l2nn
+    enrichment.csv : error for l1nn & l2nn
+    burnup.csv : error for l1nn & l2nn
 
     """
-    # regularization parameters (k and alpha (a) differ for each)
-    reg = {'r_l1_k' : 15, 'r_l2_k' : 20, 'r_rc_a' : 0.1, 
-           'e_l1_k' : 7, 'e_l2_k' : 10, 'e_rr_a' : 100, 
-           'b_l1_k' : 30, 'b_l2_k' : 35, 'b_rr_a' : 100}
 
-    reactor = classification(train.nuc_concs, train.reactor, 
-                             test.nuc_concs, test.reactor, 
-                             reg['r_l1_k'], reg['r_l2_k'], reg['r_rc_a'])
-    enrichment = regression(train.nuc_concs, train.enrichment, 
-                            test.nuc_concs, test.enrichment, 
-                            reg['e_l1_k'], reg['e_l2_k'], reg['e_rr_a'])
-    burnup = regression(train.nuc_concs, train.burnup, 
-                        test.nuc_concs, test.burnup, 
-                        reg['b_l1_k'], reg['b_l2_k'], reg['b_rr_a'])
+    # regularization parameters (k's differ for each type of prediction)
+    #reg = {'r_l1' : 15, 'r_l2' : 20, 
+    #       'c_l1' : 7, 'c_l2' : 10, 
+    #       'e_l1' : 7, 'e_l2' : 10, 
+    #       'b_l1' : 30, 'b_l2' : 35,
+    #       }
+    cv_folds = 10
+    klist = list(range(1, 50))
+    reactor_acc = []
+    cooling_err = []
+    enrichment_err = []
+    burnup_err = []
+    for k in klist:
+        r = classification(X, rY, k, cv_folds)
+        c = regression(X, cY, k, cv_folds)
+        e = regression(X, eY, k, cv_folds)
+        b = regression(X, bY, k, cv_folds)
+        reactor_acc.append(r)
+        cooling_err.append(c)
+        enrichment_err.append(e)
+        burnup_err.append(b)
+
+
+#            r_sum = [sum(x) for x in zip(r, r_sum)]
+#            c_sum = [sum(x) for x in zip(c, c_sum)]
+#            e_sum = [sum(x) for x in zip(e, e_sum)]
+#            b_sum = [sum(x) for x in zip(b, b_sum)]
+#        # Take Average
+#        reactor = [x / n_trials for x in r_sum]
+#        cooling = [x / n_trials for x in c_sum]
+#        enrichment = [x / n_trials for x in e_sum]
+#        burnup = [x / n_trials for x in b_sum]
+#        reactor_acc.append(reactor)
+#        cooling_err.append(cooling)
+#        enrichment_err.append(enrichment)
+#        burnup_err.append(burnup)
     
-    return reactor, enrichment, burnup 
+    # Save results
+    cols = ['CVL1', 'TrainL1', 'CVL2', 'TrainL2']
+    pd.DataFrame(reactor_acc, columns=cols, index=klist).to_csv('reactor.csv')
+    pd.DataFrame(cooling_err, columns=cols, index=klist).to_csv('cooling.csv')
+    pd.DataFrame(enrichment_err, columns=cols, index=klist).to_csv('enrichment.csv')
+    pd.DataFrame(burnup_err, columns=cols, index=klist).to_csv('burnup.csv')
+
+    return 
