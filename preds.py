@@ -2,7 +2,6 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.model_selection import cross_val_predict
 from sklearn.model_selection import learning_curve
-from sklearn.preprocessing import scale
 from sklearn import metrics
 import numpy as np
 import pandas as pd

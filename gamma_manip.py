@@ -21,10 +21,33 @@ def format_df(filename):
     data : pandas dataframe containing csv entries
 
     """
-    
-    data = pd.read_csv(filename, header=5, index_col=0).T
-    data.drop_duplicates(inplace=True)
-    data.drop('subtotal', axis=1, inplace=True)
+    time_idx = []
+    spectrum = []
+    spectra = []
+    gamma_bins = ()
+    with open(filename) as f:
+        gamma = csv.reader(f, delimiter=',')
+        i = 1
+        for row in gamma:
+            if len(row) > 0:
+                if i < 6:
+                    pass
+                elif i == 6:
+                    time_idx.append(row[0])
+                elif row[1]=='days':
+                    spectra.append(spectrum)
+                    time_idx.append(row[0])
+                    spectrum = []
+                else:
+                    if i in range(7, 209):
+                        if (i > 7 and gamma_bins[-1]==row[0]):
+                            row[0] = row[0] + '.1'
+                        gamma_bins = gamma_bins + (row[0],)    
+                    spectrum.append(row[1])
+                i = i + 1
+        spectra.append(spectrum)
+    data = pd.DataFrame(spectra, index=time_idx, columns=gamma_bins)
+    data.drop_duplicates(keep='last', inplace=True)    
     return data
 
 def label_data(labels, data):
@@ -137,7 +160,7 @@ def splitXY(dfXY):
 
     """
 
-    lbls = ['ReactorType', 'CoolingTime', 'Enrichment', 'Burnup', 'total']
+    lbls = ['ReactorType', 'CoolingTime', 'Enrichment', 'Burnup']
     dfX = dfXY.drop(lbls, axis=1)
     r_dfY = dfXY.loc[:, lbls[0]]
     c_dfY = dfXY.loc[:, lbls[1]]
@@ -162,13 +185,13 @@ def main():
         for j in range(0, len(ENRICH[i])):
             enrich = ENRICH[i][j]
             rxtrpath = datapath + o_rxtr + "/"
-            csv = o_rxtr + "_enr" + str(enrich) + "_nucs.csv"
+            csv = o_rxtr + "_enr" + str(enrich) + "_gammas.csv"
             trainpath = os.path.join(rxtrpath, csv)
             train_files.append(trainpath)
     
     trainXY = dataframeXY(train_files)
     trainX, rY, cY, eY, bY = splitXY(trainXY)
-    trainX = scale(trainX)
+    trainX = scale(trainX, with_mean=False)
     train_and_predict(trainX, rY, cY, eY, bY)
 
     return
