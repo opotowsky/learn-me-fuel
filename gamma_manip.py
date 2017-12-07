@@ -6,6 +6,7 @@ from sklearn.preprocessing import scale
 import numpy as np
 import pandas as pd
 import glob
+import csv
 import os
 
 def format_df(filename):
