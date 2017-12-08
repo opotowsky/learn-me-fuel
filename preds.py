@@ -103,7 +103,7 @@ def lc_regression(X, y, k, cv_fold):
     mse = format(m, cvl1, trl1, cvl2, trl2)
     return mse
 
-def train_and_predict(X, rY, cY, eY, bY, train_src):
+def train_and_predict(X, rY, cY, eY, bY, train_src, nucs_tracked):
     """
     Given training and testing data, this script runs some ML algorithms
     (currently, this is k nearest neighbors with 2 distance metrics) 
@@ -125,51 +125,54 @@ def train_and_predict(X, rY, cY, eY, bY, train_src):
 
     """
 
+    cols = ['CVL1', 'TrainL1', 'CVL2', 'TrainL2']
+
     #####################
     ## Learning Curves ##
     #####################
     cv_folds = 5
     k = 3
-    reactor_lc  = lc_classification(X, rY, k, cv_folds)
-    cooling_lc= lc_regression(X, cY, k, cv_folds)
-    enrichment_lc = lc_regression(X, eY, k, cv_folds)
-    burnup_lc = lc_regression(X, bY, k, cv_folds)
+    rxtr_lc  = lc_classification(X, rY, k, cv_folds)
+    cool_lc= lc_regression(X, cY, k, cv_folds)
+    enr_lc = lc_regression(X, eY, k, cv_folds)
+    burn_lc = lc_regression(X, bY, k, cv_folds)
+    r_lc = 'lc_' + 'reactor' + nucs_tracked + train_src + '.csv'
+    c_lc = 'lc_' + 'cooling' + nucs_tracked + train_src + '.csv'
+    e_lc = 'lc_' + 'enrichment' + nucs_tracked + train_src + '.csv'
+    b_lc = 'lc_' + 'burnup' + nucs_tracked + train_src + '.csv'
+    idx_lc = TRAINSET_SIZES
+    pd.DataFrame(rxtr_lc, columns=cols, index=idx_lc).to_csv(r_lc)
+    pd.DataFrame(cool_lc, columns=cols, index=idx_lc).to_csv(c_lc)
+    pd.DataFrame(enr_lc, columns=cols, index=idx_lc).to_csv(e_lc)
+    pd.DataFrame(burn_lc, columns=cols, index=idx_lc).to_csv(b_lc)
     
     #######################
     ## Validation Curves ##
     #######################
     cv_folds = 5
     klist = list(range(1, 100))
-    reactor_vc = []
-    cooling_vc = []
-    enrichment_vc = []
-    burnup_vc = []
+    rxtr_vc = []
+    cool_vc = []
+    enr_vc = []
+    burn_vc = []
     for k in klist:
         r = classification(X, rY, k, cv_folds)
         c = regression(X, cY, k, cv_folds)
         e = regression(X, eY, k, cv_folds)
         b = regression(X, bY, k, cv_folds)
-        reactor_vc.append(r)
-        cooling_vc.append(c)
-        enrichment_vc.append(e)
-        burnup_vc.append(b)
+        rxtr_vc.append(r)
+        cool_vc.append(c)
+        enr_vc.append(e)
+        burn_vc.append(b)
 
-    ##############
-    ## Save CSVs##
-    ##############
-    cols = ['CVL1', 'TrainL1', 'CVL2', 'TrainL2']
-    idx = klist.append(TRAINSET_SIZES)
-    rxtr = reactor_vc.append(reactor_lc)
-    cool = cooling_vc.append(cooling_lc)
-    enr = enrichment_vc.append(enrichment_lc)
-    burn = burnup_vc.append(burnup_lc)
-    rcsv = 'reactor' + train_src + '.csv'
-    ccsv = 'cooling' + train_src + '.csv'
-    ecsv = 'enrichment' + train_src + '.csv'
-    bcsv = 'burnup' + train_src + '.csv'
-    pd.DataFrame(rxtr, columns=cols, index=idx).to_csv(rcsv)
-    pd.DataFrame(cool, columns=cols, index=idx).to_csv(ccsv)
-    pd.DataFrame(enr, columns=cols, index=idx).to_csv(ecsv)
-    pd.DataFrame(burn, columns=cols, index=idx).to_csv(bcsv)
+    idx_vc = klist
+    r_vc = 'vc_' + 'reactor' + nucs_tracked + train_src + '.csv'
+    c_vc = 'vc_' + 'cooling' + nucs_tracked + train_src + '.csv'
+    e_vc = 'vc_' + 'enrichment' + nucs_tracked + train_src + '.csv'
+    b_vc = 'vc_' + 'burnup' + nucs_tracked + train_src + '.csv'
+    pd.DataFrame(rxtr_vc, columns=cols, index=idx_vc).to_csv(r_vc)
+    pd.DataFrame(cool_vc, columns=cols, index=idx_vc).to_csv(c_vc)
+    pd.DataFrame(enr_vc, columns=cols, index=idx_vc).to_csv(e_vc)
+    pd.DataFrame(burn_vc, columns=cols, index=idx_vc).to_csv(b_vc)
     
     return 
