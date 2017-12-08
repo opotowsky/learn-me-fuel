@@ -50,10 +50,9 @@ def format_gdf(filename):
                 i = i + 1
         spectra.append(spectrum)
     data = pd.DataFrame(spectra, index=time_idx, columns=gamma_bins)
-    data.drop_duplicates(keep='last', inplace=True)    
     return data
 
-def format_df(filename):
+def format_ndf(filename):
     """
     This takes a csv file and reads the data in as a dataframe.
 
@@ -68,7 +67,6 @@ def format_df(filename):
     """
     
     data = pd.read_csv(filename, header=5, index_col=0).T
-    data.drop_duplicates(inplace=True)
     data.drop('subtotal', axis=1, inplace=True)
     return data
 
@@ -115,17 +113,23 @@ def loop_labels(burnup, cooling):
 
     """
     
-    steps_per_case = len(COOLING_INTERVALS) + 1
-    burnup_lbl = [0, ]
-    cooling_lbl = [0, ]
+    steps_per_case = len(COOLING_INTERVALS)
+    burnup_lbl = [0,]
+    cooling_lbl = [0,]
     for case in range(0, len(burnup)):
+        if case == 0:
+            pass
+        else:
+            # corresponds to previous material logging step
+            burnup_lbl.append(burnup[case-1])
+            cooling_lbl.append(0)
+        # corresponds to irradiation step
+        burnup_lbl.append(burnup[case])
+        cooling_lbl.append(0)
         for step in range(0, steps_per_case):
-            if (step == 0):
-                burnup_lbl.append(burnup[case])
-                cooling_lbl.append(0)
-            else:
-                burnup_lbl.append(burnup[case])
-                cooling_lbl.append(COOLING_INTERVALS[step-1])
+            # corresponds to 5 cooling times
+            burnup_lbl.append(burnup[case])
+            cooling_lbl.append(COOLING_INTERVALS[step])
     return burnup_lbl, cooling_lbl
 
 def dataframeXY(all_files, info):
@@ -152,7 +156,7 @@ def dataframeXY(all_files, info):
         if info == '_gammas':
             data = format_gdf(f)
         else:
-            data = format_df(f)
+            data = format_ndf(f)
         labels = {'ReactorType': TRAIN_LABELS['ReactorType'][idx],
                   #'OrigenReactor': TRAIN_LABELS['OrigenReactor'][idx],
                   'Enrichment': TRAIN_LABELS['Enrichment'][idx], 
@@ -160,6 +164,7 @@ def dataframeXY(all_files, info):
                   'CoolingInts': COOLING_INTERVALS
                   }
         labeled = label_data(labels, data)
+        labeled.drop_duplicates(keep='last', inplace=True)
         all_data.append(labeled)
     dfXY = pd.concat(all_data)
     dfXY.fillna(value=0, inplace=True)
@@ -205,34 +210,38 @@ def main():
 
     """
     
-    #print("Did you check your training data path?\n", flush=True)
+    # hard coding this for now
+    nucs_tracked = '_fiss' 
+    print("Nuclides being tracked: {}\n".format(nucs_tracked), flush=True)
+
+    print("Did you check your training data path?\n", flush=True)
     info_src = ['_nucs', '_gammas']
-    train_files = []
     #datapath = "../origen/origen-data/30nov2017_actinides/"
-    datapath = "../origen-data/30nov2017_actinides/"
+    datapath = "../origen-data/8dec2017/"
     for src in info_src:
+        train_files = []
         for i in range(0, len(O_RXTRS)):
             o_rxtr = O_RXTRS[i]
             for j in range(0, len(ENRICH[i])):
                 enrich = ENRICH[i][j]
                 rxtrpath = datapath + o_rxtr + "/"
-                csv = o_rxtr + "_enr" + str(enrich) + src + ".csv"
-                trainpath = os.path.join(rxtrpath, csv)
+                csvfile = o_rxtr + "_enr" + str(enrich) + nucs_tracked + src + ".csv"
+                trainpath = os.path.join(rxtrpath, csvfile)
                 train_files.append(trainpath)
         trainXY = dataframeXY(train_files, src)
         
         if info_src.index(src) == 0:
             # nuclide concentrations prediction
-            #print("predictions from nuclide concentrations...\n", flush=True)
+            print("\n...predictions from nuclide concentrations...\n", flush=True)
             trainX, rY, cY, eY, bY = splitXY(trainXY, src)
             trainX = scale(trainX)
-            train_and_predict(trainX, rY, cY, eY, bY, src)
+            train_and_predict(trainX, rY, cY, eY, bY, src, nucs_tracked)
         else:
             # gamma spectra prediction
-            #print("predictions from gamma spectra...\n", flush=True)
+            print("\n ...predictions from gamma spectra...\n", flush=True)
             trainX, rY, cY, eY, bY = splitXY(trainXY, src)
             trainX = scale(trainX, with_mean=False)
-            train_and_predict(trainX, rY, cY, eY, bY, src)
+            train_and_predict(trainX, rY, cY, eY, bY, src, nucs_tracked)
     print("Remember to move results to a dated directory!")
     return
 
