@@ -9,9 +9,11 @@ import glob
 import csv
 import os
 
-def format_df(filename):
+def format_gdf(filename):
     """
     This takes a csv file and reads the data in as a dataframe.
+    There are different requirements for the gamma file bc opus gives
+    stupid output - so can't use pandas functionality
 
     Parameters
     ----------
@@ -49,6 +51,25 @@ def format_df(filename):
         spectra.append(spectrum)
     data = pd.DataFrame(spectra, index=time_idx, columns=gamma_bins)
     data.drop_duplicates(keep='last', inplace=True)    
+    return data
+
+def format_df(filename):
+    """
+    This takes a csv file and reads the data in as a dataframe.
+
+    Parameters
+    ----------
+    filename : str of simulation output in a csv file
+
+    Returns
+    -------
+    data : pandas dataframe containing csv entries
+
+    """
+    
+    data = pd.read_csv(filename, header=5, index_col=0).T
+    data.drop_duplicates(inplace=True)
+    data.drop('subtotal', axis=1, inplace=True)
     return data
 
 def label_data(labels, data):
@@ -107,7 +128,7 @@ def loop_labels(burnup, cooling):
                 cooling_lbl.append(COOLING_INTERVALS[step-1])
     return burnup_lbl, cooling_lbl
 
-def dataframeXY(all_files):
+def dataframeXY(all_files, info):
     """" 
     Takes list of all files in a directory (and rxtr-labeled subdirectories) 
     and produces a dataframe that has both the data features (X) and labeled 
@@ -116,6 +137,7 @@ def dataframeXY(all_files):
     Parameters
     ----------
     all_files : list of str holding all simulation file names in a directory
+    info : string indicating the information source of the training data
 
     Returns
     -------
@@ -127,7 +149,10 @@ def dataframeXY(all_files):
     all_data = []
     for f in all_files:
         idx = all_files.index(f)
-        data = format_df(f)
+        if info == '_gammas':
+            data = format_gdf(f)
+        else:
+            data = format_df(f)
         labels = {'ReactorType': TRAIN_LABELS['ReactorType'][idx],
                   #'OrigenReactor': TRAIN_LABELS['OrigenReactor'][idx],
                   'Enrichment': TRAIN_LABELS['Enrichment'][idx], 
@@ -140,7 +165,7 @@ def dataframeXY(all_files):
     dfXY.fillna(value=0, inplace=True)
     return dfXY
 
-def splitXY(dfXY):
+def splitXY(dfXY, info):
     """
     Takes a dataframe with all X (features) and Y (labels) information and 
     produces five different pandas datatypes: a dataframe with nuclide info 
@@ -161,7 +186,10 @@ def splitXY(dfXY):
 
     """
 
-    lbls = ['ReactorType', 'CoolingTime', 'Enrichment', 'Burnup']
+    if info == '_gammas':
+        lbls = ['ReactorType', 'CoolingTime', 'Enrichment', 'Burnup']
+    else:
+        lbls = ['ReactorType', 'CoolingTime', 'Enrichment', 'Burnup', 'total']
     dfX = dfXY.drop(lbls, axis=1)
     r_dfY = dfXY.loc[:, lbls[0]]
     c_dfY = dfXY.loc[:, lbls[1]]
@@ -177,24 +205,35 @@ def main():
 
     """
     
-    print("Did you check your training and testing data paths?\n")    
+    #print("Did you check your training data path?\n", flush=True)
+    info_src = ['_nucs', '_gammas']
     train_files = []
     #datapath = "../origen/origen-data/30nov2017_actinides/"
     datapath = "../origen-data/30nov2017_actinides/"
-    for i in range(0, len(O_RXTRS)):
-        o_rxtr = O_RXTRS[i]
-        for j in range(0, len(ENRICH[i])):
-            enrich = ENRICH[i][j]
-            rxtrpath = datapath + o_rxtr + "/"
-            csv = o_rxtr + "_enr" + str(enrich) + "_gammas.csv"
-            trainpath = os.path.join(rxtrpath, csv)
-            train_files.append(trainpath)
-    
-    trainXY = dataframeXY(train_files)
-    trainX, rY, cY, eY, bY = splitXY(trainXY)
-    trainX = scale(trainX, with_mean=False)
-    train_and_predict(trainX, rY, cY, eY, bY)
-
+    for src in info_src:
+        for i in range(0, len(O_RXTRS)):
+            o_rxtr = O_RXTRS[i]
+            for j in range(0, len(ENRICH[i])):
+                enrich = ENRICH[i][j]
+                rxtrpath = datapath + o_rxtr + "/"
+                csv = o_rxtr + "_enr" + str(enrich) + src + ".csv"
+                trainpath = os.path.join(rxtrpath, csv)
+                train_files.append(trainpath)
+        trainXY = dataframeXY(train_files, src)
+        
+        if info_src.index(src) == 0:
+            # nuclide concentrations prediction
+            #print("predictions from nuclide concentrations...\n", flush=True)
+            trainX, rY, cY, eY, bY = splitXY(trainXY, src)
+            trainX = scale(trainX)
+            train_and_predict(trainX, rY, cY, eY, bY, src)
+        else:
+            # gamma spectra prediction
+            #print("predictions from gamma spectra...\n", flush=True)
+            trainX, rY, cY, eY, bY = splitXY(trainXY, src)
+            trainX = scale(trainX, with_mean=False)
+            train_and_predict(trainX, rY, cY, eY, bY, src)
+    print("Remember to move results to a dated directory!")
     return
 
 if __name__ == "__main__":
