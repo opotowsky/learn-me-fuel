@@ -18,7 +18,7 @@ plt.rcParams['axes.titlesize'] = 12
 plt.rcParams['xtick.labelsize'] = 12
 plt.rcParams['ytick.labelsize'] = 12
 plt.rcParams['legend.fontsize'] = 12
-plt.rcParams['figure.titlesize'] = 14
+plt.rcParams['figure.titlesize'] = 12
 #plt.rcParams['figure.figsize'] = ()
 
 # Custom Color Blind Palette
@@ -33,8 +33,8 @@ MPURPLE = '#af8dc3'
 LPURPLE = '#e7d4e8'
 
 # Where the data are stored:
-rpath = './results/8dec_knn/fissionprods/'
-preds = 'reactor', 'cooling', 'enrichment', 'burnup')
+rpath = './results/11dec_knn/fissact/'
+preds = ('reactor', 'cooling', 'enrichment', 'burnup')
 src = ('_nucs', '_gammas')
 ###########################################
 ######### These two are hardcoded #########
@@ -47,7 +47,7 @@ colors = (DBROWN, MBROWN, DTEAL, MTEAL)
 labels = ('CVL1', 'TrainL1', 'CVL2', 'TrainL2')
 quality = ('Nuclide Concentrations', 'Gamma spectra')
 titles = ('Reactor Type', 'Cooling Time [days?]', 
-          'Enrichment [%U235]', 'Burnup [?Wd/MTU]'
+          'Enrichment [%U235]', 'Burnup [MWd/MTU]'
           )
 
 # Learning Curve Data
@@ -64,15 +64,19 @@ for s in src:
         # y labels
         if j == 0:
             plt.ylabel('Accuracy Score')
+        elif j == 3:
+            # Make sure burnup is in M not 1e7
+            ldata.iloc[:, 1:] = ldata.iloc[:, 1:].mul(10**(-6))
+            plt.ylabel('Negative Mean-squared Error')
         else:
             plt.ylabel('Negative Mean-squared Error')
-        for column in labels:
+        for c, column in enumerate(labels):
             Y = ldata.loc[:, column]
-            plt.plot(X, Y, label=column, color=colors.index(column))
+            plt.plot(X, Y, label=column, color=colors[c])
         leg=plt.legend(loc='best', fancybox=True)
-        # Customize title location
-        plt_title = 'Learning Curve: ' + titles[j] + ' Predictions from ' + \
-                     tsubset + ' of ' + quality[i]
+        # Very descriptive title for now
+        plt_title = 'Learning Curve:\n' + titles[j] + ' Predictions \n from ' + \
+                     tsubset + '\n of ' + quality[i]
         plt.title(plt_title, fontstyle='italic')
         # Save figure as PNG
         filename = 'lc_' + p + subset + s + '.png'
@@ -81,15 +85,35 @@ for s in src:
 
         
 ## Validation Curve Data
-#for i, s in enumerate(src):
-#    for j, p in enumerate(preds):
-#        fig = plt.figure()  
-#        vcsv = 'vc_' + p + subset + s + '.csv'
-#        vdatapath = os.path.join(rpath, vcsv)
-#        vdata = pd.read_csv(vdatapth)
-#        plt.xlabel('Neighborhood size (k)')
-#        # y labels
-#        if j == 0:
-#            plt.ylabel('Accuracy Score')
-#        else:
-#            ply.ylabel('Negative Mean-squared Error')
+for s in src:
+    i = src.index(s)
+    for p in preds:
+        j = preds.index(p)
+        fig = plt.figure()  
+        vcsv = 'vc_' + p + subset + s + '.csv'
+        vdatapath = os.path.join(rpath, vcsv)
+        vdata = pd.read_csv(vdatapath)
+        X = vdata.iloc[:, 0]
+        plt.xlabel('Neighborhood Size (k)')
+        # y labels
+        if j == 0:
+            plt.ylabel('Accuracy Score')
+        elif j == 3:
+            # Make sure burnup is in M not 1e7
+            vdata.iloc[:, 1:] = vdata.iloc[:, 1:].mul(10**(-6))
+            plt.ylabel('Negative Mean-squared Error')
+        else:
+            plt.ylabel('Negative Mean-squared Error')
+        for c, column in enumerate(labels):
+            Y = vdata.loc[:, column]
+            plt.plot(X, Y, label=column, color=colors[c])
+        plt.gca().invert_xaxis()
+        leg=plt.legend(loc='best', fancybox=True)
+        # Very descriptive title for now
+        plt_title = 'Validation Curve:\n' + titles[j] + ' Predictions \n from ' + \
+                     tsubset + '\n of ' + quality[i]
+        plt.title(plt_title, fontstyle='italic')
+        # Save figure as PNG
+        filename = 'vc_' + p + subset + s + '.png'
+        plt.savefig(filename, bbox_inches="tight")
+        plt.close(fig)
