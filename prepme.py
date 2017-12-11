@@ -90,9 +90,9 @@ def label_data(labels, data):
     burnups, coolings = loop_labels(labels['Burnup'], labels['CoolingInts'])
     # inserting 4 labels into columns
     data.insert(loc = col, column = 'ReactorType', value = labels['ReactorType'])
-    data.insert(loc = col+1, column = 'Enrichment', value = labels['Enrichment'])
-    data.insert(loc = col+2, column = 'Burnup', value = burnups)
-    data.insert(loc = col+3, column = 'CoolingTime', value = coolings)
+    data.insert(loc = col+1, column = 'CoolingTime', value = coolings)
+    data.insert(loc = col+2, column = 'Enrichment', value = labels['Enrichment'])
+    data.insert(loc = col+3, column = 'Burnup', value = burnups)
     return data
 
 def loop_labels(burnup, cooling):
@@ -211,12 +211,12 @@ def main():
     """
     
     # hard coding this for now
-    nucs_tracked = '_fiss' 
+    nucs_tracked = '_fissact' 
     print("Nuclides being tracked: {}\n".format(nucs_tracked), flush=True)
 
     print("Did you check your training data path?\n", flush=True)
     info_src = ['_nucs', '_gammas']
-    #datapath = "../origen/origen-data/30nov2017_actinides/"
+    #datapath = "../origen/origen-data/8dec2017/"
     datapath = "../origen-data/8dec2017/"
     for src in info_src:
         train_files = []
