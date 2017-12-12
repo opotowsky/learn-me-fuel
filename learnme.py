@@ -150,7 +150,7 @@ def train_and_predict(X, rY, cY, eY, bY, train_src, nucs_tracked):
     ## Validation Curves ##
     #######################
     cv_folds = 5
-    klist = list(range(1, 100))
+    klist = list(range(1, 21))
     rxtr_vc = []
     cool_vc = []
     enr_vc = []
