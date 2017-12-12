@@ -33,13 +33,13 @@ MPURPLE = '#af8dc3'
 LPURPLE = '#e7d4e8'
 
 # Where the data are stored:
-rpath = './results/11dec_knn/fissact/'
+rpath = './results/11dec_knn/fiss/'
 preds = ('reactor', 'cooling', 'enrichment', 'burnup')
 src = ('_nucs', '_gammas')
 ###########################################
 ######### These two are hardcoded #########
-subset = '_fissact'
-tsubset = 'Fission Products and Actinides'
+subset = '_fiss'
+tsubset = 'Fission Products'
 ###########################################
 print('You are plotting the {} subset'.format(subset), flush=True)
 # Other useful lists for plotting
