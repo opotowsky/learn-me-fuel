@@ -211,7 +211,7 @@ def main():
     """
     
     # hard coding this for now
-    nucs_tracked = '_fissact' 
+    nucs_tracked = '_fiss' 
     print("Nuclides being tracked: {}\n".format(nucs_tracked), flush=True)
 
     print("Did you check your training data path?\n", flush=True)
