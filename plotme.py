@@ -2,7 +2,8 @@
 
 import matplotlib.pyplot as plt
 import pandas as pd
-import plotly as ply
+#import plotly.plotly as ply
+#import plotly.tools as tls
 import os
 
 plt.style.use('seaborn-white')
@@ -79,8 +80,12 @@ for s in src:
                      tsubset + '\n of ' + quality[i]
         plt.title(plt_title, fontstyle='italic')
         # Save figure as PNG
-        filename = 'lc_' + p + subset + s + '.png'
-        plt.savefig(filename, bbox_inches="tight")
+        fname = 'lc_' + p + subset + s + '.png'
+        # Enable interactivity!
+        #plotly_fig = tls.mpl_to_plotly(fig)
+        #plotly_fig['layout']['showlegend'] = True
+        #plotly_url = ply.plot(plotly_fig, filename=fname)
+        plt.savefig(fname, bbox_inches="tight")
         plt.close(fig)
 
         
@@ -114,6 +119,10 @@ for s in src:
                      tsubset + '\n of ' + quality[i]
         plt.title(plt_title, fontstyle='italic')
         # Save figure as PNG
-        filename = 'vc_' + p + subset + s + '.png'
-        plt.savefig(filename, bbox_inches="tight")
+        fname = 'vc_' + p + subset + s + '.png'
+        # Enable interactivity!
+        #plotly_fig = tls.mpl_to_plotly(fig)
+        #plotly_fig['layout']['showlegend'] = True
+        #plotly_url = ply.plot(plotly_fig, filename=fname)
+        plt.savefig(fname, bbox_inches="tight")
         plt.close(fig)
