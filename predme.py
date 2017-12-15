@@ -4,6 +4,7 @@ import datetime as dt
 from training_set import *
 from learnme import train_and_predict
 from sklearn.preprocessing import scale
+import pickle
 import numpy as np
 import pandas as pd
 import glob
@@ -211,36 +212,41 @@ def main():
 
     """
     
-    # hard coding this for now
-    nucs_tracked = '_fiss' 
-    print("Nuclides being tracked: {}\n".format(nucs_tracked), flush=True)
-    print("Did you check your training data path?\n", flush=True)
-    info_src = ['_nucs', '_gammas']
-    #datapath = "../origen/origen-data/8dec2017/"
-    datapath = "../origen-data/8dec2017/"
     start = dt.datetime.now()
     print("Start Time: {}\n".format(start), flush=True)
-    for src in info_src:
-        train_files = []
-        for i in range(0, len(O_RXTRS)):
-            o_rxtr = O_RXTRS[i]
-            for j in range(0, len(ENRICH[i])):
-                enrich = ENRICH[i][j]
-                rxtrpath = datapath + o_rxtr + "/"
-                csvfile = o_rxtr + "_enr" + str(enrich) + nucs_tracked + src + ".csv"
-                trainpath = os.path.join(rxtrpath, csvfile)
-                train_files.append(trainpath)
-        trainXY = dataframeXY(train_files, src)
-        trainX, rY, cY, eY, bY = splitXY(trainXY, src)
-        print("Training set and labels for {} are formatted\n".format(src), flush=True)
-        print("{} Format Timestamp: {}\n".format(src, dt.datetime.now()), flush=True)
-        if info_src.index(src) == 0:
-            trainX = scale(trainX)
-        else:
-            trainX = scale(trainX, with_mean=False)
-        train_and_predict(trainX, rY, cY, eY, bY, src, nucs_tracked)
-        print("Predictions for {} are complete\n".format(src), flush=True)
-        print("{} Train & Predict Timestamp: {}\n".format(src, dt.datetime.now()), flush=True)
+    print("Did you check your training data path?\n", flush=True)
+    info_src = ['_gammas',]#['_nucs', '_gammas']
+    #datapath = "../origen/origen-data/8dec2017/"
+    datapath = "../origen-data/8dec2017/"
+    subset = ['_fiss',]#['_act', '_fissact']#['_fiss', '_act', '_fissact']
+    for nucs_tracked in subset:
+        print("Nuclides being tracked: {}\n".format(nucs_tracked), flush=True)
+        for src in info_src:
+        #    train_files = []
+        #    for i in range(0, len(O_RXTRS)):
+        #        o_rxtr = O_RXTRS[i]
+        #        for j in range(0, len(ENRICH[i])):
+        #            enrich = ENRICH[i][j]
+        #            rxtrpath = datapath + o_rxtr + "/"
+        #            csvfile = o_rxtr + "_enr" + str(enrich) + nucs_tracked + src + ".csv"
+        #            trainpath = os.path.join(rxtrpath, csvfile)
+        #            train_files.append(trainpath)
+        #    trainXY = dataframeXY(train_files, src)
+        #    pkl_name = 'trainset' + src + nucs_tracked + '_8dec.pkl'
+        #    pickle.dump(trainXY, open(pkl_name, 'wb'))
+        ##############################################################
+        ##############################################################
+        ##############################################################
+            pkl_name = 'trainset' + src + nucs_tracked + '_8dec.pkl'
+            trainXY = pd.read_pickle(pkl_name, compression=None)
+            trainX, rY, cY, eY, bY = splitXY(trainXY, src)
+            if info_src.index(src) == 0:
+                trainX = scale(trainX)
+            else:
+                trainX = scale(trainX, with_mean=False)
+            train_and_predict(trainX, rY, cY, eY, bY, src, nucs_tracked)
+            print("Predictions for {} are complete\n".format(src), flush=True)
+            print("{} Train & Predict Timestamp: {}\n".format(src, dt.datetime.now()), flush=True)
     print("Remember to move results to a dated directory!\n")
     total_time = dt.datetime.now() - start
     print("Time to run script: {}\n".format(total_time), flush=True)
