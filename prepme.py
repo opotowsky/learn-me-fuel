@@ -1,9 +1,6 @@
 #! /usr/bin/env python
 
-import datetime as dt
 from training_set import *
-from learnme import train_and_predict
-from sklearn.preprocessing import scale
 import pickle
 import numpy as np
 import pandas as pd
@@ -172,84 +169,34 @@ def dataframeXY(all_files, info):
     dfXY.fillna(value=0, inplace=True)
     return dfXY
 
-def splitXY(dfXY, info):
-    """
-    Takes a dataframe with all X (features) and Y (labels) information and 
-    produces five different pandas datatypes: a dataframe with nuclide info 
-    only + a series for each label column.
-
-    Parameters
-    ----------
-    dfXY : dataframe with nuclide concentraations and 4 labels: reactor type, 
-           cooling time, enrichment, and burnup
-
-    Returns
-    -------
-    dfX : dataframe with only nuclide concentrations for each instance
-    rY : dataframe with reactor type for each instance
-    cY : dataframe with cooling time for each instance
-    eY : dataframe with fuel enrichment for each instance
-    bY : dataframe with fuel burnup for each instance
-
-    """
-
-    if info == '_gammas':
-        lbls = ['ReactorType', 'CoolingTime', 'Enrichment', 'Burnup']
-    else:
-        lbls = ['ReactorType', 'CoolingTime', 'Enrichment', 'Burnup', 'total']
-    dfX = dfXY.drop(lbls, axis=1)
-    r_dfY = dfXY.loc[:, lbls[0]]
-    c_dfY = dfXY.loc[:, lbls[1]]
-    e_dfY = dfXY.loc[:, lbls[2]]
-    b_dfY = dfXY.loc[:, lbls[3]]
-    return dfX, r_dfY, c_dfY, e_dfY, b_dfY
 
 def main():
     """
-    Takes all origen files and compiles them into the appropriate dataframe for 
-    the training set. Then splits the dataframe into the appropriate X and Ys 
-    for prediction of reactor type, cooling time, fuel enrichment, and burnup. 
+    Takes all origen files in the hard-coded datapath and compiles them into 
+    the appropriate dataframe for the training set. Saves the training set as
+    a pickle file.
 
     """
     
-    start = dt.datetime.now()
-    print("Start Time: {}\n".format(start), flush=True)
     print("Did you check your training data path?\n", flush=True)
-    info_src = ['_gammas',]#['_nucs', '_gammas']
+    info_src = ['_nucs', '_gammas']
     #datapath = "../origen/origen-data/8dec2017/"
     datapath = "../origen-data/8dec2017/"
-    subset = ['_fiss',]#['_act', '_fissact']#['_fiss', '_act', '_fissact']
+    subset = ['_fiss', '_act', '_fissact']
     for nucs_tracked in subset:
-        print("Nuclides being tracked: {}\n".format(nucs_tracked), flush=True)
         for src in info_src:
-        #    train_files = []
-        #    for i in range(0, len(O_RXTRS)):
-        #        o_rxtr = O_RXTRS[i]
-        #        for j in range(0, len(ENRICH[i])):
-        #            enrich = ENRICH[i][j]
-        #            rxtrpath = datapath + o_rxtr + "/"
-        #            csvfile = o_rxtr + "_enr" + str(enrich) + nucs_tracked + src + ".csv"
-        #            trainpath = os.path.join(rxtrpath, csvfile)
-        #            train_files.append(trainpath)
-        #    trainXY = dataframeXY(train_files, src)
-        #    pkl_name = 'trainset' + src + nucs_tracked + '_8dec.pkl'
-        #    pickle.dump(trainXY, open(pkl_name, 'wb'))
-        ##############################################################
-        ##############################################################
-        ##############################################################
+            train_files = []
+            for i in range(0, len(O_RXTRS)):
+                o_rxtr = O_RXTRS[i]
+                for j in range(0, len(ENRICH[i])):
+                    enrich = ENRICH[i][j]
+                    rxtrpath = datapath + o_rxtr + "/"
+                    csvfile = o_rxtr + "_enr" + str(enrich) + nucs_tracked + src + ".csv"
+                    trainpath = os.path.join(rxtrpath, csvfile)
+                    train_files.append(trainpath)
+            trainXY = dataframeXY(train_files, src)
             pkl_name = 'trainset' + src + nucs_tracked + '_8dec.pkl'
-            trainXY = pd.read_pickle(pkl_name, compression=None)
-            trainX, rY, cY, eY, bY = splitXY(trainXY, src)
-            if info_src.index(src) == 0:
-                trainX = scale(trainX)
-            else:
-                trainX = scale(trainX, with_mean=False)
-            train_and_predict(trainX, rY, cY, eY, bY, src, nucs_tracked)
-            print("Predictions for {} are complete\n".format(src), flush=True)
-            print("{} Train & Predict Timestamp: {}\n".format(src, dt.datetime.now()), flush=True)
-    print("Remember to move results to a dated directory!\n")
-    total_time = dt.datetime.now() - start
-    print("Time to run script: {}\n".format(total_time), flush=True)
+            pickle.dump(trainXY, open(pkl_name, 'wb'))
     return
 
 if __name__ == "__main__":
