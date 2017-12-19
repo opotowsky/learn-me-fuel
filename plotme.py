@@ -34,13 +34,19 @@ MPURPLE = '#af8dc3'
 LPURPLE = '#e7d4e8'
 
 # Where the data are stored:
-rpath = './results/11dec_knn/fiss/'
+#rpath = './results/12dec_ridge/fiss/'
+#rpath = './results/12dec_ridge/act/'
+rpath = './results/12dec_ridge/fissact/'
 preds = ('reactor', 'cooling', 'enrichment', 'burnup')
-src = ('_nucs', '_gammas')
+src = ('_gammas',)#('_nucs', '_gammas')
 ###########################################
 ######### These two are hardcoded #########
-subset = '_fiss'
-tsubset = 'Fission Products'
+#subset = '_fiss'
+#tsubset = 'Fission Products'
+#subset = '_act'
+#tsubset = 'Actinides'
+subset = '_fissact'
+tsubset = 'Fission Products and Actinides'
 ###########################################
 print('You are plotting the {} subset'.format(subset), flush=True)
 # Other useful lists for plotting
@@ -51,42 +57,51 @@ titles = ('Reactor Type', 'Cooling Time [days?]',
           'Enrichment [%U235]', 'Burnup [MWd/MTU]'
           )
 
-# Learning Curve Data
-for s in src:
-    i = src.index(s)
-    for p in preds:
-        j = preds.index(p)
-        fig = plt.figure()  
-        lcsv = 'lc_' + p + subset + s + '.csv'
-        ldatapath = os.path.join(rpath, lcsv)
-        ldata = pd.read_csv(ldatapath)
-        X = ldata.iloc[:, 0]
-        plt.xlabel('Training set size (m)')
-        # y labels
-        if j == 0:
-            plt.ylabel('Accuracy Score')
-        elif j == 3:
-            # Make sure burnup is in M not 1e7
-            ldata.iloc[:, 1:] = ldata.iloc[:, 1:].mul(10**(-6))
-            plt.ylabel('Negative Mean-squared Error')
-        else:
-            plt.ylabel('Negative Mean-squared Error')
-        for c, column in enumerate(labels):
-            Y = ldata.loc[:, column]
-            plt.plot(X, Y, label=column, color=colors[c])
-        leg=plt.legend(loc='best', fancybox=True)
-        # Very descriptive title for now
-        plt_title = 'Learning Curve:\n' + titles[j] + ' Predictions \n from ' + \
-                     tsubset + '\n of ' + quality[i]
-        plt.title(plt_title, fontstyle='italic')
-        # Save figure as PNG
-        fname = 'lc_' + p + subset + s + '.png'
-        # Enable interactivity!
-        #plotly_fig = tls.mpl_to_plotly(fig)
-        #plotly_fig['layout']['showlegend'] = True
-        #plotly_url = ply.plot(plotly_fig, filename=fname)
-        plt.savefig(fname, bbox_inches="tight")
-        plt.close(fig)
+## Learning Curve Data
+#for s in src:
+#    i = src.index(s)
+#    for p in preds:
+#        j = preds.index(p)
+#        fig = plt.figure()  
+#        lcsv = 'lc_' + p + subset + s + '.csv'
+#        ldatapath = os.path.join(rpath, lcsv)
+#        ldata = pd.read_csv(ldatapath)
+#        X = ldata.iloc[:, 0]
+#        plt.xlabel('Training set size (m)')
+#        # y labels
+#        if j == 0:
+#            plt.ylabel('Accuracy Score')
+#        elif j == 3:
+#            # Make sure burnup is in M not 1e7
+#            ldata.iloc[:, 1:] = ldata.iloc[:, 1:].mul(10**(-6))
+#            plt.ylabel('Negative Mean-squared Error')
+#        else:
+#            plt.ylabel('Negative Mean-squared Error')
+#        for c, column in enumerate(labels):
+#            Y = ldata.loc[:, column]
+#            plt.plot(X, Y, label=column, color=colors[c])
+#        # Customize y axes so they are comparable
+#        if p == 'reactor':
+#            plt.ylim(0,1)
+#        elif p == 'burnup':
+#            plt.ylim(-225, 0)
+#        elif p == 'cooling':
+#            plt.ylim(-700000, 0)
+#        elif p == 'enrichment':
+#            plt.ylim(-2, 0)
+#        leg=plt.legend(loc='best', fancybox=True)
+#        # Very descriptive title for now
+#        plt_title = 'Learning Curve:\n' + titles[j] + ' Predictions \n from ' + \
+#                     tsubset + '\n of ' + quality[i]
+#        plt.title(plt_title, fontstyle='italic')
+#        # Save figure as PNG
+#        fname = 'lc_' + p + subset + s + '.png'
+#        # Enable interactivity!
+#        #plotly_fig = tls.mpl_to_plotly(fig)
+#        #plotly_fig['layout']['showlegend'] = True
+#        #plotly_url = ply.plot(plotly_fig, filename=fname)
+#        plt.savefig(fname, bbox_inches="tight")
+#        plt.close(fig)
 
         
 ## Validation Curve Data
@@ -99,7 +114,7 @@ for s in src:
         vdatapath = os.path.join(rpath, vcsv)
         vdata = pd.read_csv(vdatapath)
         X = vdata.iloc[:, 0]
-        plt.xlabel('Neighborhood Size (k)')
+        plt.xlabel(r'Regularization parameter ($\mathbf{\alpha}$)')
         # y labels
         if j == 0:
             plt.ylabel('Accuracy Score')
@@ -112,6 +127,16 @@ for s in src:
         for c, column in enumerate(labels):
             Y = vdata.loc[:, column]
             plt.plot(X, Y, label=column, color=colors[c])
+        # Customize y axes so they are comparable
+        if p == 'reactor':
+            plt.ylim(0,1)
+        elif p == 'burnup':
+            plt.ylim(-225, 0)
+        elif p == 'cooling':
+            plt.ylim(-700000, 0)
+        elif p == 'enrichment':
+            plt.ylim(-2, 0)
+        plt.xscale('log')
         plt.gca().invert_xaxis()
         leg=plt.legend(loc='best', fancybox=True)
         # Very descriptive title for now
