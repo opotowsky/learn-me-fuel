@@ -2,21 +2,9 @@
 
 from __future__ import print_function
 from __future__ import division
-from preds import train_and_predict
-from preds import mean_absolute_percentage_error
-from sklearn.model_selection import learning_curve
-from sklearn.model_selection import validation_curve
-from sklearn.model_selection import cross_val_predict
-from sklearn.metrics import mean_squared_error
-from sklearn.svm import SVR
-from sklearn.model_selection import StratifiedShuffleSplit
-from sklearn.model_selection import GridSearchCV
-from sklearn.neighbors import KNeighborsRegressor
-from sklearn.linear_model import Ridge
-from sklearn.linear_model import RidgeCV
-from sklearn.linear_model import Lasso
-from sklearn.neural_network import MLPRegressor
-from sklearn.preprocessing import StandardScaler  
+from auto_preds import train_and_predict
+from manual_preds import train_and_predict
+from sklearn.preprocessing import scale
 import math
 import numpy as np
 import pandas as pd
@@ -29,10 +17,10 @@ class LearnSet(object):
     algorithm, each in the format of a pandas dataframe
     """
 
-    def __init__(self, nuc_concs, reactor, enrichment, burnup):
+    def __init__(self, nuc_concs, burnup):#reactor, enrichment, burnup):
         self.nuc_concs = nuc_concs
-        self.reactor = reactor
-        self.enrichment = enrichment
+        #self.reactor = reactor
+        #self.enrichment = enrichment
         self.burnup = burnup
 
 
@@ -331,6 +319,9 @@ def main():
     # moved this out of the loop to test scikit learn's learning curves
     trainX, trainYr, trainYe, trainYb = splitXY(trainXY)
     trainX = filter_nucs(trainX, nuc_set, top_n)
+    trainX = scale(trainX)
+    trainX, trainYr, trainYe, trainYb = splitXY(testXY)
+    train_set = LearnSet(nuc_concs = trainX, burnup = trainYb)
     
     # Testing Dataset (for now)
     testpath = "../origen/origen-data/testing/10may2017_2/csv/"
@@ -339,216 +330,11 @@ def main():
     testXY.reset_index(inplace = True)
     testX, testYr, testYe, testYb = splitXY(testXY)
     testX = filter_nucs(testX, nuc_set, top_n)
-    test_set = LearnSet(nuc_concs = testX, reactor = testYr, 
-                        enrichment = testYe, burnup = testYb)
+    testX = scale(testX)
+    test_set = LearnSet(nuc_concs = testX, burnup = testYb)
     
-
-    #################################
-    ########## SVR Stuff ############
-    #################################
-    # Step 1, find ideal params
-    #C_range = [10000, 50000, 100000] #np.logspace(1, 4, 4)
-    #gamma_range = [0.01, 0.001, 0.0001] #np.logspace(-6, -3, 4)
-    #param_grid = dict(gamma=gamma_range, C=C_range)
-    ##cv = StratifiedShuffleSplit(n_splits=5, test_size=0.2, random_state=42)
-    #grid = GridSearchCV(SVR(), param_grid=param_grid)
-    #grid.fit(trainX, trainYb)
-    #print("The best parameters are %s with a score of %0.2f" 
-    #      % (grid.best_params_, grid.best_score_))
-    # Step 2, stock learning/valid curves
-    #C = 100.0
-    #gamma = 0.001
-    #partial = np.linspace(0.15, 1.0, 20)
-    #gammas = np.linspace(0.0005, 0.09, 20)
-    #svr_train_sizes, svr_train_scores, svr_valid_scores = learning_curve(svr, trainX, trainYb, cv=5, train_sizes=partial)
-    #svr_train_scores, svr_valid_scores = validation_curve(svr, trainX, trainYb, "gamma", gammas, cv=5)
-    #svr_train_mean = np.mean(svr_train_scores, axis=1)
-    #svr_valid_mean = np.mean(svr_valid_scores, axis=1)
-    #pd.DataFrame({'TrainSize': svr_train_sizes, 'TrainScore': svr_train_mean, 'ValidScore': svr_valid_mean}).to_csv('svrlearn.csv')
-    #pd.DataFrame({'Gammas': gammas, 'TrainScore': svr_train_mean, 'ValidScore': svr_valid_mean}).to_csv('svrvalid.csv')
-    # 
-    # Step 3, manual gammas validation
-   # train = []
-   # test = []
-   # cv = []
-   # for g in gammas:
-   #     svr = SVR(C=C, gamma=g)
-   #     svr.fit(trainX, trainYb)
-   #     train_pred = svr.predict(trainX)
-   #     test_pred = svr.predict(testX)
-   #     cv_pred = cross_val_predict(svr, trainX, trainYb, cv = 5)
-   #     train_err = mean_absolute_percentage_error(trainYb, train_pred)
-   #     test_err = mean_absolute_percentage_error(testYb, test_pred)
-   #     cv_err = mean_absolute_percentage_error(trainYb, cv_pred)
-   #     train.append(train_err)
-   #     test.append(test_err)
-   #     cv.append(cv_err)
-
-   # pd.DataFrame({'Gammas': gammas, 'TrainErr': train, 'TestErr': test, 'CVErr': cv}).to_csv('svrgammas.csv')
-
-    svr = SVR()
-    svr.fit(trainX, trainYb)
-    train_pred = svr.predict(trainX)
-    test_pred = svr.predict(testX)
-    cv_pred = cross_val_predict(svr, trainX, trainYb, cv = 5)
-    train_err = mean_absolute_percentage_error(trainYb, train_pred)
-    test_err = mean_absolute_percentage_error(testYb, test_pred)
-    cv_err = mean_absolute_percentage_error(trainYb, cv_pred)
-    train_mse = mean_squared_error(trainYb, train_pred)
-    test_mse = mean_squared_error(testYb, test_pred)
-    cv_mse = mean_squared_error(trainYb, cv_pred)
-    svr_err = (train_err, test_err, cv_err)
-    svr_rmse = map(lambda x: math.sqrt(x), (train_mse, test_mse, cv_mse))
-  
-    rr = Ridge()
-    rr.fit(trainX, trainYb)
-    train_pred = rr.predict(trainX)
-    test_pred = rr.predict(testX)
-    cv_pred = cross_val_predict(rr, trainX, trainYb, cv = 5)
-    train_err = mean_absolute_percentage_error(trainYb, train_pred)
-    test_err = mean_absolute_percentage_error(testYb, test_pred)
-    cv_err = mean_absolute_percentage_error(trainYb, cv_pred)
-    train_mse = mean_squared_error(trainYb, train_pred)
-    test_mse = mean_squared_error(testYb, test_pred)
-    cv_mse = mean_squared_error(trainYb, cv_pred)
-    rr_err = (train_err, test_err, cv_err)
-    rr_rmse = map(lambda x: math.sqrt(x), (train_mse, test_mse, cv_mse))
-
-    nn = KNeighborsRegressor(n_neighbors=1)
-    nn.fit(trainX, trainYb)
-    train_pred = nn.predict(trainX)
-    test_pred = nn.predict(testX)
-    cv_pred = cross_val_predict(nn, trainX, trainYb, cv = 5)
-    train_err = mean_absolute_percentage_error(trainYb, train_pred)
-    test_err = mean_absolute_percentage_error(testYb, test_pred)
-    cv_err = mean_absolute_percentage_error(trainYb, cv_pred)
-    train_mse = mean_squared_error(trainYb, train_pred)
-    test_mse = mean_squared_error(testYb, test_pred)
-    cv_mse = mean_squared_error(trainYb, cv_pred)
-    nn_err = (train_err, test_err, cv_err)
-    nn_rmse = map(lambda x: math.sqrt(x), (train_mse, test_mse, cv_mse))
-
-    print('format is train, test, cv \n')
-    print('SVR MAPEs are as follows \n')
-    print(svr_err)
-    print('\n')
-    print('RR MAPEs are as follows \n')
-    print(rr_err)
-    print('\n')
-    print('NN MAPEs are as follows \n')
-    print(nn_err)
-    print('\n')
-    print('SVR RMSEs are as follows \n')
-    print(svr_rmse)
-    print('\n')
-    print('RR RMSEs are as follows \n')
-    print(rr_rmse)
-    print('\n')
-    print('NN RMSEs are as follows \n')
-    print(nn_rmse)
-    print('\n')
-
-    ################################
-    ####### Ridge and Lasso ########
-    ################################
-    #rr = Ridge(alpha=300000)
-    #lr = Lasso(alpha=3000)
-    #partial = np.linspace(0.15, 1.0, 20)
-    #alpha_list = np.logspace(-10, 4, 15)
-    #rrcv = RidgeCV(alphas=alpha_list)
-    #rrcv.fit(trainX, trainYb)
-    #please_work = rrcv.alpha_
-    #print('Alpha:')
-    #print(please_work)
-    #rr_train_sizes, rr_train_scores, rr_valid_scores = learning_curve(rr, trainX, trainYb, cv=5, train_sizes=partial)
-    #lr_train_sizes, lr_train_scores, lr_valid_scores = learning_curve(lr, trainX, trainYb, cv=5, train_sizes=partial)
-    #rr_train_scores, rr_valid_scores = validation_curve(Ridge(), trainX, trainYb, "alpha", alphas, cv=5)
-    #lr_train_scores, lr_valid_scores = validation_curve(Lasso(), trainX, trainYb, "alpha", alphas, cv=5)
-    #rr_train_mean = np.mean(rr_train_scores, axis=1)
-    #rr_valid_mean = np.mean(rr_valid_scores, axis=1)
-    #lr_train_mean = np.mean(lr_train_scores, axis=1)
-    #lr_valid_mean = np.mean(lr_valid_scores, axis=1)
-    #pd.DataFrame({'TrainSize': rr_train_sizes, 'TrainScore': rr_train_mean, 'ValidScore': rr_valid_mean}).to_csv('ridgelearn.csv')
-    #pd.DataFrame({'TrainSize': lr_train_sizes, 'TrainScore': lr_train_mean, 'ValidScore': lr_valid_mean}).to_csv('lassolearn.csv')
-    #pd.DataFrame({'Alpha': alphas, 'TrainScore': rr_train_mean, 'ValidScore': rr_valid_mean}).to_csv('ridgevalid.csv')
-    #pd.DataFrame({'Alpha': alphas, 'TrainScore': lr_train_mean, 'ValidScore': lr_valid_mean}).to_csv('lassovalid.csv')
-    
-    
-    #################################
-    ########## ANN Stuff ############
-    #################################
-    #alphas = np.linspace(0.00005, 1, 10)
-    #scaler = StandardScaler()  
-    #scaler.fit(trainX)  
-    #trainX = scaler.transform(trainX)  
-    #testX = scaler.transform(testX)
-    #ann = MLPRegressor()
-    #ann.fit(trainX, trainYb)
-    #test_predictYb = ann.predict(testX)
-    #cv_predictYb = cross_val_predict(ann, trainX, trainYb, cv = 5)
-    #test_score = 1.0 - mean_absolute_percentage_error(testYb, test_predictYb)
-    #print('test_score:')
-    #print(test_score)
-    #train_error = mean_absolute_percentage_error(trainYb, cv_predictYb)
-
-    #ann_train_sizes, ann_train_scores, ann_valid_scores = learning_curve(ann, trainX, trainYb, cv=5, train_sizes=partial)
-    #ann_train_mean = np.mean(ann_train_scores, axis=1)
-    #ann_valid_mean = np.mean(ann_valid_scores, axis=1)
-    #ann_train_scores, ann_valid_scores = validation_curve(ann, trainX, trainYb, "alpha", alphas, cv=5)
-    #ann_train_mean = np.mean(ann_train_scores, axis=1)
-    #ann_valid_mean = np.mean(ann_valid_scores, axis=1)
-    
-    #pd.DataFrame({'TrainSize': ann_train_sizes, 'TrainScore': ann_train_mean, 'ValidScore': ann_valid_mean}).to_csv('annlearn.csv')
-    #pd.DataFrame({'Alpha': alphas, 'TrainScore': ann_train_mean, 'ValidScore': ann_valid_mean}).to_csv('annvalid.csv')
-
-
-    ###################################
-    ########## Manual Stuff ###########
-    ###################################
-    ## Cut training set to create a learning curve
-    #n_trials = 1 
-    #percent_set = np.linspace(0.15, 1.0, 20)
-    ##reactor_acc = []
-    ##enrichment_err = []
-    #burnup_err = []
-    #idx = []
-    #for per in percent_set:
-    #    # weak point in code
-    #    #r_sum = (0, 0, 0, 0, 0, 0, 0, 0, 0)
-    #    #e_sum = (0, 0, 0, 0, 0, 0, 0, 0, 0)
-    #    #b_sum = (0, 0, 0, 0, 0, 0, 0, 0, 0)
-    #    b_sum = (0, 0, 0)
-    #    for i in range(0, n_trials):
-    #        # could use frac in df.sample too, but think I want to see absolute 
-    #        # training set size instead in the future
-    #        n_sample = int(per * len(trainXY))
-    #        subXY = trainXY.sample(n = n_sample)
-    #        trainX, trainYr, trainYe, trainYb = splitXY(subXY)
-    #        trainX = filter_nucs(trainX, nuc_set, top_n)
-    #        subset = LearnSet(nuc_concs = trainX, reactor = trainYr, 
-    #                          enrichment = trainYe, burnup = trainYb)
-    #        #r, e, b = train_and_predict(subset, test_set)
-    #        b = train_and_predict(subset, test_set)
-    #        #r_sum = [sum(x) for x in zip(r, r_sum)]
-    #        #e_sum = [sum(x) for x in zip(e, e_sum)]
-    #        b_sum = [sum(x) for x in zip(b, b_sum)]
-    #    #reactor = [x / n_trials for x in r_sum]
-    #    #enrichment = [x / n_trials for x in e_sum]
-    #    burnup = [x / n_trials for x in b_sum]
-    #    #reactor_acc.append(reactor)
-    #    #enrichment_err.append(enrichment)
-    #    burnup_err.append(burnup)
-    #    idx.append(n_sample)
-    
-    
-    # Save results
-    #cols = ['TrainL1', 'TrainL2', 'TrainRR', 'TestL1', 'TestL2', 'TestRR', 'CVL1', 'CVL2', 'CVRR']
-    #pd.DataFrame(reactor_acc, columns = cols, index = idx).to_csv('reactor.csv')
-    #pd.DataFrame(enrichment_err, columns = cols, index = idx).to_csv('enrichment.csv')
-    #cols = ['ANNTrainErr', 'ANNTestErr']
-    #cols = ['TrainErr', 'TestErr', 'CVErr']
-    #pd.DataFrame(burnup_err, columns = cols, index = idx).to_csv('svrburnup.csv')
-    
+    manual_train_and_predict(train_set, test_set) 
+    auto_train_and_predict(train_set, test_set) 
     
     print("All csv files are saved in this directory!\n")
 

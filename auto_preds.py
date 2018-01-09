@@ -1,13 +1,15 @@
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.linear_model import RidgeClassifier
 from sklearn.neighbors import KNeighborsRegressor
+from sklearn.linear_model import RidgeClassifier
 from sklearn.linear_model import Ridge
+from sklearn.svm import SVC
 from sklearn.svm import SVR
 from sklearn.model_selection import cross_val_predict
-from sklearn.neural_network import MLPClassifier
-from sklearn.neural_network import MLPRegressor
-from sklearn.preprocessing import StandardScaler  
+from sklearn.model_selection import validation_curve
+from sklearn.model_selection import learning_curve
 from sklearn import metrics
+from sklearn.model_selection import StratifiedShuffleSplit
+from sklearn.model_selection import GridSearchCV
 from math import sqrt
 import numpy as np
 import pandas as pd
@@ -37,37 +39,6 @@ def random_error(percent_err, df):
     df_err = df * errs
     
     return df_err
-
-def ann_classification(trainX, trainY, testX, expected):
-    """ 
-    Old code, keeping for future reference    
-    """
-    
-    ann = MLPClassifier(hidden_layer_sizes=(500,), tol=0.01)
-    ann.fit(trainX, trainY)
-    predict = ann.predict(testX)
-    accuracy = metrics.accuracy_score(expected, predict)
-    
-    return accuracy
-
-def ann_regression(trainX, trainY, testX, testY):
-    """
-    Old code, keeping for future reference    
-    """
-    # Scale the data
-    scaler = StandardScaler()  
-    scaler.fit(trainX)  
-    trainX = scaler.transform(trainX)  
-    testX = scaler.transform(testX)
-
-    ann = MLPRegressor()
-    ann.fit(trainX, trainY)
-    train_predict = ann.predict(trainX)
-    test_predict = ann.predict(testX)
-    train_error = mean_absolute_percentage_error(trainY, train_predict)
-    test_error = mean_absolute_percentage_error(testY, test_predict)
-    error = (train_error, test_error)
-    return error
 
 def mean_absolute_percentage_error(true, pred):
     """
@@ -219,8 +190,4 @@ def train_and_predict(train, test):
                         test.nuc_concs, test.burnup, 
                         30, 35, 300000)
     
-    #return reactor, enrichment, burnup 
-    
-    #burnup = ann_regression(train.nuc_concs, train.burnup, test.nuc_concs, test.burnup)
-
     return burnup
