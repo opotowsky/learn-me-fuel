@@ -305,7 +305,8 @@ def main():
     
     print("Did you check your training and testing data paths?\n")    
     # Training Datasets
-    trainpath = "../origen/origen-data/training/9may2017/csv/"
+    #trainpath = "../origen/origen-data/training/9may2017/csv/"
+    trainpath = "../origen-data/training/2nov2017/csv/"
     train_files = glob.glob(os.path.join(trainpath, "*.csv"))
     trainXY = dataframeXY(train_files, train_label)
     trainXY.reset_index(inplace = True)
@@ -316,14 +317,14 @@ def main():
     # and the training set is filtered within each loop
     top_n = 200
     nuc_set = top_nucs(trainXY, top_n)
-    # moved this out of the loop to test scikit learn's learning curves
     trainX, trainYr, trainYe, trainYb = splitXY(trainXY)
     trainX = filter_nucs(trainX, nuc_set, top_n)
     trainX = scale(trainX)
     train_set = LearnSet(nuc_concs = trainX, burnup = trainYb)
     
     # Testing Dataset (for now)
-    testpath = "../origen/origen-data/testing/10may2017_2/csv/"
+    #testpath = "../origen/origen-data/testing/10may2017_2/csv/"
+    testpath = "../origen-data/testing/2nov2017/csv/"
     test_files = glob.glob(os.path.join(testpath, "*.csv"))
     testXY = dataframeXY(test_files, test_label)
     testXY.reset_index(inplace = True)
