@@ -5,9 +5,7 @@ from sklearn.linear_model import Ridge
 from sklearn.svm import SVC
 from sklearn.svm import SVR
 from sklearn.model_selection import cross_val_predict
-from sklearn import metrics
-from sklearn.model_selection import StratifiedShuffleSplit
-from sklearn.model_selection import GridSearchCV
+from sklearn.metrics import mean_squared_error
 from math import sqrt
 import numpy as np
 import pandas as pd
@@ -89,36 +87,33 @@ def classification(trainX, trainY, testX, testY, k_l1, k_l2, a_rc):
 
     return accuracy
 
-def regression(trainX, trainY, testX, testY, k_l1, k_l2, a_rr):
+def regression(trainX, trainY, testX, testY, k, a, g, c):
     """ 
     Training for Regression: predicts a model using three algorithms, returning
     the training error, testing error, and cross validation error for each. 
 
     """
     
-    ## L1 norm is Manhattan Distance
-    ## L2 norm is Euclidian Distance 
-    ## Ridge Regression is Linear + L2 regularization
-    #l1 = KNeighborsRegressor(n_neighbors = k_l1, metric='l1', p=1)
-    #l2 = KNeighborsRegressor(n_neighbors = k_l2, metric='l2', p=2)
-    #rr = Ridge(alpha = a_rr)
-    #l1.fit(trainX, trainY)
-    #l2.fit(trainX, trainY)
-    #rr.fit(trainX, trainY)
+    l2 = KNeighborsRegressor(n_neighbors = k, metric='l2', p=2)
+    l2.fit(trainX, trainY)
     
-    # Testing SVR
-    C = 100.0
-    gamma = 0.001
-    svr = SVR(C=C, gamma=gamma)
+    rr = Ridge(alpha = a)
+    rr.fit(trainX, trainY)
+    
+    svr = SVR(C=c, gamma=g)
     svr.fit(trainX, trainY)
-    train_pred = svr.predict(trainX)
-    test_pred = svr.predict(testX)
-    cv_pred = cross_val_predict(svr, trainX, trainY, cv = 5)
-    train_err = mean_absolute_percentage_error(trainY, train_pred)
-    test_err = mean_absolute_percentage_error(testY, test_pred)
-    cv_err = mean_absolute_percentage_error(trainY, cv_pred)
+    svr_train_pred = svr.predict(trainX)
+    svr_test_pred = svr.predict(testX)
+    svr_cv_pred = cross_val_predict(svr, trainX, trainY, cv = 5)
     
-    return (train_err, test_err, cv_err)
+    svr_train_mape = mean_absolute_percentage_error(trainY, train_pred)
+    svr_test_mape = mean_absolute_percentage_error(testY, test_pred)
+    svr_cv_mape = mean_absolute_percentage_error(trainY, cv_pred)
+    svr_train_rmse = mean_absolute_percentage_error(trainY, train_pred)
+    svr_test_rmse = mean_absolute_percentage_error(testY, test_pred)
+    svr_cv_rmse = mean_absolute_percentage_error(trainY, cv_pred)
+    
+    return (train_mape, test_mape, cv_mape)
 
     ## Predictions for training, testing, and cross validation 
     #train_predict1 = l1.predict(trainX)
@@ -130,17 +125,17 @@ def regression(trainX, trainY, testX, testY, k_l1, k_l2, a_rr):
     #cv_predict1 = cross_val_predict(l1, trainX, trainY, cv = 5)
     #cv_predict2 = cross_val_predict(l2, trainX, trainY, cv = 5)
     #cv_predict3 = cross_val_predict(rr, trainX, trainY, cv = 5)
-    #train_err1 = mean_absolute_percentage_error(trainY, train_predict1)
-    #train_err2 = mean_absolute_percentage_error(trainY, train_predict2)
-    #train_err3 = mean_absolute_percentage_error(trainY, train_predict3)
-    #test_err1 = mean_absolute_percentage_error(testY, test_predict1)
-    #test_err2 = mean_absolute_percentage_error(testY, test_predict2)
-    #test_err3 = mean_absolute_percentage_error(testY, test_predict3)
-    #cv_err1 = mean_absolute_percentage_error(trainY, cv_predict1)
-    #cv_err2 = mean_absolute_percentage_error(trainY, cv_predict2)
-    #cv_err3 = mean_absolute_percentage_error(trainY, cv_predict3)
-    #rmse = (train_err1, train_err2, train_err3, test_err1, test_err2, test_err3, 
-    #        cv_err1, cv_err2, cv_err3)
+    #train_mape1 = mean_absolute_percentage_error(trainY, train_predict1)
+    #train_mape2 = mean_absolute_percentage_error(trainY, train_predict2)
+    #train_mape3 = mean_absolute_percentage_error(trainY, train_predict3)
+    #test_mape1 = mean_absolute_percentage_error(testY, test_predict1)
+    #test_mape2 = mean_absolute_percentage_error(testY, test_predict2)
+    #test_mape3 = mean_absolute_percentage_error(testY, test_predict3)
+    #cv_mape1 = mean_absolute_percentage_error(trainY, cv_predict1)
+    #cv_mape2 = mean_absolute_percentage_error(trainY, cv_predict2)
+    #cv_mape3 = mean_absolute_percentage_error(trainY, cv_predict3)
+    #rmse = (train_mape1, train_mape2, train_mape3, test_mape1, test_mape2, test_mape3, 
+    #        cv_mape1, cv_mape2, cv_mape3)
 
     #return rmse
 
@@ -170,200 +165,114 @@ def manual_train_and_predict(train, test):
 
     """
 
-    ## regularization parameters (k and alpha (a) differ for each)
-    #reg = {'r_l1_k' : 15, 'r_l2_k' : 20, 'r_rc_a' : 0.1, 
-    #       'e_l1_k' : 7, 'e_l2_k' : 10, 'e_rr_a' : 100, 
-    #       'b_l1_k' : 30, 'b_l2_k' : 35, 'b_rr_a' : 100}
+    k = 1
+    a = 1
+    g = 0.001
+    c = 1000
+    CV = 5
+    n_trials = 10
 
-    #reactor = classification(train.nuc_concs, train.reactor, 
-    #                         test.nuc_concs, test.reactor, 
-    #                         reg['r_l1_k'], reg['r_l2_k'], reg['r_rc_a'])
-    #enrichment = regression(train.nuc_concs, train.enrichment, 
-    #                        test.nuc_concs, test.enrichment, 
-    #                        reg['e_l1_k'], reg['e_l2_k'], reg['e_rr_a'])
-    #burnup = regression(train.nuc_concs, train.burnup, 
-    #                    test.nuc_concs, test.burnup, 
-    #                    reg['b_l1_k'], reg['b_l2_k'], reg['b_rr_a'])
-    burnup = regression(train.nuc_concs, train.burnup, 
-                        test.nuc_concs, test.burnup, 
-                        30, 35, 300000)
+    trainX = train.nuc_concs
+    trainY = train.burnup
+    testX = test.nuc_concs
+    testY = test.burnup
+
+    #################
+    ## Results Only##
+    #################
+    nn = KNeighborsRegressor(n_neighbors=k)
+    rr = Ridge(alpha=a)
+    svr = SVR(gamma=g, C=c)
+    print('format is (train, test, cv) \n')
+    for alg in (nn, rr, svr):
+        mape_sum = (0, 0, 0)
+        rmse_sum = (0, 0, 0)
+        for n in range(0, n_trials):
+            #preds`
+            if alg == nn:
+                nn.fit(trainX, trainY)
+                train_pred = nn.predict(trainX)
+                test_pred = nn.predict(testX)
+                cv_pred = cross_val_predict(nn, trainX, trainY, cv = CV)
+                print('NN errors are as follows: \n')
+            elif alg == rr:
+                rr.fit(trainX, trainY)
+                train_pred = rr.predict(trainX)
+                test_pred = rr.predict(testX)
+                cv_pred = cross_val_predict(rr, trainX, trainY, cv = CV)
+                print('RR errors are as follows: \n')
+            else:
+                svr.fit(trainX, trainY)
+                train_pred = svr.predict(trainX)
+                test_pred = svr.predict(testX)
+                cv_pred = cross_val_predict(svr, trainX, trainY, cv = CV)
+                print('SVRs errors are as follows: \n')
+            #errs
+            train_mape = mean_absolute_percentage_error(trainY, train_pred)
+            test_mape = mean_absolute_percentage_error(testY, test_pred)
+            cv_mape = mean_absolute_percentage_error(trainY, cv_pred)
+            train_rmse = sqrt(mean_squared_error(trainY, train_pred))
+            test_rmse = sqrt(mean_squared_error(testY, test_pred))
+            cv_rmse = sqrt(mean_squared_error(trainY, cv_pred))
+            #maths
+            per = (train_mape, test_mape, cv_mape)
+            rms = (train_rmse, test_rmse, cv_rmse)
+            mape_sum = [sum(x) for x in zip(per, mape_sum)]
+            rmse_sum = [sum(x) for x in zip(rms, rmse_sum)]
+        mape = [x / n_trials for x in mape_sum]
+        rmse = [x / n_trials for x in rmse_sum]
+        print('MAPE: ')
+        print(mape)
+        print('\n')
+        print('RMSE: ')
+        print(rmse)
+        print('\n')
     
-    #################################
-    ########## SVR Stuff ############
-    #################################
-    # Step 1, find ideal params
-    #C_range = [10000, 50000, 100000] #np.logspace(1, 4, 4)
-    #gamma_range = [0.01, 0.001, 0.0001] #np.logspace(-6, -3, 4)
-    #param_grid = dict(gamma=gamma_range, C=C_range)
-    ##cv = StratifiedShuffleSplit(n_splits=5, test_size=0.2, random_state=42)
-    #grid = GridSearchCV(SVR(), param_grid=param_grid)
-    #grid.fit(trainX, trainYb)
-    #print("The best parameters are %s with a score of %0.2f" 
-    #      % (grid.best_params_, grid.best_score_))
-    # Step 2, stock learning/valid curves
-    #C = 100.0
-    #gamma = 0.001
-    #partial = np.linspace(0.15, 1.0, 20)
-    #gammas = np.linspace(0.0005, 0.09, 20)
-    #svr_train_sizes, svr_train_scores, svr_valid_scores = learning_curve(svr, trainX, trainYb, cv=5, train_sizes=partial)
-    #svr_train_scores, svr_valid_scores = validation_curve(svr, trainX, trainYb, "gamma", gammas, cv=5)
-    #svr_train_mean = np.mean(svr_train_scores, axis=1)
-    #svr_valid_mean = np.mean(svr_valid_scores, axis=1)
-    #pd.DataFrame({'TrainSize': svr_train_sizes, 'TrainScore': svr_train_mean, 'ValidScore': svr_valid_mean}).to_csv('svrlearn.csv')
-    #pd.DataFrame({'Gammas': gammas, 'TrainScore': svr_train_mean, 'ValidScore': svr_valid_mean}).to_csv('svrvalid.csv')
-    # 
-    # Step 3, manual gammas validation
-   # train = []
-   # test = []
-   # cv = []
-   # for g in gammas:
-   #     svr = SVR(C=C, gamma=g)
-   #     svr.fit(trainX, trainYb)
-   #     train_pred = svr.predict(trainX)
-   #     test_pred = svr.predict(testX)
-   #     cv_pred = cross_val_predict(svr, trainX, trainYb, cv = 5)
-   #     train_err = mean_absolute_percentage_error(trainYb, train_pred)
-   #     test_err = mean_absolute_percentage_error(testYb, test_pred)
-   #     cv_err = mean_absolute_percentage_error(trainYb, cv_pred)
-   #     train.append(train_err)
-   #     test.append(test_err)
-   #     cv.append(cv_err)
+    
+    #################
+    ##Manual Curves##
+    #################
 
-   # pd.DataFrame({'Gammas': gammas, 'TrainErr': train, 'TestErr': test, 'CVErr': cv}).to_csv('svrgammas.csv')
-
-    svr = SVR()
-    svr.fit(trainX, trainYb)
-    train_pred = svr.predict(trainX)
-    test_pred = svr.predict(testX)
-    cv_pred = cross_val_predict(svr, trainX, trainYb, cv = 5)
-    train_err = mean_absolute_percentage_error(trainYb, train_pred)
-    test_err = mean_absolute_percentage_error(testYb, test_pred)
-    cv_err = mean_absolute_percentage_error(trainYb, cv_pred)
-    train_mse = mean_squared_error(trainYb, train_pred)
-    test_mse = mean_squared_error(testYb, test_pred)
-    cv_mse = mean_squared_error(trainYb, cv_pred)
-    svr_mape = (train_err, test_err, cv_err)
-    svr_rmse = map(lambda x: math.sqrt(x), (train_mse, test_mse, cv_mse))
-  
-    rr = Ridge()
-    rr.fit(trainX, trainYb)
-    train_pred = rr.predict(trainX)
-    test_pred = rr.predict(testX)
-    cv_pred = cross_val_predict(rr, trainX, trainYb, cv = 5)
-    train_err = mean_absolute_percentage_error(trainYb, train_pred)
-    test_err = mean_absolute_percentage_error(testYb, test_pred)
-    cv_err = mean_absolute_percentage_error(trainYb, cv_pred)
-    train_mse = mean_squared_error(trainYb, train_pred)
-    test_mse = mean_squared_error(testYb, test_pred)
-    cv_mse = mean_squared_error(trainYb, cv_pred)
-    rr_mape = (train_err, test_err, cv_err)
-    rr_rmse = map(lambda x: math.sqrt(x), (train_mse, test_mse, cv_mse))
-
-    nn = KNeighborsRegressor(n_neighbors=1)
-    nn.fit(trainX, trainYb)
-    train_pred = nn.predict(trainX)
-    test_pred = nn.predict(testX)
-    cv_pred = cross_val_predict(nn, trainX, trainYb, cv = 5)
-    train_err = mean_absolute_percentage_error(trainYb, train_pred)
-    test_err = mean_absolute_percentage_error(testYb, test_pred)
-    cv_err = mean_absolute_percentage_error(trainYb, cv_pred)
-    train_mse = mean_squared_error(trainYb, train_pred)
-    test_mse = mean_squared_error(testYb, test_pred)
-    cv_mse = mean_squared_error(trainYb, cv_pred)
-    nn_mape = (train_err, test_err, cv_err)
-    nn_rmse = map(lambda x: math.sqrt(x), (train_mse, test_mse, cv_mse))
-
-    print('format is train, test, cv \n')
-    print('NN MAPEs are as follows \n')
-    print(nn_mape)
-    print('\n')
-    print('NN RMSEs are as follows \n')
-    print(nn_rmse)
-    print('\n')
-    print('RR MAPEs are as follows \n')
-    print(rr_mape)
-    print('\n')
-    print('RR RMSEs are as follows \n')
-    print(rr_rmse)
-    print('\n')
-    print('SVR MAPEs are as follows \n')
-    print(svr_mape)
-    print('\n')
-    print('SVR RMSEs are as follows \n')
-    print(svr_rmse)
-    print('\n')
-
-    ################################
-    ####### Ridge and Lasso ########
-    ################################
-    #rr = Ridge(alpha=300000)
-    #lr = Lasso(alpha=3000)
-    #partial = np.linspace(0.15, 1.0, 20)
+    #m_percent = np.linspace(0.15, 1.0, 20)
+    #k_list = np.linspace(1, 39, 20)
     #alpha_list = np.logspace(-10, 4, 15)
-    #rrcv = RidgeCV(alphas=alpha_list)
-    #rrcv.fit(trainX, trainYb)
-    #please_work = rrcv.alpha_
-    #print('Alpha:')
-    #print(please_work)
-    #rr_train_sizes, rr_train_scores, rr_valid_scores = learning_curve(rr, trainX, trainYb, cv=5, train_sizes=partial)
-    #lr_train_sizes, lr_train_scores, lr_valid_scores = learning_curve(lr, trainX, trainYb, cv=5, train_sizes=partial)
-    #rr_train_scores, rr_valid_scores = validation_curve(Ridge(), trainX, trainYb, "alpha", alphas, cv=5)
-    #lr_train_scores, lr_valid_scores = validation_curve(Lasso(), trainX, trainYb, "alpha", alphas, cv=5)
-    #rr_train_mean = np.mean(rr_train_scores, axis=1)
-    #rr_valid_mean = np.mean(rr_valid_scores, axis=1)
-    #lr_train_mean = np.mean(lr_train_scores, axis=1)
-    #lr_valid_mean = np.mean(lr_valid_scores, axis=1)
-    #pd.DataFrame({'TrainSize': rr_train_sizes, 'TrainScore': rr_train_mean, 'ValidScore': rr_valid_mean}).to_csv('ridgelearn.csv')
-    #pd.DataFrame({'TrainSize': lr_train_sizes, 'TrainScore': lr_train_mean, 'ValidScore': lr_valid_mean}).to_csv('lassolearn.csv')
-    #pd.DataFrame({'Alpha': alphas, 'TrainScore': rr_train_mean, 'ValidScore': rr_valid_mean}).to_csv('ridgevalid.csv')
-    #pd.DataFrame({'Alpha': alphas, 'TrainScore': lr_train_mean, 'ValidScore': lr_valid_mean}).to_csv('lassovalid.csv')
-    
-    
-    ###################################
-    ########## Manual Stuff ###########
-    ###################################
-    ## Cut training set to create a learning curve
+    #gammas = np.linspace(0.0005, 0.09, 20)
+    #c_list = np.linspace(0.0005, 0.09, 20)
+    #
     #n_trials = 1 
-    #percent_set = np.linspace(0.15, 1.0, 20)
-    ##reactor_acc = []
-    ##enrichment_err = []
     #burnup_err = []
     #idx = []
-    #for per in percent_set:
-    #    # weak point in code
-    #    #r_sum = (0, 0, 0, 0, 0, 0, 0, 0, 0)
-    #    #e_sum = (0, 0, 0, 0, 0, 0, 0, 0, 0)
-    #    #b_sum = (0, 0, 0, 0, 0, 0, 0, 0, 0)
+    #for m in m_percent:
     #    b_sum = (0, 0, 0)
     #    for i in range(0, n_trials):
-    #        # could use frac in df.sample too, but think I want to see absolute 
-    #        # training set size instead in the future
-    #        n_sample = int(per * len(trainXY))
-    #        subXY = trainXY.sample(n = n_sample)
-    #        trainX, trainYr, trainYe, trainYb = splitXY(subXY)
-    #        trainX = filter_nucs(trainX, nuc_set, top_n)
-    #        subset = LearnSet(nuc_concs = trainX, reactor = trainYr, 
-    #                          enrichment = trainYe, burnup = trainYb)
-    #        #r, e, b = train_and_predict(subset, test_set)
-    #        b = train_and_predict(subset, test_set)
-    #        #r_sum = [sum(x) for x in zip(r, r_sum)]
-    #        #e_sum = [sum(x) for x in zip(e, e_sum)]
+    #        #burnup = regression(trainX, trainY, testX, testY, k, a, g, c)
     #        b_sum = [sum(x) for x in zip(b, b_sum)]
-    #    #reactor = [x / n_trials for x in r_sum]
-    #    #enrichment = [x / n_trials for x in e_sum]
     #    burnup = [x / n_trials for x in b_sum]
-    #    #reactor_acc.append(reactor)
-    #    #enrichment_err.append(enrichment)
     #    burnup_err.append(burnup)
     #    idx.append(n_sample)
-    
-    
-    # Save results
+    #
+    #train = []
+    #test = []
+    #cv = []
+    #for g in gammas:
+    #    svr = SVR(C=C, gamma=g)
+    #    svr.fit(trainX, trainY)
+    #    train_pred = svr.predict(trainX)
+    #    test_pred = svr.predict(testX)
+    #    cv_pred = cross_val_predict(svr, trainX, trainY, cv = 5)
+    #    train_mape = mean_absolute_percentage_error(trainY, train_pred)
+    #    test_mape = mean_absolute_percentage_error(testY, test_pred)
+    #    cv_mape = mean_absolute_percentage_error(trainY, cv_pred)
+    #    train.append(train_mape)
+    #    test.append(test_mape)
+    #    cv.append(cv_mape)
+
+    #
+    #
+    ##Save results
     #cols = ['TrainL1', 'TrainL2', 'TrainRR', 'TestL1', 'TestL2', 'TestRR', 'CVL1', 'CVL2', 'CVRR']
-    #pd.DataFrame(reactor_acc, columns = cols, index = idx).to_csv('reactor.csv')
-    #pd.DataFrame(enrichment_err, columns = cols, index = idx).to_csv('enrichment.csv')
-    #cols = ['ANNTrainErr', 'ANNTestErr']
     #cols = ['TrainErr', 'TestErr', 'CVErr']
     #pd.DataFrame(burnup_err, columns = cols, index = idx).to_csv('svrburnup.csv')
+    #pd.DataFrame({'Gammas': gammas, 'TrainErr': train, 'TestErr': test, 'CVErr': cv}).to_csv('svrgammas.csv')
     
-    return burnup
+    return

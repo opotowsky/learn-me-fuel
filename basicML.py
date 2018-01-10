@@ -2,8 +2,8 @@
 
 from __future__ import print_function
 from __future__ import division
-from auto_preds import train_and_predict
-from manual_preds import train_and_predict
+#from auto_preds import auto_train_and_predict
+from manual_preds import manual_train_and_predict
 from sklearn.preprocessing import scale
 import math
 import numpy as np
@@ -320,7 +320,6 @@ def main():
     trainX, trainYr, trainYe, trainYb = splitXY(trainXY)
     trainX = filter_nucs(trainX, nuc_set, top_n)
     trainX = scale(trainX)
-    trainX, trainYr, trainYe, trainYb = splitXY(testXY)
     train_set = LearnSet(nuc_concs = trainX, burnup = trainYb)
     
     # Testing Dataset (for now)
@@ -334,7 +333,7 @@ def main():
     test_set = LearnSet(nuc_concs = testX, burnup = testYb)
     
     manual_train_and_predict(train_set, test_set) 
-    auto_train_and_predict(train_set, test_set) 
+    #auto_train_and_predict(train_set, test_set) 
     
     print("All csv files are saved in this directory!\n")
 

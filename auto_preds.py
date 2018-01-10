@@ -146,7 +146,7 @@ def regression(trainX, trainY, testX, testY, k_l1, k_l2, a_rr):
 
     #return rmse
 
-def train_and_predict(train, test):
+def auto_train_and_predict(train, test):
     """
     Given training and testing data, this script runs some ML algorithms
     (currently, this is nearest neighbors with 2 distance metrics and ridge
@@ -172,22 +172,37 @@ def train_and_predict(train, test):
 
     """
 
-    ## regularization parameters (k and alpha (a) differ for each)
-    #reg = {'r_l1_k' : 15, 'r_l2_k' : 20, 'r_rc_a' : 0.1, 
-    #       'e_l1_k' : 7, 'e_l2_k' : 10, 'e_rr_a' : 100, 
-    #       'b_l1_k' : 30, 'b_l2_k' : 35, 'b_rr_a' : 100}
+    k = 3
+    a = 100
+    gamma = 0.01
+    C = 1
 
-    #reactor = classification(train.nuc_concs, train.reactor, 
-    #                         test.nuc_concs, test.reactor, 
-    #                         reg['r_l1_k'], reg['r_l2_k'], reg['r_rc_a'])
-    #enrichment = regression(train.nuc_concs, train.enrichment, 
-    #                        test.nuc_concs, test.enrichment, 
-    #                        reg['e_l1_k'], reg['e_l2_k'], reg['e_rr_a'])
-    #burnup = regression(train.nuc_concs, train.burnup, 
-    #                    test.nuc_concs, test.burnup, 
-    #                    reg['b_l1_k'], reg['b_l2_k'], reg['b_rr_a'])
     burnup = regression(train.nuc_concs, train.burnup, 
                         test.nuc_concs, test.burnup, 
-                        30, 35, 300000)
+                        k, a, gamma, C)
+    
+    
+    m_size = np.linspace(0.15, 1.0, 20)
+    gammas = np.linspace(0.0005, 0.09, 20)
+    svr_train_sizes, svr_train_scores, svr_valid_scores = learning_curve(svr, trainX, trainYb, cv=5, train_sizes=m_size)
+    svr_train_scores, svr_valid_scores = validation_curve(svr, trainX, trainYb, "gamma", gammas, cv=5)
+    svr_train_mean = np.mean(svr_train_scores, axis=1)
+    svr_valid_mean = np.mean(svr_valid_scores, axis=1)
+    pd.DataFrame({'TrainSize': svr_train_sizes, 'TrainScore': svr_train_mean, 'ValidScore': svr_valid_mean}).to_csv('svrlearn.csv')
+    pd.DataFrame({'Gammas': gammas, 'TrainScore': svr_train_mean, 'ValidScore': svr_valid_mean}).to_csv('svrvalid.csv')
+    
+    
+    rr = Ridge(alpha=a)
+    alpha_list = np.logspace(-10, 4, 15)
+    rrcv = RidgeCV(alphas=alpha_list) ###
+    rrcv.fit(trainX, trainYb)
+    rr_train_sizes, rr_train_scores, rr_valid_scores = learning_curve(rr, trainX, trainYb, cv=5, train_sizes=m_size)
+    rr_train_scores, rr_valid_scores = validation_curve(Ridge(), trainX, trainYb, "alpha", alphas, cv=5)
+    rr_train_mean = np.mean(rr_train_scores, axis=1)
+    rr_valid_mean = np.mean(rr_valid_scores, axis=1)
+    pd.DataFrame({'TrainSize': rr_train_sizes, 'TrainScore': rr_train_mean, 'ValidScore': rr_valid_mean}).to_csv('ridgelearn.csv')
+    pd.DataFrame({'Alpha': alphas, 'TrainScore': rr_train_mean, 'ValidScore': rr_valid_mean}).to_csv('ridgevalid.csv')
+    
+    
     
     return burnup
