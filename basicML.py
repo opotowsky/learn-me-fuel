@@ -5,6 +5,7 @@ from __future__ import division
 #from auto_preds import auto_train_and_predict
 from manual_preds import manual_train_and_predict
 from sklearn.preprocessing import scale
+import pickle
 import math
 import numpy as np
 import pandas as pd
@@ -303,18 +304,23 @@ def main():
 
     """
     
+    pkl_train = 'trainXY_2nov.pkl'
+    pkl_test = 'testXY_2nov.pkl'
     print("Did you check your training and testing data paths?\n")    
     # Training Datasets
     #trainpath = "../origen/origen-data/training/9may2017/csv/"
-    trainpath = "../origen-data/training/2nov2017/csv/"
-    train_files = glob.glob(os.path.join(trainpath, "*.csv"))
-    trainXY = dataframeXY(train_files, train_label)
-    trainXY.reset_index(inplace = True)
+    #trainpath = "../origen-data/training/2nov2017/csv/"
+    #trainpath = "../origen/origen-data/training/2nov2017/csv/"
+    #train_files = glob.glob(os.path.join(trainpath, "*.csv"))
+    #trainXY = dataframeXY(train_files, train_label)
+    #trainXY.reset_index(inplace = True)
+    #pickle.dump(trainXY, open(pkl_train, 'wb'))
     
     # Get set of top 200 nucs from training set
     # The filter_nuc func repeats stuff from top_nucs but it is needed because
     # the nuc_set needs to be determined from the training set for the test set
     # and the training set is filtered within each loop
+    trainXY = pd.read_pickle(pkl_train)
     top_n = 200
     nuc_set = top_nucs(trainXY, top_n)
     trainX, trainYr, trainYe, trainYb = splitXY(trainXY)
@@ -324,14 +330,19 @@ def main():
     
     # Testing Dataset (for now)
     #testpath = "../origen/origen-data/testing/10may2017_2/csv/"
-    testpath = "../origen-data/testing/2nov2017/csv/"
-    test_files = glob.glob(os.path.join(testpath, "*.csv"))
-    testXY = dataframeXY(test_files, test_label)
-    testXY.reset_index(inplace = True)
+    #testpath = "../origen-data/testing/2nov2017/csv/"
+    #testpath = "../origen/origen-data/testing/2nov2017/csv/"
+    #test_files = glob.glob(os.path.join(testpath, "*.csv"))
+    #testXY = dataframeXY(test_files, test_label)
+    #testXY.reset_index(inplace = True)
+    #pickle.dump(testXY, open(pkl_test, 'wb'))
+    testXY = pd.read_pickle(pkl_test)
     testX, testYr, testYe, testYb = splitXY(testXY)
     testX = filter_nucs(testX, nuc_set, top_n)
     testX = scale(testX)
     test_set = LearnSet(nuc_concs = testX, burnup = testYb)
+    
+    
     
     manual_train_and_predict(train_set, test_set) 
     #auto_train_and_predict(train_set, test_set) 
