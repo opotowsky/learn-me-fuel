@@ -91,12 +91,12 @@ def burnup_predict(trainX, trainY, testX, testY, k, a, g, c, CV, n_trials):
 
     nn = KNeighborsRegressor(n_neighbors=k)
     rr = Ridge(alpha=a)
-    svr = SVR(gamma=g, C=c)
+#    svr = SVR(gamma=g, C=c)
     nn_err = ()
     rr_err = ()
-    svr_err = ()
+#    svr_err = ()
     #print('format is (train, test, cv) \n')
-    for alg in (nn, rr, svr):
+    for alg in (nn, rr):#, svr):
         mape_sum = (0, 0, 0)
         rmse_sum = (0, 0, 0)
         for n in range(0, n_trials):
@@ -117,9 +117,9 @@ def burnup_predict(trainX, trainY, testX, testY, k, a, g, c, CV, n_trials):
                 test_pred = svr.predict(testX)
                 cv_pred = cross_val_predict(svr, trainX, trainY, cv = CV)
             # negative errors
-            train_mape = 1 - mean_absolute_percentage_error(trainY, train_pred)
-            test_mape = 1 - mean_absolute_percentage_error(testY, test_pred)
-            cv_mape = 1 - mean_absolute_percentage_error(trainY, cv_pred)
+            train_mape = 100 - mean_absolute_percentage_error(trainY, train_pred)
+            test_mape = 100 - mean_absolute_percentage_error(testY, test_pred)
+            cv_mape = 100 - mean_absolute_percentage_error(trainY, cv_pred)
             train_rmse = -1 * sqrt(mean_squared_error(trainY, train_pred))
             test_rmse = -1 * sqrt(mean_squared_error(testY, test_pred))
             cv_rmse = -1 * sqrt(mean_squared_error(trainY, cv_pred))
@@ -137,15 +137,16 @@ def burnup_predict(trainX, trainY, testX, testY, k, a, g, c, CV, n_trials):
         else:
             svr_err = (mape, rmse)
     
-    return nn_err, rr_err, svr_err
+    return nn_err, rr_err#, svr_err
 
 def m_reduc(m, train_set):
     # unsplit
-    train_set.nuc_concs['burnup'] = train_set.burnup
-    train = train_set.nuc_concs.sample(frac=m)
+    train = pd.DataFrame(train_set.nuc_concs)
+    train['burnup'] = pd.Series(train_set.burnup, index=train.index)
+    reduc = train.sample(frac=m)
     # resplit
-    trainX = train.iloc[:, 0:-1]
-    trainY = train.iloc[:, -1]
+    trainX = reduc.iloc[:, 0:-1]
+    trainY = reduc.iloc[:, -1]
     return trainX, trainY
 
 def manual_train_and_predict(train, test):
@@ -173,7 +174,8 @@ def manual_train_and_predict(train, test):
     g = 0.001
     c = 1000
     CV = 5
-    n_trials = 10
+    n_trials = 1
+    #n_trials = 10
 
     trainX = train.nuc_concs
     trainY = train.burnup
@@ -188,24 +190,30 @@ def manual_train_and_predict(train, test):
     # Manual Learning Curves#
     #########################
     m_percent = np.linspace(0.15, 1.0, 20)
-    nn_err = ()
-    rr_err = ()
-    svr_err = ()
+    nn_err = []
+    rr_err = []
+    svr_err = []
     for m in m_percent:
         # reduce training set
         trainX, trainY = m_reduc(m, train)
         # *_err format is (mape, rmse) and each err type is [train, test, cv]
-        nn_err, rr_err, svr_err = burnup_predict(trainX, trainY, testX, testY, 
-                                                 k, a, g, c, CV, n_trials)
+        #nn, rr, svr = burnup_predict(trainX, trainY, testX, testY, 
+        #                             k, a, g, c, CV, n_trials)
+        nn, rr = burnup_predict(trainX, trainY, testX, testY, 
+                                     k, a, g, c, CV, n_trials)
+        nn_err.append(nn)
+        rr_err.append(rr)
+        #svr_err.append(svr)
+    print(zip(*nn_err)[0])
     # save Learning Curve Results
     mape_cols = ['TrainScore', 'TestScore', 'CVScore']
     rmse_cols = ['TrainNegErr', 'TestNegErr', 'CVNegErr']
-    pd.DataFrame(nn_err[0], columns=mape_cols, index=m_percent).to_csv('lc_nn_mape.csv')
-    pd.DataFrame(rr_err[0], columns=mape_cols, index=m_percent).to_csv('lc_rr_mape.csv')
-    pd.DataFrame(svr_err[0], columns=mape_cols, index=m_percent).to_csv('lc_svr_mape.csv')
-    pd.DataFrame(nn_err[1], columns=rmse_cols, index=m_percent).to_csv('lc_nn_rmse.csv')
-    pd.DataFrame(rr_err[1], columns=rmse_cols, index=m_percent).to_csv('lc_rr_rmse.csv')
-    pd.DataFrame(svr_err[1], columns=rmse_cols, index=m_percent).to_csv('lc_svr_rmse.csv')
+    pd.DataFrame(zip(*nn_err)[0], columns=mape_cols, index=m_percent).to_csv('lc_nn_mape.csv')
+    pd.DataFrame(zip(*rr_err)[0], columns=mape_cols, index=m_percent).to_csv('lc_rr_mape.csv')
+    #pd.DataFrame(zip(*svr_err)[0], columns=mape_cols, index=m_percent).to_csv('lc_svr_mape.csv')
+    pd.DataFrame(zip(*nn_err)[1], columns=rmse_cols, index=m_percent).to_csv('lc_nn_rmse.csv')
+    pd.DataFrame(zip(*rr_err)[1], columns=rmse_cols, index=m_percent).to_csv('lc_rr_rmse.csv')
+    #pd.DataFrame(zip(*svr_err)[1], columns=rmse_cols, index=m_percent).to_csv('lc_svr_rmse.csv')
     
     
     ############################
@@ -232,13 +240,13 @@ def manual_train_and_predict(train, test):
                                        k, a, g, c, CV, n_trials)
         
     # save Validation Curve Results
-    pd.DataFrame(nn_err[0], columns=mape_cols, index=k_list).to_csv('vc_nn_mape.csv')
-    pd.DataFrame(rr_err[0], columns=mape_cols, index=alpha_list).to_csv('vc_rr_mape.csv')
-    pd.DataFrame(svr_err_g[0], columns=mape_cols, index=gammas).to_csv('vc_svr_g_mape.csv')
-    pd.DataFrame(svr_err_c[0], columns=mape_cols, index=c_list).to_csv('vc_svr_c_mape.csv')
-    pd.DataFrame(nn_err[1], columns=rmse_cols, index=k_list).to_csv('vc_nn_rmse.csv')
-    pd.DataFrame(rr_err[1], columns=rmse_cols, index=alpha_list).to_csv('vc_rr_rmse.csv')
-    pd.DataFrame(svr_err_g[1], columns=rmse_cols, index=gammas).to_csv('vc_svr_g_rmse.csv')
-    pd.DataFrame(svr_err_c[1], columns=rmse_cols, index=c_list).to_csv('vc_svr_c_rmse.csv')
+    pd.DataFrame(nn_err[:, 0], columns=mape_cols, index=k_list).to_csv('vc_nn_mape.csv')
+    pd.DataFrame(rr_err[:, 0], columns=mape_cols, index=alpha_list).to_csv('vc_rr_mape.csv')
+    pd.DataFrame(svr_err_g[:, 0], columns=mape_cols, index=gammas).to_csv('vc_svr_g_mape.csv')
+    pd.DataFrame(svr_err_c[:, 0], columns=mape_cols, index=c_list).to_csv('vc_svr_c_mape.csv')
+    pd.DataFrame(nn_err[:, 1], columns=rmse_cols, index=k_list).to_csv('vc_nn_rmse.csv')
+    pd.DataFrame(rr_err[:, 1], columns=rmse_cols, index=alpha_list).to_csv('vc_rr_rmse.csv')
+    pd.DataFrame(svr_err_g[:, 1], columns=rmse_cols, index=gammas).to_csv('vc_svr_g_rmse.csv')
+    pd.DataFrame(svr_err_c[:, 1], columns=rmse_cols, index=c_list).to_csv('vc_svr_c_rmse.csv')
     
     return

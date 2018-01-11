@@ -8,8 +8,6 @@ from sklearn.model_selection import cross_val_predict
 from sklearn.model_selection import validation_curve
 from sklearn.model_selection import learning_curve
 from sklearn import metrics
-from sklearn.model_selection import StratifiedShuffleSplit
-from sklearn.model_selection import GridSearchCV
 from math import sqrt
 import numpy as np
 import pandas as pd
