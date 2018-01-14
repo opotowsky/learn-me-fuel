@@ -346,7 +346,7 @@ def main():
     
     #random_error(train_set, test_set)
     auto_train_and_predict(train_set) 
-    #manual_train_and_predict(train_set, test_set) 
+    manual_train_and_predict(train_set, test_set) 
     
     print("All csv files are saved in this directory!\n")
 
