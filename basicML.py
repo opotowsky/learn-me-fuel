@@ -2,8 +2,9 @@
 
 from __future__ import print_function
 from __future__ import division
-#from auto_preds import auto_train_and_predict
 from manual_preds import manual_train_and_predict
+from info_reduc import random_error
+from auto_preds import auto_train_and_predict
 from sklearn.preprocessing import scale
 import pickle
 import math
@@ -306,7 +307,8 @@ def main():
     
     pkl_train = 'trainXY_2nov.pkl'
     pkl_test = 'testXY_2nov.pkl'
-    print("Did you check your training and testing data paths?\n")    
+    print("Default scikit validation curve script is running...\n")
+    #print("Did you check your training and testing data paths?\n")    
     # Training Datasets
     #trainpath = "../origen/origen-data/training/9may2017/csv/"
     #trainpath = "../origen-data/training/2nov2017/csv/"
@@ -342,10 +344,9 @@ def main():
     testX = scale(testX)
     test_set = LearnSet(nuc_concs = testX, burnup = testYb)
     
-    
-    
-    manual_train_and_predict(train_set, test_set) 
-    #auto_train_and_predict(train_set, test_set) 
+    #random_error(train_set, test_set)
+    auto_train_and_predict(train_set) 
+    #manual_train_and_predict(train_set, test_set) 
     
     print("All csv files are saved in this directory!\n")
 
