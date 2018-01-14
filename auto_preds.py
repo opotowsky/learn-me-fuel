@@ -67,12 +67,12 @@ def auto_train_and_predict(train):
     k_list = np.linspace(1, 39, 20)
     alpha_list = np.logspace(-7, 3, 20)
     gamma_list = np.linspace(0.0005, 0.09, 20)
-    c_list = np.linspace(0.0005, 0.09, 20)
+    c_list = np.linspace(0.01, 100000, 20)
 
     trainX = train.nuc_concs
     trainY = train.burnup
     
-    for alg_type in ('svr_c', 'svr_g'):#('nn', 'rr', 'svr_c', 'svr_g'):
+    for alg_type in ('svr_c',):#('nn', 'rr', 'svr_c', 'svr_g'):
         if alg_type == 'nn':
             alg1 = KNeighborsRegressor(n_neighbors=k)
             alg2 = KNeighborsRegressor()
