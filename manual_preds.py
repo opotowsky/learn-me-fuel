@@ -37,9 +37,9 @@ def burnup_predict(trainX, trainY, testX, testY, alg):
         test_pred = alg.predict(testX)
         cv_pred = cross_val_predict(alg, trainX, trainY, cv = CV)
         # negative errors
-        train_mape = 100 - mean_absolute_percentage_error(trainY, train_pred)
-        test_mape = 100 - mean_absolute_percentage_error(testY, test_pred)
-        cv_mape = 100 - mean_absolute_percentage_error(trainY, cv_pred)
+        train_mape = -1 * mean_absolute_percentage_error(trainY, train_pred)
+        test_mape = -1 * mean_absolute_percentage_error(testY, test_pred)
+        cv_mape = -1 * mean_absolute_percentage_error(trainY, cv_pred)
         train_rmse = -1 * sqrt(mean_squared_error(trainY, train_pred))
         test_rmse = -1 * sqrt(mean_squared_error(testY, test_pred))
         cv_rmse = -1 * sqrt(mean_squared_error(trainY, cv_pred))

@@ -11,8 +11,8 @@ import pandas as pd
 # some defaults
 k = 1
 a = 1
-g = 0.001
-c = 1000
+g = 0.01
+c = 10
 CV = 5
 n_trials = 10
 nn = KNeighborsRegressor(n_neighbors=k)
@@ -45,9 +45,9 @@ def pred_errs(trainX, trainY, testX, testY, alg):
             test_pred = svr.predict(testX)
             cv_pred = cross_val_predict(svr, trainX, trainY, cv = CV)
         # negative errors
-        train_mape = 100 - mean_absolute_percentage_error(trainY, train_pred)
-        test_mape = 100 - mean_absolute_percentage_error(testY, test_pred)
-        cv_mape = 100 - mean_absolute_percentage_error(trainY, cv_pred)
+        train_mape = -1 * mean_absolute_percentage_error(trainY, train_pred)
+        test_mape = -1 * mean_absolute_percentage_error(testY, test_pred)
+        cv_mape = -1 * mean_absolute_percentage_error(trainY, cv_pred)
         train_rmse = -1 * sqrt(mean_squared_error(trainY, train_pred))
         test_rmse = -1 * sqrt(mean_squared_error(testY, test_pred))
         cv_rmse = -1 * sqrt(mean_squared_error(trainY, cv_pred))
@@ -136,7 +136,7 @@ def random_error(train, test):
 
     """
     
-    mape_cols = ['TrainPerScore', 'TestPerScore', 'CVPerScore']
+    mape_cols = ['TrainNegPercent', 'TestNegPercent', 'CVNegPercent']
     rmse_cols = ['TrainNegRMSErr', 'TestNegRMSErr', 'CVNegRMSErr']
     mae_cols = ['TrainNegMAErr', 'TestNegMAErr', 'CVNegMAErr']
 
@@ -147,7 +147,7 @@ def random_error(train, test):
     
     err_percent = [0, 0.1, 0.2, 0.4, 0.6, 0.8, 1, 1.1, 1.4, 
                    1.7, 2, 2.5, 3, 3.5, 4, 5, 6, 7, 8, 9]
-    for alg in (nn, rr, svr):
+    for alg in (svr,):#(nn, rr, svr):
         map_err = []
         rms_err = []
         ma_err = []
@@ -167,6 +167,6 @@ def random_error(train, test):
         elif alg == rr:
             errors.to_csv('rr_inforeduc.csv')
         else:
-            errors.to_csv('svr_inforeduc.csv')
+            errors.to_csv('svr_inforeduc_g01c10.csv')
     
     return
