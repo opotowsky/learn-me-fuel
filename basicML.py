@@ -307,7 +307,7 @@ def main():
     
     pkl_train = 'trainXY_2nov.pkl'
     pkl_test = 'testXY_2nov.pkl'
-    print("Default scikit validation curve script is running...\n")
+    print("scrips\n")
     #print("Did you check your training and testing data paths?\n")    
     # Training Datasets
     #trainpath = "../origen/origen-data/training/9may2017/csv/"
