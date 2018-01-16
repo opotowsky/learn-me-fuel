@@ -4,6 +4,7 @@ from sklearn.svm import SVR
 from sklearn.model_selection import cross_val_predict
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import mean_absolute_error
+from sklearn.preprocessing import scale
 from math import sqrt
 import numpy as np
 import pandas as pd
@@ -11,8 +12,8 @@ import pandas as pd
 # some defaults
 k = 1
 a = 1
-g = 0.01
-c = 10
+g = 0.1
+c = 1
 CV = 5
 n_trials = 10
 nn = KNeighborsRegressor(n_neighbors=k)
@@ -115,6 +116,7 @@ def add_error(percent_err, df):
     high = 1 + err
     errs = np.random.uniform(low, high, (x, y))
     df_err = df * errs
+    df_err_scaled = scale(df_err)
     
     return df_err
 
@@ -145,9 +147,12 @@ def random_error(train, test):
     testX = test.nuc_concs
     testY = test.burnup
     
-    err_percent = [0, 0.1, 0.2, 0.4, 0.6, 0.8, 1, 1.1, 1.4, 
-                   1.7, 2, 2.5, 3, 3.5, 4, 5, 6, 7, 8, 9]
-    for alg in (svr,):#(nn, rr, svr):
+    #err_percent = np.arange(0, 9.25, 0.25)
+    err_percent = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.1, 
+                   1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.25, 2.5, 
+                   2.75, 3, 3.25, 3.5, 3.75, 4, 4.25, 4.5, 4.75, 5, 5.5, 6, 
+                   6.5, 7, 7.5, 8, 8.5, 9]
+    for alg in (nn, rr, svr):
         map_err = []
         rms_err = []
         ma_err = []
@@ -167,6 +172,6 @@ def random_error(train, test):
         elif alg == rr:
             errors.to_csv('rr_inforeduc.csv')
         else:
-            errors.to_csv('svr_inforeduc_g01c10.csv')
+            errors.to_csv('svr_inforeduc_defaults.csv')
     
     return
