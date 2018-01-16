@@ -344,8 +344,8 @@ def main():
     testX = scale(testX)
     test_set = LearnSet(nuc_concs = testX, burnup = testYb)
     
-    random_error(train_set, test_set)
-    auto_train_and_predict(train_set) 
+    #random_error(train_set, test_set)
+    #auto_train_and_predict(train_set) 
     manual_train_and_predict(train_set, test_set) 
     
     print("All csv files are saved in this directory!\n")
