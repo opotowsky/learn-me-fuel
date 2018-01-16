@@ -5,6 +5,7 @@ from sklearn.model_selection import validation_curve
 from sklearn.model_selection import learning_curve
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import mean_absolute_error
+from sklearn.preprocessing import scale
 from math import sqrt
 import numpy as np
 import pandas as pd
@@ -69,7 +70,7 @@ def auto_train_and_predict(train):
     gamma_list = np.linspace(0.0005, 0.09, 20)
     c_list = np.linspace(0.01, 100000, 20)
 
-    trainX = train.nuc_concs
+    trainX = scale(train.nuc_concs)
     trainY = train.burnup
     
     for alg_type in ('svr_c',):#('nn', 'rr', 'svr_c', 'svr_g'):

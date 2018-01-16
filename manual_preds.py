@@ -4,6 +4,7 @@ from sklearn.svm import SVR
 from sklearn.model_selection import cross_val_predict
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import mean_absolute_error
+from sklearn.preprocessing import scale
 from math import sqrt
 import numpy as np
 import pandas as pd
@@ -103,7 +104,7 @@ def manual_train_and_predict(train, test):
     rmse_cols = ['TrainNegRMSErr', 'TestNegRMSErr', 'CVNegRMSErr']
     mae_cols = ['TrainNegMAErr', 'TestNegMAErr', 'CVNegMAErr']
     
-    trainX = train.nuc_concs
+    trainX = scale(train.nuc_concs)
     trainY = train.burnup
     testX = test.nuc_concs
     testY = test.burnup
