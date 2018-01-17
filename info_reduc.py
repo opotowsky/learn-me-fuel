@@ -157,7 +157,7 @@ def random_error(train, test):
                    1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.25, 2.5, 2.75,
                    3.0, 3.25, 3.5, 3.75, 4.0, 4.25, 4.5, 4.75, 5.0, 5.5, 6.0, 
                    6.5, 7.0, 7.5, 8.0, 8.5, 9.0]
-    for alg in (svr,):#(nn, rr, svr):
+    for alg in (nn, rr, svr):
         map_err = []
         rms_err = []
         ma_err = []
@@ -177,6 +177,6 @@ def random_error(train, test):
         elif alg == rr:
             errors.to_csv('rr_inforeduc.csv')
         else:
-            errors.to_csv('svr_inforeduc_best.csv')
+            errors.to_csv('svr_inforeduc.csv')
     
     return

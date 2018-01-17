@@ -97,7 +97,7 @@ def manual_train_and_predict(train, test):
 
     k = 1
     a = 1
-    g = 0.001
+    g = 0.1
     c = 1000
 
     mape_cols = ['TrainPerScore', 'TestPerScore', 'CVPerScore']
@@ -123,29 +123,29 @@ def manual_train_and_predict(train, test):
     #########################
     # Manual Learning Curves#
     #########################
-   # m_percent = np.linspace(0.15, 1.0, 20)
-   # for alg_type in ('nn', 'rr', 'svr'):
-   #     map_err = []
-   #     rms_err = []
-   #     ma_err = []
-   #     if alg_type == 'nn':
-   #         alg = KNeighborsRegressor(n_neighbors=k) 
-   #     elif alg_type == 'rr':
-   #         alg = Ridge(alpha=a)
-   #     else:
-   #         alg = SVR(gamma=g, C=c)
-   #     for m in m_percent:
-   #         # reduce training set size
-   #         trainX, trainY = m_reduc(m, train)
-   #         mape, rmse, mae = burnup_predict(trainX, trainY, testX, testY, alg)
-   #         map_err.append(mape)
-   #         rms_err.append(rmse)
-   #         ma_err.append(mae)
-   #     mape = pd.DataFrame(map_err, columns=mape_cols, index=m_percent)
-   #     rmse = pd.DataFrame(rms_err, columns=rmse_cols, index=m_percent)
-   #     mae = pd.DataFrame(ma_err, columns=mae_cols, index=m_percent)
-   #     errors = pd.concat([mape, rmse, mae], axis=1)
-   #     errors.to_csv(alg_type + '_learn_manual.csv')
+    m_percent = np.linspace(0.15, 1.0, 20)
+    for alg_type in ('nn', 'rr', 'svr'):
+        map_err = []
+        rms_err = []
+        ma_err = []
+        if alg_type == 'nn':
+            alg = KNeighborsRegressor(n_neighbors=k) 
+        elif alg_type == 'rr':
+            alg = Ridge(alpha=a)
+        else:
+            alg = SVR(gamma=g, C=c)
+        for m in m_percent:
+            # reduce training set size
+            trainX, trainY = m_reduc(m, train)
+            mape, rmse, mae = burnup_predict(trainX, trainY, testX, testY, alg)
+            map_err.append(mape)
+            rms_err.append(rmse)
+            ma_err.append(mae)
+        mape = pd.DataFrame(map_err, columns=mape_cols, index=m_percent)
+        rmse = pd.DataFrame(rms_err, columns=rmse_cols, index=m_percent)
+        mae = pd.DataFrame(ma_err, columns=mae_cols, index=m_percent)
+        errors = pd.concat([mape, rmse, mae], axis=1)
+        errors.to_csv(alg_type + '_learn_manual.csv')
     
     
     ############################
@@ -156,7 +156,7 @@ def manual_train_and_predict(train, test):
     gamma_list = np.linspace(0.0005, 0.09, 20)
     c_list = np.logspace(0.01, 100000, 20)
     
-    for alg_type in ('svr_c',):#('nn', 'rr', 'svr_c', 'svr_g'):
+    for alg_type in ('nn', 'rr', 'svr_g'):#, 'svr_c'):
         map_err = []
         rms_err = []
         ma_err = []

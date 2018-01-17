@@ -73,7 +73,7 @@ def auto_train_and_predict(train):
     trainX = scale(train.nuc_concs)
     trainY = train.burnup
     
-    for alg_type in ('svr_c',):#('nn', 'rr', 'svr_c', 'svr_g'):
+    for alg_type in ('nn', 'rr', 'svr_g'):#, 'svr_c'):
         if alg_type == 'nn':
             alg1 = KNeighborsRegressor(n_neighbors=k)
             alg2 = KNeighborsRegressor()
