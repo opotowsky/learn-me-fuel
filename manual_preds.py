@@ -154,7 +154,7 @@ def manual_train_and_predict(train, test):
     k_list = np.linspace(1, 39, 20)
     alpha_list = np.logspace(-7, 3, 20)
     gamma_list = np.linspace(0.0005, 0.09, 20)
-    c_list = np.linspace(0.01, 100000, 20)
+    c_list = np.logspace(0.01, 100000, 20)
     
     for alg_type in ('svr_c',):#('nn', 'rr', 'svr_c', 'svr_g'):
         map_err = []

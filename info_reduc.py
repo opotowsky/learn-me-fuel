@@ -1,3 +1,6 @@
+from __future__ import print_function
+from __future__ import division
+
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.linear_model import Ridge
 from sklearn.svm import SVR
@@ -12,8 +15,8 @@ import pandas as pd
 # some defaults
 k = 1
 a = 1
-g = 0.1
-c = 1
+g = 0.001
+c = 100
 CV = 5
 n_trials = 10
 nn = KNeighborsRegressor(n_neighbors=k)
@@ -89,7 +92,7 @@ def mean_absolute_percentage_error(true, pred):
 
     """
 
-    mape = np.mean(np.abs((true - pred) / true)) * 100
+    mape = np.mean(np.abs((true - pred) / true)) * 100.0
 
     return mape
 
@@ -106,19 +109,21 @@ def add_error(percent_err, df):
 
     Returns
     -------
-    df_err : dataframe with nuclide concentrations altered by some error
+    df_err_scaled : dataframe with nuclide concentrations altered by some error and then 
+                    scaled to reign in order of magnitude issues
 
     """
+    df = df.astype(float)
     x = df.shape[0]
     y = df.shape[1]
     err = percent_err / 100.0
-    low = 1 - err
-    high = 1 + err
+    low = 1.0 - err
+    high = 1.0 + err
     errs = np.random.uniform(low, high, (x, y))
     df_err = df * errs
     df_err_scaled = scale(df_err)
     
-    return df_err
+    return df_err_scaled
 
 def random_error(train, test):
     """
@@ -148,11 +153,11 @@ def random_error(train, test):
     testY = test.burnup
     
     #err_percent = np.arange(0, 9.25, 0.25)
-    err_percent = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.1, 
-                   1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.25, 2.5, 
-                   2.75, 3, 3.25, 3.5, 3.75, 4, 4.25, 4.5, 4.75, 5, 5.5, 6, 
-                   6.5, 7, 7.5, 8, 8.5, 9]
-    for alg in (nn, rr, svr):
+    err_percent = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 
+                   1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.25, 2.5, 2.75,
+                   3.0, 3.25, 3.5, 3.75, 4.0, 4.25, 4.5, 4.75, 5.0, 5.5, 6.0, 
+                   6.5, 7.0, 7.5, 8.0, 8.5, 9.0]
+    for alg in (svr,):#(nn, rr, svr):
         map_err = []
         rms_err = []
         ma_err = []
@@ -172,6 +177,6 @@ def random_error(train, test):
         elif alg == rr:
             errors.to_csv('rr_inforeduc.csv')
         else:
-            errors.to_csv('svr_inforeduc_defaults.csv')
+            errors.to_csv('svr_inforeduc_best.csv')
     
     return

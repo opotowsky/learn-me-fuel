@@ -327,9 +327,6 @@ def main():
     nuc_set = top_nucs(trainXY, top_n)
     trainX, trainYr, trainYe, trainYb = splitXY(trainXY)
     trainX = filter_nucs(trainX, nuc_set, top_n)
-    ######################################################
-    #trainX = scale(trainX) WILL DO SCALING AFTER DATA MANIP
-    ######################################################
     train_set = LearnSet(nuc_concs = trainX, burnup = trainYb)
     
     # Testing Dataset (for now)
@@ -343,9 +340,6 @@ def main():
     testXY = pd.read_pickle(pkl_test)
     testX, testYr, testYe, testYb = splitXY(testXY)
     testX = filter_nucs(testX, nuc_set, top_n)
-    ######################################################
-    #testX = scale(testX) WILL DO SCALING AFTER DATA MANIP
-    ######################################################
     test_set = LearnSet(nuc_concs = testX, burnup = testYb)
     
     #random_error(train_set, test_set)
