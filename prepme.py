@@ -195,7 +195,7 @@ def main():
                     trainpath = os.path.join(rxtrpath, csvfile)
                     train_files.append(trainpath)
             trainXY = dataframeXY(train_files, src)
-            pkl_name = 'trainset' + src + nucs_tracked + '_8dec.pkl'
+            pkl_name = 'not-scaled_trainset' + src + nucs_tracked + '_8dec.pkl'
             pickle.dump(trainXY, open(pkl_name, 'wb'))
     return
 
