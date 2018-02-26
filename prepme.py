@@ -196,7 +196,7 @@ def main():
                     train_files.append(trainpath)
             trainXY = dataframeXY(train_files, src)
             pkl_name = 'not-scaled_trainset' + src + nucs_tracked + '_8dec.pkl'
-            pickle.dump(trainXY, open(pkl_name, 'wb'))
+            pickle.dump(trainXY, open(pkl_name, 'wb'), protocol=2)
     return
 
 if __name__ == "__main__":
