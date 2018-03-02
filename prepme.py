@@ -92,6 +92,8 @@ def label_data(labels, data):
     data.insert(loc = col+1, column = 'CoolingTime', value = coolings)
     data.insert(loc = col+2, column = 'Enrichment', value = labels['Enrichment'])
     data.insert(loc = col+3, column = 'Burnup', value = burnups)
+    # added the origen reactor for indepth purposes
+    data.insert(loc = col+4, column = 'OrigenReactor', value = labels['OrigenReactor'])
     return data
 
 def loop_labels(burnup, cooling):
@@ -150,6 +152,7 @@ def dataframeXY(all_files, info):
     """
 
     all_data = []
+    col_order = []
     for f in all_files:
         idx = all_files.index(f)
         if info == '_gammas':
@@ -157,7 +160,7 @@ def dataframeXY(all_files, info):
         else:
             data = format_ndf(f)
         labels = {'ReactorType': TRAIN_LABELS['ReactorType'][idx],
-                  #'OrigenReactor': TRAIN_LABELS['OrigenReactor'][idx],
+                  'OrigenReactor': TRAIN_LABELS['OrigenReactor'][idx],
                   'Enrichment': TRAIN_LABELS['Enrichment'][idx], 
                   'Burnup': TRAIN_LABELS['Burnup'][idx], 
                   'CoolingInts': COOLING_INTERVALS
@@ -179,10 +182,10 @@ def main():
     """
     
     print("Did you check your training data path?\n", flush=True)
-    info_src = ['_nucs', '_gammas']
+    info_src = ['_nucs',] '_gammas']
     #datapath = "../origen/origen-data/8dec2017/"
     datapath = "../origen-data/8dec2017/"
-    subset = ['_fiss', '_act', '_fissact']
+    subset = ['_fissact',] '_act', '_fissact']
     for nucs_tracked in subset:
         for src in info_src:
             train_files = []
