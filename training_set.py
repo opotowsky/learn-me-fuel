@@ -48,9 +48,24 @@ RXTRLBL = (('pwr',)*len(LWR_ENR)*8 + ('pwr',)*len(VVER_ENR) +
 ENRICHLBL = (LWR_ENR*8 + VVER_ENR + LWR_ENR*10 + PHWR_ENR*3)
 BURNLBL = ((LWRBURN,)*len(LWR_ENR)*19 + (PHWRBURN,)*len(PHWR_ENR)*3)
 
+rxtrlbl = list(RXTR_TYPES)
+ORXTRLBL = []
+for idx in range(0, len(rxtrlbl)):
+    r_type = rxtrlbl[idx]
+    o_rxtr = O_RXTRS[idx]
+    if idx == 8:
+        rxtrs = [o_rxtr,]*len(VVER_ENR)
+    elif r_type == 'pwr':
+        rxtrs = [o_rxtr,]*len(LWR_ENR)
+    elif r_type == 'bwr':
+        rxtrs = [o_rxtr,]*len(LWR_ENR)
+    else:
+        rxtrs = [o_rxtr,]*len(PHWR_ENR)
+    ORXTRLBL = ORXTRLBL + rxtrs
+
 # Dict for labelinig the training set using the simulation inputs
 TRAIN_LABELS = {'ReactorType': RXTRLBL,
-                'OrigenReactor': O_RXTRS,
+                'OrigenReactor': ORXTRLBL,
                 'Enrichment': ENRICHLBL,
                 'Burnup': BURNLBL,
                 }
