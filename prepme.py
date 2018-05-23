@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
 import training_set as ts
 import pickle
@@ -86,19 +86,23 @@ def label_data(labels, data):
     """
     
     col = len(data.columns)
-    cooling_tmp = [0] + labels['CoolingInts'] + [0]
-    burnups =  [ burnup for burnup in labels['Burnup'] for cooling in cooling_tmp ]
-    coolings = cooling_tmp * len(labels['Burnup'])
+    cooling_tmp = [0] + list(labels['CoolingInts']) + [0]
+    burnups =  [ burnup for burnup in labels['Burnups'] for cooling in cooling_tmp ]
+    coolings = cooling_tmp * len(labels['Burnups'])
 
     # the above process puts an extra entry on the end of each list
     burnups.pop()
     coolings.pop()
-    
+
+    #still need a pre-0 to start
+    burnups.insert(0, 0)
+    coolings.insert(0, 0)
+
     # inserting 4 labels into columns
     data.insert(loc = col, column = 'ReactorType', value = labels['ReactorType'])
-    data.insert(loc = col+1, column = 'CoolingTime', value = coolings )
+    data.insert(loc = col+1, column = 'CoolingTime', value = tuple(coolings))
     data.insert(loc = col+2, column = 'Enrichment', value = labels['Enrichment'])
-    data.insert(loc = col+3, column = 'Burnup', value = burnups)
+    data.insert(loc = col+3, column = 'Burnup', value = tuple(burnups))
     # added the origen reactor for indepth purposes
     data.insert(loc = col+4, column = 'OrigenReactor', value = labels['OrigenReactor'])
     return data
@@ -145,16 +149,16 @@ def main():
     """
     
     print("Did you check your training data path?\n", flush=True)
-    info_src = ['_nucs',] '_gammas']
-    #datapath = "../origen/origen-data/8dec2017/"
-    datapath = "../origen-data/8dec2017/"
-    subset = ['_fissact',] '_act', '_fissact']
+    info_src = ['_nucs', '_gammas']
+    datapath = "../origen/origen-data/8dec2017/"
+    #datapath = "../origen-data/8dec2017/"
+    subset = ['_fiss', '_act', '_fissact']
     for nucs_tracked in subset:
         for src in info_src:
             train_files = {}
             for training_set in ts.train_labels:
-                o_rxtr = training_set[1]
-                enrich = training_set[2]
+                o_rxtr = training_set['OrigenReactor']
+                enrich = training_set['Enrichment']
                 rxtrpath = datapath + o_rxtr + "/"
                 csvfile = o_rxtr + "_enr" + str(enrich) + nucs_tracked + src + ".csv"
                 trainpath = os.path.join(rxtrpath, csvfile)
