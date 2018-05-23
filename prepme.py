@@ -1,6 +1,6 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
-from training_set import *
+import training_set as ts
 import pickle
 import numpy as np
 import pandas as pd
@@ -86,54 +86,28 @@ def label_data(labels, data):
     """
     
     col = len(data.columns)
-    burnups, coolings = loop_labels(labels['Burnup'], labels['CoolingInts'])
+    cooling_tmp = [0] + list(labels['CoolingInts']) + [0]
+    burnups =  [ burnup for burnup in labels['Burnups'] for cooling in cooling_tmp ]
+    coolings = cooling_tmp * len(labels['Burnups'])
+
+    # the above process puts an extra entry on the end of each list
+    burnups.pop()
+    coolings.pop()
+
+    #still need a pre-0 to start
+    burnups.insert(0, 0)
+    coolings.insert(0, 0)
+
     # inserting 4 labels into columns
     data.insert(loc = col, column = 'ReactorType', value = labels['ReactorType'])
-    data.insert(loc = col+1, column = 'CoolingTime', value = coolings)
+    data.insert(loc = col+1, column = 'CoolingTime', value = tuple(coolings))
     data.insert(loc = col+2, column = 'Enrichment', value = labels['Enrichment'])
-    data.insert(loc = col+3, column = 'Burnup', value = burnups)
+    data.insert(loc = col+3, column = 'Burnup', value = tuple(burnups))
     # added the origen reactor for indepth purposes
     data.insert(loc = col+4, column = 'OrigenReactor', value = labels['OrigenReactor'])
     return data
 
-def loop_labels(burnup, cooling):
-    """
-    Takes the burnups and cooling time for each case within the simulation and
-    creates a list of the burnup of the irradiated and cooled/ decayed fuels;
-    returns a list to be added as the burnup label to the main dataframe.
-
-    Parameters
-    ----------
-    burnup : list of the steps of burnup from the simulation parameters
-    cooling : list of the cooling intervals from the simulation parameters
-
-    Returns
-    -------
-    burnup_lbl : list of burnups to be applied as a label for a given simulation
-    cooling_lbl : list of cooling times to be applied as a label for a given simulation
-
-    """
-    
-    steps_per_case = len(COOLING_INTERVALS)
-    burnup_lbl = [0,]
-    cooling_lbl = [0,]
-    for case in range(0, len(burnup)):
-        if case == 0:
-            pass
-        else:
-            # corresponds to previous material logging step
-            burnup_lbl.append(burnup[case-1])
-            cooling_lbl.append(0)
-        # corresponds to irradiation step
-        burnup_lbl.append(burnup[case])
-        cooling_lbl.append(0)
-        for step in range(0, steps_per_case):
-            # corresponds to 5 cooling times
-            burnup_lbl.append(burnup[case])
-            cooling_lbl.append(COOLING_INTERVALS[step])
-    return burnup_lbl, cooling_lbl
-
-def dataframeXY(all_files, info):
+def dataframeXY(train_labels, info):
     """" 
     Takes list of all files in a directory (and rxtr-labeled subdirectories) 
     and produces a dataframe that has both the data features (X) and labeled 
@@ -141,7 +115,7 @@ def dataframeXY(all_files, info):
 
     Parameters
     ----------
-    all_files : list of str holding all simulation file names in a directory
+    train_labels : list of dicts holding training lables and filenames
     info : string indicating the information source of the training data
 
     Returns
@@ -153,19 +127,12 @@ def dataframeXY(all_files, info):
 
     all_data = []
     col_order = []
-    for f in all_files:
-        idx = all_files.index(f)
+    for training_set in train_labels:
         if info == '_gammas':
-            data = format_gdf(f)
+            data = format_gdf(training_set['filename'])
         else:
-            data = format_ndf(f)
-        labels = {'ReactorType': TRAIN_LABELS['ReactorType'][idx],
-                  'OrigenReactor': TRAIN_LABELS['OrigenReactor'][idx],
-                  'Enrichment': TRAIN_LABELS['Enrichment'][idx], 
-                  'Burnup': TRAIN_LABELS['Burnup'][idx], 
-                  'CoolingInts': COOLING_INTERVALS
-                  }
-        labeled = label_data(labels, data)
+            data = format_ndf(training_set['filename'])
+        labeled = label_data(training_set, data)
         labeled.drop_duplicates(keep='last', inplace=True)
         all_data.append(labeled)
     dfXY = pd.concat(all_data)
@@ -182,22 +149,21 @@ def main():
     """
     
     print("Did you check your training data path?\n", flush=True)
-    info_src = ['_nucs',] '_gammas']
-    #datapath = "../origen/origen-data/8dec2017/"
-    datapath = "../origen-data/8dec2017/"
-    subset = ['_fissact',] '_act', '_fissact']
+    info_src = ['_nucs', '_gammas']
+    datapath = "../origen/origen-data/8dec2017/"
+    #datapath = "../origen-data/8dec2017/"
+    subset = ['_fiss', '_act', '_fissact']
     for nucs_tracked in subset:
         for src in info_src:
-            train_files = []
-            for i in range(0, len(O_RXTRS)):
-                o_rxtr = O_RXTRS[i]
-                for j in range(0, len(ENRICH[i])):
-                    enrich = ENRICH[i][j]
-                    rxtrpath = datapath + o_rxtr + "/"
-                    csvfile = o_rxtr + "_enr" + str(enrich) + nucs_tracked + src + ".csv"
-                    trainpath = os.path.join(rxtrpath, csvfile)
-                    train_files.append(trainpath)
-            trainXY = dataframeXY(train_files, src)
+            train_files = {}
+            for training_set in ts.train_labels:
+                o_rxtr = training_set['OrigenReactor']
+                enrich = training_set['Enrichment']
+                rxtrpath = datapath + o_rxtr + "/"
+                csvfile = o_rxtr + "_enr" + str(enrich) + nucs_tracked + src + ".csv"
+                trainpath = os.path.join(rxtrpath, csvfile)
+                training_set['filename'] = trainpath
+            trainXY = dataframeXY(ts.train_labels, src)
             pkl_name = 'not-scaled_trainset' + src + nucs_tracked + '_8dec.pkl'
             pickle.dump(trainXY, open(pkl_name, 'wb'), protocol=2)
     return
