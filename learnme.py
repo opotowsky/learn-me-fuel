@@ -213,19 +213,21 @@ def splitXY(dfXY, info):
     cY : dataframe with cooling time for each instance
     eY : dataframe with fuel enrichment for each instance
     bY : dataframe with fuel burnup for each instance
+    oY : dataframe with ORIGEN reactor name for each instance
 
     """
 
     if info == '_gammas':
-        lbls = ['ReactorType', 'CoolingTime', 'Enrichment', 'Burnup']
+        lbls = ['ReactorType', 'CoolingTime', 'Enrichment', 'Burnup', 'OrigenReactor']
     else:
-        lbls = ['ReactorType', 'CoolingTime', 'Enrichment', 'Burnup', 'total']
+        lbls = ['ReactorType', 'CoolingTime', 'Enrichment', 'Burnup', 'OrigenReactor', 'total']
     dfX = dfXY.drop(lbls, axis=1)
     r_dfY = dfXY.loc[:, lbls[0]]
     c_dfY = dfXY.loc[:, lbls[1]]
     e_dfY = dfXY.loc[:, lbls[2]]
     b_dfY = dfXY.loc[:, lbls[3]]
-    return dfX, r_dfY, c_dfY, e_dfY, b_dfY
+    o_dfY = dfXY.loc[:, lbls[4]]
+    return dfX, r_dfY, c_dfY, e_dfY, b_dfY, o_dfY
 
 
 def main():
@@ -239,12 +241,16 @@ def main():
     start = dt.datetime.now()
     print("Start Time: {}\n".format(start), flush=True)
     
-    info_src = ['_nucs', '_gammas']
-    subset = ['_fiss', '_act', '_fissact']
+    # Not dealing with gammas for now
+    #info_src = ['_nucs', '_gammas']
+    info_src = ['_nucs',]
+    #subset = ['_fiss', '_act', '_fissact']
+    # sub the subset for now
+    subset = ['_fiss']
     for nucs_tracked in subset:
-        print("Nuclides being used for training: {}\n".format(nucs_tracked), flush=True)
+        print("Nuclide subset currently being used for training: {}\n".format(nucs_tracked), flush=True)
         for src in info_src:
-            pkl_name = 'trainset' + src + nucs_tracked + '_8dec.pkl'
+            pkl_name = 'not-scaled_trainset' + src + nucs_tracked + '_8dec.pkl'
             trainXY = pd.read_pickle(pkl_name, compression=None)
             trainX, rY, cY, eY, bY = splitXY(trainXY, src)
             if info_src.index(src) == 0:

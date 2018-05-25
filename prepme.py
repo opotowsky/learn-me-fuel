@@ -10,7 +10,7 @@ import os
 
 def format_gdf(filename):
     """
-    This takes a csv file and reads the data in as a dataframe.
+    This takes a filepath and reads the csv data in as a dataframe.
     There are different requirements for the gamma file bc opus gives
     stupid output - so can't use pandas functionality
 
@@ -53,7 +53,7 @@ def format_gdf(filename):
 
 def format_ndf(filename):
     """
-    This takes a csv file and reads the data in as a dataframe.
+    This takes a filepath and reads the csv data in as a dataframe.
 
     Parameters
     ----------
@@ -138,7 +138,6 @@ def dataframeXY(train_labels, info):
     dfXY = pd.concat(all_data)
     dfXY.fillna(value=0, inplace=True)
     return dfXY
-
 
 def main():
     """
