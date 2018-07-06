@@ -81,19 +81,3 @@ phwr_data = { 'type' : 'phwr',
               'mod_density' : 0.84
               }
 
-cooling_intervals = (0.000694, 7, 30, 365.25, 2292) 
-
-train_labels = []
-for rxtr_data in [pwr_data, bwr_data, vver_data, phwr_data]:
-    rxtr_type = rxtr_data['type']
-    for rxtr in rxtr_data['rxtrs']:
-        #print(rxtr_data['enrich'])
-        for enrich in rxtr_data['enrich']:
-            train_labels.append( {'ReactorType' : rxtr_type,
-                                  'OrigenReactor' : rxtr,
-                                  'Enrichment' : enrich,
-                                  'Burnups' : rxtr_data['burnup'],
-                                  'CoolingInts' : cooling_intervals } )
-
-
-
