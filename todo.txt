@@ -1,0 +1,8 @@
+Todos for this repository:
+
+- check labeling for vver440, candu, etc rxtrs
+- write tests for this too
+
+- reimplement the training, LC, and VC scripts to work with both training sets
+- can still ignore training with gammas for now
+- bring in these changes to the train_set_eval repository to do/redo the viz
