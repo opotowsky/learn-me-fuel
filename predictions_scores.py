@@ -141,7 +141,6 @@ def main():
     """
     # Parameters for the training and predictions
     CV = 10
-    scores = ['r2', 'explained_variance', 'neg_mean_absolute_error', 'neg_mean_squared_error']
     # The hand-picked numbers are based on the dayman test set validation curves
     k = 13
     a = 100
@@ -160,9 +159,6 @@ def main():
                 trainX = filter_nucs(trainX, nuc_set, top_n)
             trainX = scale(trainX)
             
-            # Predictions
-            kfold = KFold(n_splits=CV, shuffle=True)
-
             # loops through each reactor parameter to do separate predictions
             for Y in ('c', 'e', 'b', 'r'):
                 trainY = pd.Series()
@@ -182,6 +178,8 @@ def main():
                 
                 # initialize a learner
                 if Y is not 'r':
+                    scores = ['r2', 'explained_variance', 'neg_mean_absolute_error', 'neg_mean_squared_error']
+                    kfold = KFold(n_splits=CV, shuffle=True)
                     knn_init = KNeighborsRegressor(n_neighbors=k, weights='distance')
                     rr_init = Ridge(alpha=a)
                     svr_init = SVR(gamma=g, C=c)
