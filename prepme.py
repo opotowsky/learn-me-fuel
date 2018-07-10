@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 
-import training_set as ts
+import training_set_1 as ts
+#import training_set_2 as ts
 import pickle
 import numpy as np
 import pandas as pd
@@ -66,7 +67,8 @@ def format_ndf(filename):
     """
     
     data = pd.read_csv(filename, header=5, index_col=0).T
-    data.drop('subtotal', axis=1, inplace=True)
+    if 'subtotal' in data.columns:
+        data.drop('subtotal', axis=1, inplace=True)
     return data
 
 def label_data(labels, data):
@@ -135,9 +137,32 @@ def dataframeXY(train_labels, info):
         labeled = label_data(training_set, data)
         labeled.drop_duplicates(keep='last', inplace=True)
         all_data.append(labeled)
-    dfXY = pd.concat(all_data)
+    dfXY = pd.concat(all_data, sort=True)
     dfXY.fillna(value=0, inplace=True)
     return dfXY
+
+def create_train_labels():
+    """
+    Creates a list of dictionaries containing the entire training set from the 
+    imported training set file
+
+    Returns
+    -------
+    train_set : list of dictionaries, each of which contains the simulation 
+                subsets by ORIGEN rxtr
+
+    """
+
+    train_set = []
+    for rxtr_data in [ts.pwr_data, ts.bwr_data, ts.vver_data, ts.phwr_data]:
+        for o_rxtr in rxtr_data['rxtrs']:
+            for enrich in rxtr_data['enrich']:
+                train_set.append( {'ReactorType' : rxtr_data['type'],
+                                   'OrigenReactor' : o_rxtr,
+                                   'Enrichment' : enrich,
+                                   'Burnups' : rxtr_data['burnup'],
+                                   'CoolingInts' : rxtr_data['cooling_intervals'] } )
+    return train_set
 
 def main():
     """
@@ -146,24 +171,28 @@ def main():
     a pickle file.
 
     """
-    
-    print("Did you check your training data path?\n", flush=True)
-    info_src = ['_nucs', '_gammas']
-    datapath = "../origen/origen-data/8dec2017/"
-    #datapath = "../origen-data/8dec2017/"
-    subset = ['_fiss', '_act', '_fissact']
+    # Always check this data path
+    origen_dir = '../origen/origen-data/'
+    train_dir = '2jul2018_trainset1'
+    datapath = origen_dir + train_dir + '/' 
+    print('Is {} the correct training set directory?\n'.format(datapath), flush=True)
+    # Grab training set
+    train_set = create_train_labels()
+    # Make pkl files according to nuc subset and measurement source
+    subset = ['_all', '_fiss', '_act', '_fissact']
+    info_src = ['_nucs',]# '_gammas']
     for nucs_tracked in subset:
         for src in info_src:
             train_files = {}
-            for training_set in ts.train_labels:
-                o_rxtr = training_set['OrigenReactor']
-                enrich = training_set['Enrichment']
+            for train_sim in train_set:
+                o_rxtr = train_sim['OrigenReactor']
+                enrich = train_sim['Enrichment']
                 rxtrpath = datapath + o_rxtr + "/"
                 csvfile = o_rxtr + "_enr" + str(enrich) + nucs_tracked + src + ".csv"
                 trainpath = os.path.join(rxtrpath, csvfile)
-                training_set['filename'] = trainpath
-            trainXY = dataframeXY(ts.train_labels, src)
-            pkl_name = 'not-scaled_trainset' + src + nucs_tracked + '_8dec.pkl'
+                train_sim['filename'] = trainpath
+            trainXY = dataframeXY(train_set, src)
+            pkl_name = train_dir + src + nucs_tracked + '_not-scaled.pkl'
             pickle.dump(trainXY, open(pkl_name, 'wb'), protocol=2)
     return
 
