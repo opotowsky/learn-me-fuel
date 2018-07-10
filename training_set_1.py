@@ -21,8 +21,8 @@ pwr_data = { 'type' : 'pwr',
              'burnup' : (600, 1550, 2500, 3450, 4400, 5350, 6300, 7250, 8200,
                          9150, 10100, 11050, 12000, 12950, 13900, 14850, 15800,
                          16750, 17700),
-             # cooling time in days: 1 min, 1 wk, 1 mo, 1 yr, 8 yrs, 
-             'cooling_intervals' : (0.000694, 7, 30, 365.25, 2292),
+             # cooling time in days: 1 min, 1 wk, 1 mo, 1 yr 
+             'cooling_intervals' : (0.000694, 7, 30, 365.25),
              'avg_power' : 32,
              'mod_density' : 0.72
              }
