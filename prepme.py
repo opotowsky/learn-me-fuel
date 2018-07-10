@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 
-import training_set_1 as ts
-#import training_set_2 as ts
+#import training_set_1 as ts
+import training_set_2 as ts
 import pickle
 import numpy as np
 import pandas as pd
@@ -173,7 +173,7 @@ def main():
     """
     # Always check this data path
     origen_dir = '../origen/origen-data/'
-    train_dir = '2jul2018_trainset1'
+    train_dir = '2jul2018_trainset2'
     datapath = origen_dir + train_dir + '/' 
     print('Is {} the correct training set directory?\n'.format(datapath), flush=True)
     # Grab training set
