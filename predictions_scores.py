@@ -126,8 +126,10 @@ def splitXY(dfXY):
 
     """
 
-    lbls = ['ReactorType', 'CoolingTime', 'Enrichment', 'Burnup', 'OrigenReactor', 'total']
+    lbls = ['ReactorType', 'CoolingTime', 'Enrichment', 'Burnup', 'OrigenReactor']
     dfX = dfXY.drop(lbls, axis=1)
+    if 'total' in dfX.columns:
+        data.drop('total', axis=1, inplace=True)
     r_dfY = dfXY.loc[:, lbls[0]]
     c_dfY = dfXY.loc[:, lbls[1]]
     e_dfY = dfXY.loc[:, lbls[2]]
