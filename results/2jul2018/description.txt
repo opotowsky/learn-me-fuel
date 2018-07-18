@@ -1,3 +1,5 @@
+2 Jul 2018
+
 This set of results is from the code revamp that I did in June 2018 for the
 origen-data respository. These are tracking predictions for all nuclide subsets
 with the same parameters.  Learning and prediction was carried out with both
@@ -16,3 +18,25 @@ with a 0 mean
 
 Scores tracked are:  ['r2', 'explained_variance', 'neg_mean_absolute_error',
 'neg_mean_squared_error'] for regression and accuracy only for classification
+
+
+
+16 Jul 2018
+
+Because of time constraints, top_n was changed to 50 for the tset2_all
+validation curve, as well as the score tracking reduction (to just variance and
+absolute error)
+
+18 Jul 2018
+
+for predictions in both training sets, burnup is good, and the others are bad
+
+the validation and learning curves were (and thus alg hyperparams) were
+optimized for burnup only, need to do this separately for each prediction
+
+may need to just run hyperparam optimization for each alg (knn, rr, svr) each
+time before prediction.  Variables include: 
+- trainset (1 or 2)
+- nuclide subset (fiss, act, fissact, top_n)
+- parameter being predicted (rxtr, burn, enri, cooling)
+- scoring metric (exp var for diagnostic curves now, but also r2, RMSE, MAE)
