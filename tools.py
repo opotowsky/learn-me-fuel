@@ -1,5 +1,7 @@
 #! /usr/bin/env python3
 
+import pandas as pd
+
 def splitXY(dfXY):
     """
     Takes a dataframe with all X (features) and Y (labels) information and 
