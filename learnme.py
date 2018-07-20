@@ -7,12 +7,12 @@ from sklearn.preprocessing import scale
 from sklearn.neighbors import KNeighborsRegressor, KNeighborsClassifier
 from sklearn.linear_model import Ridge, RidgeClassifier
 from sklearn.svm import SVR, SVC
-from sklearn.model_selection import cross_val_predict, cross_validate, KFold, StratifiedKFold, RandomizedSearchCV
+from sklearn.model_selection import cross_val_predict, cross_validate, KFold, StratifiedKFold, RandomizedSearchCV, learning_curve
 
 import pandas as pd
 import numpy as np
 
-def learning_curves(X, Y, knn, rr, svr, scores, CV, csv_name):
+def learning_curves(X, Y, knn, rr, svr, CV, csv_name):
     """
     
     Given training data, iteratively runs some ML algorithms (currently, this
@@ -28,7 +28,6 @@ def learning_curves(X, Y, knn, rr, svr, scores, CV, csv_name):
     knn : optimized kNN learner
     rr : optimized RR learner
     svr : optimized SVR learner
-    scores : list of scoring types (from sckikit-learn)
     CV : cross-validation generator
     csv_name : string containing the train set, nuc subset, and parameter being 
                predicted for naming purposes
@@ -39,37 +38,47 @@ def learning_curves(X, Y, knn, rr, svr, scores, CV, csv_name):
                           prediction category
 
     """    
-    m = np.array( [0.1, 0.2, 0.3, 0.4, 0.5, 0.55, 0.6, 0.65, 
-                   0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0]
-                 )
-    fname = csv_name + '_learning_curve.csv'
-    lc_data = pd.DataFrame()
-    col_names = ['FracTrainSize', 'AbsTrainSize', 'TrainScore', 'CV-Score',
-                 'Algorithm', 'ScoringMetric']
     
-    for alg_type in ('knn', 'rr', 'svr'):
-        if alg_type == 'knn':
-            alg = knn
-        elif alg_type == 'rr':
-            alg = rr
-        else:
-            alg = svr
+    # Note: I'm trying to avoid loops here so the code is inelegant
 
-        for score in scores:
-            tsize, train, cv = learning_curve(alg, X, Y, train_sizes=m, cv=CV, 
-                                              scoring=score, shuffle=True)
-            train_mean = np.mean(train, axis=1)
-            cv_mean = np.mean(cv, axis=1)
-            lc_data['FracTrainSize'] = m
-            lc_data['AbsTrainSize'] = tsize
-            lc_data['TrainScore'] = train_mean
-            lc_data['CV-Score'] = cv_mean
-            lc_data['Algorithm'] = alg_type
-            lc_data['ScoringMetric'] = score
-            if not os.path.isfile(fname):
-                lc_data.to_csv(fname, mode='w', header=col_names)
-            else:
-                lc_data.to_csv(fname, mode='a', header=False)
+    trainset_frac = np.array( [0.1, 0.2, 0.3, 0.4, 0.5, 0.55, 0.6, 0.65, 
+                               0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0]
+                 )
+    col_names = ['AbsTrainSize', 'TrainScore', 'CV-Score']
+    tsze = 'AbsTrainSize'
+    tscr = 'TrainScore'
+    cscr = 'CV-Score'
+
+    # knn
+    ktsize, ktrain, kcv = learning_curve(knn, X, Y, train_sizes=trainset_frac, 
+                                         cv=CV, shuffle=True)
+    ktrain_mean = np.mean(ktrain, axis=1)
+    kcv_mean = np.mean(kcv, axis=1)
+    knn_df = pd.DataFrame({tsze : ktsize, tscr : ktrain_mean, cscr : kcv_mean}, 
+                           index=trainset_frac)
+    knn_df['Algorithm'] = 'knn'
+
+    # ridge
+    rtsize, rtrain, rcv = learning_curve(rr, X, Y, train_sizes=trainset_frac, 
+                                         cv=CV, shuffle=True)
+    rtrain_mean = np.mean(rtrain, axis=1)
+    rcv_mean = np.mean(rcv, axis=1)
+    rr_df = pd.DataFrame({tsze : rtsize, tscr : rtrain_mean, cscr : rcv_mean}, 
+                         index=trainset_frac)
+    rr_df['Algorithm'] = 'rr'
+    
+    # svr
+    stsize, strain, scv = learning_curve(svr, X, Y, train_sizes=trainset_frac, 
+                                         cv=CV, shuffle=True)
+    strain_mean = np.mean(strain, axis=1)
+    scv_mean = np.mean(scv, axis=1)
+    svr_df = pd.DataFrame({tsze : stsize, tscr : strain_mean, cscr : scv_mean}, 
+                           index=trainset_frac)
+    svr_df['Algorithm'] = 'svr'
+
+    lc_data = pd.concat([knn_df, rr_df, svr_df])
+    lc_data.index.name = 'TrainSizeFrac'
+    lc_data.to_csv(csv_name + '_learning_curve.csv')
     return 
 
 def track_predictions(trainX, trainY, knn_init, rr_init, svr_init, scores, CV, csv_name):
@@ -231,20 +240,20 @@ def main():
             rr_opt.fit(trainX, trainY)
             svr_opt.fit(trainX, trainY)
 
-            # Get best params
-            k = knn_opt.best_params_['n_neighbors']
-            a = rr_opt.best_params_['alpha']
-            g = svr_opt.best_params_['gamma']
-            c = svr_opt.best_params_['C']
-            
-            # Save dat info
-            param_file = 'trainset_' + trainset + '_hyperparameters.txt'
-            with open(param_file, 'a') as pf:
-                pf.write('The following parameters are best from the randomized search for the {} parameter prediction:\n'.format(parameter))
-                pf.write('k for knn is {}\n'.format(k)) 
-                pf.write('alpha for ridge is {}\n'.format(a)) 
-                pf.write('gamma for svr is {}\n'.format(g)) 
-                pf.write('C for svr is {}\n'.format(c)) 
+            ## Get best params
+            #k = knn_opt.best_params_['n_neighbors']
+            #a = rr_opt.best_params_['alpha']
+            #g = svr_opt.best_params_['gamma']
+            #c = svr_opt.best_params_['C']
+            #
+            ## Save dat info
+            #param_file = 'trainset_' + trainset + '_hyperparameters.txt'
+            #with open(param_file, 'a') as pf:
+            #    pf.write('The following parameters are best from the randomized search for the {} parameter prediction:\n'.format(parameter))
+            #    pf.write('k for knn is {}\n'.format(k)) 
+            #    pf.write('alpha for ridge is {}\n'.format(a)) 
+            #    pf.write('gamma for svr is {}\n'.format(g)) 
+            #    pf.write('C for svr is {}\n'.format(c)) 
             #knn_df = pd.DataFrame(knn_opt.cv_results_)
             #rr_df = pd.DataFrame(rr_opt.cv_results_)
             #svr_df = pd.DataFrame(svr_opt.cv_results_)
@@ -267,13 +276,13 @@ def main():
             csv_name = 'trainset_' + trainset + '_' + subset + '_' + parameter
             
             # track predictions 
-            track_predictions(trainX, trainY, knn_init, rr_init, svr_init, scores, kfold, csv_name)
+            #track_predictions(trainX, trainY, knn_init, rr_init, svr_init, scores, kfold, csv_name)
 
             # calculate errors and scores
-            errors_and_scores(trainX, trainY, knn_init, rr_init, svr_init, scores, kfold, csv_name)
+            #errors_and_scores(trainX, trainY, knn_init, rr_init, svr_init, scores, kfold, csv_name)
 
             # learning curves
-            #learning_curves(trainX, trainY, knn_init, rr_init, svr_init, scores, kfold, csv_name)
+            learning_curves(trainX, trainY, knn_init, rr_init, svr_init, kfold, csv_name)
             
             print("The {} predictions in trainset {} are complete\n".format(parameter, trainset), flush=True)
 
