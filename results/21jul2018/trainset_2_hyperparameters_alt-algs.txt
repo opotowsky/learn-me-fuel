@@ -1,0 +1,142 @@
+The following parameters are best from the randomized search for the reactor parameter prediction:
+max depth for dtree is 24
+max features for dtree is 36
+max depth for xtree is 34
+max features for xtree is 26
+The following parameters are best from the randomized search for the burnup parameter prediction:
+max depth for dtree is 15
+max features for dtree is 14
+max depth for xtree is 56
+max features for xtree is 29
+num iterations for bayes reg is 437
+alpha 1 for bayes reg is ()
+alpha 2 for bayes reg is ()
+lambda 1 for bayes reg is ()
+lambda 2 for bayes reg is ()
+The following parameters are best from the randomized search for the cooling parameter prediction:
+max depth for dtree is 65
+max features for dtree is 37
+max depth for xtree is 70
+max features for xtree is 30
+num iterations for bayes reg is 495
+alpha 1 for bayes reg is ()
+alpha 2 for bayes reg is ()
+lambda 1 for bayes reg is ()
+lambda 2 for bayes reg is ()
+The following parameters are best from the randomized search for the enrichment parameter prediction:
+max depth for dtree is 36
+max features for dtree is 41
+max depth for xtree is 26
+max features for xtree is 43
+num iterations for bayes reg is 573
+alpha 1 for bayes reg is ()
+alpha 2 for bayes reg is ()
+lambda 1 for bayes reg is ()
+lambda 2 for bayes reg is ()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+re-running randsearch ONLY to see alphas and lambas (messed up w/ parentheses above)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The following parameters are best from the randomized search for the reactor parameter prediction:
+max depth for dtree is 88
+max features for dtree is 12
+max depth for xtree is 42
+max features for xtree is 43
+The following parameters are best from the randomized search for the burnup parameter prediction:
+max depth for dtree is 66
+max features for dtree is 38
+max depth for xtree is 18
+max features for xtree is 31
+num iterations for bayes reg is 844
+alpha 1 for bayes reg is 1.0985411419875572e-06
+alpha 2 for bayes reg is 6.866488450042998e-07
+lambda 1 for bayes reg is 3.727593720314938
+lambda 2 for bayes reg is 0.00012067926406393288
+The following parameters are best from the randomized search for the cooling parameter prediction:
+max depth for dtree is 29
+max features for dtree is 41
+max depth for xtree is 33
+max features for xtree is 46
+num iterations for bayes reg is 903
+alpha 1 for bayes reg is 15.264179671752364
+alpha 2 for bayes reg is 6.551285568595509e-08
+lambda 1 for bayes reg is 1.757510624854793e-06
+lambda 2 for bayes reg is 4.0949150623804276e-08
+The following parameters are best from the randomized search for the enrichment parameter prediction:
+max depth for dtree is 77
+max features for dtree is 24
+max depth for xtree is 36
+max features for xtree is 37
+num iterations for bayes reg is 922
+alpha 1 for bayes reg is 100.0
+alpha 2 for bayes reg is 2.811768697974231e-06
+lambda 1 for bayes reg is 0.00012067926406393288
+lambda 2 for bayes reg is 3.727593720314938
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+re-running param search to see spread of params
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The following parameters are best from the randomized search for the reactor parameter prediction:
+max depth for dtree is 48.4
+47, 79, 66, 52, 75, 22, 20, 22, 38, 63, 
+max features for dtree is 37.4
+43, 30, 44, 33, 40, 24, 33, 44, 41, 42, 
+max depth for xtree is 48.3
+40, 50, 29, 49, 43, 90, 54, 38, 50, 40, 
+max features for xtree is 34.6
+34, 25, 46, 42, 28, 21, 35, 38, 41, 36, 
+The following parameters are best from the randomized search for the burnup parameter prediction:
+max depth for dtree is 49.8
+43, 26, 61, 36, 29, 70, 81, 72, 10, 70, 
+max features for dtree is 23.4
+19, 14, 40, 14, 30, 35, 46, 16, 5, 15, 
+max depth for xtree is 52.6
+36, 72, 54, 59, 42, 47, 18, 86, 47, 65, 
+max features for xtree is 32.8
+45, 42, 29, 35, 46, 46, 21, 25, 10, 29, 
+num iterations for bayes reg is 483.8
+108, 709, 747, 127, 534, 903, 941, 127, 554, 88, 
+alpha 1 for bayes reg is 10.667359798795038
+0.5689866029018305, 5.963623316594637, 7.196856730011529e-06, 0.0020235896477251557, 4.2919342601287785e-07, 0.13894954943731389, 4.0949150623804276e-08, 100.0, 6.551285568595509e-08, 7.196856730011529e-06, 
+alpha 2 for bayes reg is 0.15323933285101146
+1.1513953993264481e-05, 0.021209508879201925, 0.0003088843596477485, 2.94705170255181e-05, 1.4563484775012443, 2.811768697974231e-06, 2.811768697974231e-06, 2.5595479226995333e-08, 0.00019306977288832496, 0.054286754393238594, 
+lambda 1 for bayes reg is 3.469815846241976
+2.329951810515372, 5.963623316594637, 6.551285568595509e-08, 0.9102981779915227, 2.329951810515372, 2.329951810515372, 2.329951810515372, 15.264179671752364, 2.329951810515372, 0.9102981779915227, 
+lambda 2 for bayes reg is 15.579201140461105
+1.4563484775012443, 15.264179671752364, 1.1513953993264481e-05, 39.06939937054621, 1.0481131341546853e-07, 4.2919342601287785e-07, 4.71486636345739e-05, 100.0, 1.0985411419875572e-06, 0.0020235896477251557, 
+The following parameters are best from the randomized search for the cooling parameter prediction:
+max depth for dtree is 49.7
+77, 50, 47, 45, 45, 56, 22, 79, 17, 59, 
+max features for dtree is 36.5
+30, 43, 36, 36, 32, 45, 30, 33, 40, 40, 
+max depth for xtree is 42.3
+31, 84, 42, 43, 34, 31, 31, 74, 31, 22, 
+max features for xtree is 35.2
+36, 42, 23, 35, 44, 29, 38, 29, 40, 36, 
+num iterations for bayes reg is 450.9
+651, 88, 612, 205, 864, 398, 146, 224, 515, 806, 
+alpha 1 for bayes reg is 71.2100284450079
+100.0, 100.0, 9.540954763499963, 39.06939937054621, 100.0, 100.0, 24.420530945486547, 39.06939937054621, 100.0, 100.0, 
+alpha 2 for bayes reg is 8.285857185310372
+15.264179671752364, 4.2919342601287785e-07, 1.67683293681101e-07, 0.35564803062231287, 24.420530945486547, 3.727593720314938, 2.811768697974231e-06, 39.06939937054621, 7.196856730011529e-06, 0.021209508879201925, 
+lambda 1 for bayes reg is 0.00029765411790553864
+0.0020235896477251557, 4.0949150623804276e-08, 4.498432668969444e-06, 1.5998587196060573e-08, 2.94705170255181e-05, 7.196856730011529e-06, 4.2919342601287785e-07, 0.00012067926406393288, 1.5998587196060573e-08, 0.0007906043210907702, 
+lambda 2 for bayes reg is 17.42714749727643
+4.2919342601287785e-07, 6.866488450042998e-07, 9.540954763499963, 62.50551925273976, 24.420530945486547, 4.71486636345739e-05, 15.264179671752364, 62.50551925273976, 0.0339322177189533, 0.0007906043210907702, 
+The following parameters are best from the randomized search for the enrichment parameter prediction:
+max depth for dtree is 53.2
+81, 29, 50, 26, 27, 56, 75, 59, 86, 43, 
+max features for dtree is 33.1
+30, 32, 35, 27, 13, 45, 42, 39, 33, 35, 
+max depth for xtree is 49.1
+29, 29, 79, 27, 63, 52, 82, 63, 47, 20, 
+max features for xtree is 36.7
+21, 35, 46, 30, 45, 43, 43, 30, 35, 39, 
+num iterations for bayes reg is 557.4
+864, 592, 941, 340, 360, 69, 961, 495, 476, 476, 
+alpha 1 for bayes reg is 53.88428364504699
+24.420530945486547, 39.06939937054621, 100.0, 62.50551925273976, 62.50551925273976, 62.50551925273976, 62.50551925273976, 100.0, 0.9102981779915227, 24.420530945486547, 
+alpha 2 for bayes reg is 0.38752127252967133
+7.543120063354622e-05, 0.22229964825261955, 0.0020235896477251557, 0.054286754393238594, 0.35564803062231287, 0.0003088843596477485, 2.329951810515372, 0.9102981779915227, 1.1513953993264481e-05, 0.0003088843596477485, 
+lambda 1 for bayes reg is 0.0034725255512439088
+2.94705170255181e-05, 2.5595479226995333e-08, 0.0004941713361323838, 1.67683293681101e-07, 1.67683293681101e-07, 0.00019306977288832496, 0.0339322177189533, 7.543120063354622e-05, 4.2919342601287785e-07, 1.0481131341546853e-07, 
+lambda 2 for bayes reg is 0.29197352434684365
+0.008286427728546842, 0.13894954943731389, 6.551285568595509e-08, 7.196856730011529e-06, 1.1513953993264481e-05, 2.329951810515372, 2.94705170255181e-05, 0.35564803062231287, 0.08685113737513521, 4.0949150623804276e-08, 

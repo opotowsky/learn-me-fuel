@@ -26,9 +26,9 @@ def learning_curves(X, Y, alg1, alg2, alg3, CV, csv_name):
     
     X : dataframe that includes all training data
     Y : series with labels for training data
-    knn : optimized kNN learner
-    rr : optimized RR learner
-    svr : optimized SVR learner
+    alg1 : optimized learner 1
+    alg2 : optimized learner 2
+    alg3 : optimized learner 3
     CV : cross-validation generator
     csv_name : string containing the train set, nuc subset, and parameter being 
                predicted for naming purposes
@@ -43,41 +43,40 @@ def learning_curves(X, Y, alg1, alg2, alg3, CV, csv_name):
     # Note: I'm trying to avoid loops here so the code is inelegant
 
     trainset_frac = np.array( [0.1, 0.2, 0.3, 0.4, 0.5, 0.55, 0.6, 0.65, 
-                               0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0]
-                 )
+                               0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0] )
     col_names = ['AbsTrainSize', 'TrainScore', 'CV-Score']
     tsze = 'AbsTrainSize'
     tscr = 'TrainScore'
     cscr = 'CV-Score'
 
     # dtree
-    1tsize, 1train, 1cv = learning_curve(alg1, X, Y, train_sizes=trainset_frac, 
-                                         cv=CV, shuffle=True)
-    1train_mean = np.mean(1train, axis=1)
-    1cv_mean = np.mean(1cv, axis=1)
-    1_df = pd.DataFrame({tsze : 1tsize, tscr : 1train_mean, cscr : 1cv_mean}, 
-                         index=trainset_frac)
-    1_df['Algorithm'] = 'dtree'
+    tsize, train, cv = learning_curve(alg1, X, Y, train_sizes=trainset_frac, 
+                                      cv=CV, shuffle=True)
+    train_mean = np.mean(train, axis=1)
+    cv_mean = np.mean(cv, axis=1)
+    df1 = pd.DataFrame({tsze : tsize, tscr : train_mean, cscr : cv_mean}, 
+                        index=trainset_frac)
+    df1['Algorithm'] = 'dtree'
 
     # xtree
-    2tsize, 2train, 2cv = learning_curve(alg2, X, Y, train_sizes=trainset_frac, 
-                                         cv=CV, shuffle=True)
-    2train_mean = np.mean(2train, axis=1)
-    2cv_mean = np.mean(2cv, axis=1)
-    2_df = pd.DataFrame({tsze : 2tsize, tscr : 2train_mean, cscr : 2cv_mean}, 
-                         index=trainset_frac)
-    2_df['Algorithm'] = 'xtree'
+    tsize, train, cv = learning_curve(alg2, X, Y, train_sizes=trainset_frac, 
+                                      cv=CV, shuffle=True)
+    train_mean = np.mean(train, axis=1)
+    cv_mean = np.mean(cv, axis=1)
+    df2 = pd.DataFrame({tsze : tsize, tscr : train_mean, cscr : cv_mean}, 
+                        index=trainset_frac)
+    df2['Algorithm'] = 'xtree'
     
     # bayes
-    3tsize, 3train, 3cv = learning_curve(alg3, X, Y, train_sizes=trainset_frac, 
-                                         cv=CV, shuffle=True)
-    3train_mean = np.mean(3train, axis=1)
-    3cv_mean = np.mean(3cv, axis=1)
-    3_df = pd.DataFrame({tsze : 3tsize, tscr : 3train_mean, cscr : 3cv_mean}, 
-                         index=trainset_frac)
-    3_df['Algorithm'] = 'bayes'
+    tsize, train, cv = learning_curve(alg3, X, Y, train_sizes=trainset_frac, 
+                                      cv=CV, shuffle=True)
+    train_mean = np.mean(train, axis=1)
+    cv_mean = np.mean(cv, axis=1)
+    df3 = pd.DataFrame({tsze : tsize, tscr : train_mean, cscr : cv_mean}, 
+                        index=trainset_frac)
+    df3['Algorithm'] = 'bayes'
 
-    lc_data = pd.concat([1_df, 2_df, 3_df])
+    lc_data = pd.concat([df1, df2, df3])
     lc_data.index.name = 'TrainSizeFrac'
     lc_data.to_csv(csv_name + '_learning_curve.csv')
     return 
@@ -91,9 +90,9 @@ def track_predictions(trainX, trainY, alg1_init, alg2_init, alg3_init, scores, C
     
     X : dataframe that includes all training data
     Y : series with labels for training data
-    knn_init : optimized kNN learner
-    rr_init : optimized RR learner
-    svr_init : optimized SVR learner
+    alg1_init : optimized learner 1
+    alg2_init : optimized learner 2
+    alg3_init : optimized learner 3
     scores : list of scoring types (from sckikit-learn)
     CV : cross-validation generator
     csv_name : string containing the train set, nuc subset, and parameter being 
@@ -124,9 +123,9 @@ def errors_and_scores(trainX, trainY, alg1_init, alg2_init, alg3_init, scores, C
     
     X : dataframe that includes all training data
     Y : series with labels for training data
-    knn_init : optimized kNN learner
-    rr_init : optimized RR learner
-    svr_init : optimized SVR learner
+    alg1_init : optimized learner 1
+    alg2_init : optimized learner 2
+    alg3_init : optimized learner 3
     scores : list of scoring types (from sckikit-learn)
     CV : cross-validation generator
     csv_name : string containing the train set, nuc subset, and parameter being 
@@ -139,19 +138,19 @@ def errors_and_scores(trainX, trainY, alg1_init, alg2_init, alg3_init, scores, C
     """
     # Note: I'm trying to avoid loops here so the code is inelegant
     
-    1cv_scr = cross_validate(alg1_init, trainX, trainY, scoring=scores, cv=CV, return_train_score=False)
-    1_df = pd.DataFrame(1cv_scr)
-    1_df['Algorithm'] = 'dtree'
+    cv_scr = cross_validate(alg1_init, trainX, trainY, scoring=scores, cv=CV, return_train_score=False)
+    df1 = pd.DataFrame(cv_scr)
+    df1['Algorithm'] = 'dtree'
     
-    2cv_scr = cross_validate(alg2_init, trainX, trainY, scoring=scores, cv=CV, return_train_score=False)
-    2_df = pd.DataFrame(2cv_scr)
-    2_df['Algorithm'] = 'xtree'
+    cv_scr = cross_validate(alg2_init, trainX, trainY, scoring=scores, cv=CV, return_train_score=False)
+    df2 = pd.DataFrame(cv_scr)
+    df2['Algorithm'] = 'xtree'
     
-    3cv_scr = cross_validate(alg3_init, trainX, trainY, scoring=scores, cv=CV, return_train_score=False)
-    3_df = pd.DataFrame(3cv_scr)
-    3_df['Algorithm'] = 'bayes'
+    cv_scr = cross_validate(alg3_init, trainX, trainY, scoring=scores, cv=CV, return_train_score=False)
+    df3 = pd.DataFrame(cv_scr)
+    df3['Algorithm'] = 'bayes'
     
-    cv_results = [1_df, 2_df, 3_df]
+    cv_results = [df1, df2, df3]
     df = pd.concat(cv_results)
     df.to_csv(csv_name + '_scores.csv')
     
@@ -210,77 +209,88 @@ def main():
             if Y is 'r':
                 score = 'accuracy'
                 kfold = StratifiedKFold(n_splits=CV, shuffle=True)
-                alg1_init = DecisionTreeClassifier(weights='distance')
+                alg1_init = DecisionTreeClassifier(class_weight='balanced')
                 alg2_init = ExtraTreeClassifier(class_weight='balanced')
-                alg3_init = GaussianNB(class_weight='balanced')
+                alg3_init = GaussianNB()
             
             # CV search the hyperparams
-            alg1_grid = {'n_neighbors': np.linspace(1, 50).astype(int)}
-            alg2_grid = {'alpha': np.logspace(-4, 10)} 
-            alg3_grid = {'C': expon(scale=100), 'gamma': expon(scale=.1)}
+            # alg1
+            alg1_grid = {"max_depth": np.linspace(3, 90).astype(int), 
+                         "max_features": np.linspace(5, len(trainXY.columns)-6).astype(int)}
             alg1_opt = RandomizedSearchCV(estimator=alg1_init, param_distributions=alg1_grid, 
                                           n_iter=20, scoring=score, n_jobs=-1, cv=kfold, 
                                           return_train_score=True)
+            alg1_opt.fit(trainX, trainY)
+            alg1_init = alg1_opt.best_estimator_
+            d1 = alg1_opt.best_params_['max_depth']
+            f1 = alg1_opt.best_params_['max_features']
+            
+            # alg2
+            alg2_grid = alg1_grid
             alg2_opt = RandomizedSearchCV(estimator=alg2_init, param_distributions=alg2_grid,
                                           n_iter=20, scoring=score, n_jobs=-1, cv=kfold, 
                                           return_train_score=True)
-            alg3_opt = RandomizedSearchCV(estimator=alg3_init, param_distributions=alg3_grid,
-                                          n_iter=20, scoring=score, n_jobs=-1, cv=kfold, 
-                                          return_train_score=True)
-            alg1_opt.fit(trainX, trainY)
             alg2_opt.fit(trainX, trainY)
-            alg3_opt.fit(trainX, trainY)
-
-            # Get best params
-            p1 = alg1_opt.best_params_['n_neighbors']
-            p2 = alg2_opt.best_params_['alpha']
-            p3 = alg3_opt.best_params_['gamma']
-            p4 = alg3_opt.best_params_['C']
+            alg2_init = alg2_opt.best_estimator_
+            d2 = alg2_opt.best_params_['max_depth']
+            f2 = alg2_opt.best_params_['max_features']
             
+            # alg3
+            alg3_grid = {'n_iter': np.linspace(50, 1000).astype(int), 
+                         'alpha_1': np.logspace(-8, 2), 'alpha_2' : np.logspace(-8, 2), 
+                         'lambda_1': np.logspace(-8, 2), 'lambda_2' : np.logspace(-8, 2)}
+            if Y is not 'r':
+                alg3_opt = RandomizedSearchCV(estimator=alg3_init, param_distributions=alg3_grid,
+                                              n_iter=20, scoring=score, n_jobs=-1, cv=kfold, 
+                                              return_train_score=True)
+                alg3_opt.fit(trainX, trainY)
+                alg3_init = alg3_opt.best_estimator_
+                it = alg3_opt.best_params_['n_iter']
+                a1 = alg3_opt.best_params_['alpha_1']
+                a2 = alg3_opt.best_params_['alpha_2']
+                l1 = alg3_opt.best_params_['lambda_1']
+                l2 = alg3_opt.best_params_['lambda_2']
+
             # Save dat info
             param_file = 'trainset_' + trainset + '_hyperparameters_alt-algs.txt'
             with open(param_file, 'a') as pf:
                 pf.write('The following parameters are best from the randomized search for the {} parameter prediction:\n'.format(parameter))
-                pf.write('k for knn is {}\n'.format(p1)) 
-                pf.write('alpha for ridge is {}\n'.format(p2)) 
-                pf.write('gamma for svr is {}\n'.format(p3)) 
-                pf.write('C for svr is {}\n'.format(p4)) 
-            #knn_df = pd.DataFrame(knn_opt.cv_results_)
-            #rr_df = pd.DataFrame(rr_opt.cv_results_)
-            #svr_df = pd.DataFrame(svr_opt.cv_results_)
-            #knn_df.to_csv(param_file, sep=' ', mode='a')
-            #rr_df.to_csv(param_file, sep=' ', mode='a')
-            #svr_df.to_csv(param_file, sep=' ', mode='a')
+                pf.write('max depth for dtree is {}\n'.format(d1)) 
+                pf.write('max features for dtree is {}\n'.format(f1)) 
+                pf.write('max depth for xtree is {}\n'.format(d2)) 
+                pf.write('max features for xtree is {}\n'.format(f2)) 
+                if Y is not 'r':
+                    pf.write('num iterations for bayes reg is {}\n'.format(it))
+                    pf.write('alpha 1 for bayes reg is {}\n'.format(a1))
+                    pf.write('alpha 2 for bayes reg is {}\n'.format(a2))
+                    pf.write('lambda 1 for bayes reg is {}\n'.format(l1))
+                    pf.write('lambda 2 for bayes reg is {}\n'.format(l2))
 
             ########################
             # run predictions, etc #
             ########################
             
-            # gather optimized learners
-            alg1_init = alg1_opt.best_estimator_
-            alg2_init = alg2_opt.best_estimator_
-            alg3_init = alg3_opt.best_estimator_
+            #scores = ['explained_variance', 'neg_mean_absolute_error']
+            #if Y is 'r':
+            #    scores = ['accuracy', ]
+            #csv_name = 'trainset_' + trainset + '_' + subset + '_' + parameter
+            #
+            #print("The {} predictions in trainset {} are beginning\n".format(parameter, trainset), flush=True)
+            #
+            ## track predictions 
+            #track_predictions(trainX, trainY, alg1_init, alg2_init, alg3_init, scores, kfold, csv_name)
+            #print("\t Prediction tracking done\n", flush=True)
 
-            scores = ['explained_variance', 'neg_mean_absolute_error']
-            if Y is 'r':
-                scores = ['accuracy', ]
-            csv_name = 'trainset_' + trainset + '_' + subset + '_' + parameter
-            
-            print("The {} predictions in trainset {} are beginning\n".format(parameter, trainset), flush=True)
-            
-            # track predictions 
-            track_predictions(trainX, trainY, alg1_init, alg2_init, alg3_init, scores, kfold, csv_name)
-            print("\t Prediction tracking done\n", flush=True)
+            ## calculate errors and scores
+            #errors_and_scores(trainX, trainY, alg1_init, alg2_init, alg3_init, scores, kfold, csv_name)
+            #print("\t CV scoring done\n", flush=True)
 
-            # calculate errors and scores
-            errors_and_scores(trainX, trainY, alg1_init, alg2_init, alg3_init, scores, kfold, csv_name)
-            print("\t CV scoring done\n", flush=True)
-
-            # learning curves
-            learning_curves(trainX, trainY, alg1_init, alg2_init, alg3_init, kfold, csv_name)
-            print("\t Learning curves done\n", flush=True)
-            
-            print("The {} predictions in trainset {} are complete\n".format(parameter, trainset), flush=True)
+            ## learning curves
+            #learning_curves(trainX, trainY, alg1_init, alg2_init, alg3_init, kfold, csv_name)
+            #print("\t Learning curves done\n", flush=True)
+            #
+            #print("The {} predictions in trainset {} are complete\n".format(parameter, trainset), flush=True)
+            #print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n", flush=True)
 
     return
 
