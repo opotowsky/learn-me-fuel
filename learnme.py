@@ -7,7 +7,7 @@ from sklearn.preprocessing import scale
 from sklearn.neighbors import KNeighborsRegressor, KNeighborsClassifier
 from sklearn.linear_model import Ridge, RidgeClassifier
 from sklearn.svm import SVR, SVC
-from sklearn.model_selection import cross_val_predict, cross_validate, KFold, StratifiedKFold, RandomizedSearchCV, learning_curve
+from sklearn.model_selection import cross_val_predict, cross_validate, KFold, StratifiedKFold, RandomizedSearchCV, learning_curve, train_test_split
 
 import pandas as pd
 import numpy as np
@@ -41,8 +41,7 @@ def learning_curves(X, Y, knn, rr, svr, CV, csv_name):
     
     # Note: I'm trying to avoid loops here so the code is inelegant
 
-    trainset_frac = np.array( [0.1, 0.2, 0.3, 0.4, 0.5, 0.55, 0.6, 0.65, 
-                               0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0]
+    trainset_frac = np.array( [0.2, 0.4, 0.6, 0.7, 0.8, 0.9]
                  )
     col_names = ['AbsTrainSize', 'TrainScore', 'CV-Score']
     tsze = 'AbsTrainSize'
@@ -113,7 +112,7 @@ def track_predictions(trainX, trainY, knn_init, rr_init, svr_init, scores, CV, c
     preds_by_alg.to_csv(csv_name + '_predictions.csv')
     return
 
-def errors_and_scores(trainX, trainY, knn_init, rr_init, svr_init, scores, CV, csv_name):
+def errors_and_scores(trainX, trainY, alg1_init, alg2_init, alg3_init, scores, CV, csv_name):
     """
     Saves csv's with each reactor parameter regression wrt scoring metric and 
     algorithm
@@ -136,34 +135,23 @@ def errors_and_scores(trainX, trainY, knn_init, rr_init, svr_init, scores, CV, c
     *scores.csv : csv file with scores for each CV fold
     
     """
-    # init/empty the lists
-    knn_scores = []
-    rr_scores = []
-    svr_scores = []
-    for alg in ('knn', 'rr', 'svr'):
-        # get init'd learner
-        if alg == 'knn':
-            alg_pred = knn_init
-        elif alg == 'rr':
-            alg_pred = rr_init
-        else:
-            alg_pred = svr_init
-        # cross valiation to obtain scores
-        cv_info = cross_validate(alg_pred, trainX, trainY, scoring=scores, cv=CV, return_train_score=False)
-        df = pd.DataFrame(cv_info)
-        # for concatting since it's finnicky
-        if alg == 'knn':
-            df['algorithm'] = 'knn'
-            knn_scores = df
-        elif alg == 'rr':
-            df['algorithm'] = 'rr'
-            rr_scores = df
-        else:
-            df['algorithm'] = 'svr'
-            svr_scores = df
-    cv_results = [knn_scores, rr_scores, svr_scores]
+    
+    cv_scr = cross_validate(alg1_init, trainX, trainY, scoring=scores, cv=CV, return_train_score=False)
+    df1 = pd.DataFrame(cv_scr)
+    df1['Algorithm'] = 'knn'
+    
+    cv_scr = cross_validate(alg2_init, trainX, trainY, scoring=scores, cv=CV, return_train_score=False)
+    df2 = pd.DataFrame(cv_scr)
+    df2['Algorithm'] = 'rr'
+    
+    cv_scr = cross_validate(alg3_init, trainX, trainY, scoring=scores, cv=CV, return_train_score=False)
+    df3 = pd.DataFrame(cv_scr)
+    df3['Algorithm'] = 'svr'
+    
+    cv_results = [df1, df2, df3]
     df = pd.concat(cv_results)
     df.to_csv(csv_name + '_scores.csv')
+    
     return
 
 def main():
@@ -172,14 +160,14 @@ def main():
     several algorithms and saves the predictions and ground truth to a CSV file
     """
     # Parameters for the training and predictions
-    CV = 10
+    CV = 5
     
     subsets = ('fiss', 'act', 'fissact', 'all')
     subset = subsets[2]
     
-    pkl_base = './pkl_trainsets/2jul2018/2jul2018_trainset'
+    pkl_base = './pkl_trainsets/2jul2018/22jul2018_trainset'
     
-    for trainset in ('1', '2'):
+    for trainset in ('3',):# '1', '2'):
         pkl = pkl_base + trainset + '_nucs_' + subset + '_not-scaled.pkl'
         trainXY = pd.read_pickle(pkl)
         trainX, rY, cY, eY, bY = splitXY(trainXY)
@@ -213,32 +201,32 @@ def main():
             # initialize learners
             score = 'explained_variance'
             kfold = KFold(n_splits=CV, shuffle=True)
-            knn_init = KNeighborsRegressor(weights='distance')
-            rr_init = Ridge()
-            svr_init = SVR()
+            knn_init = KNeighborsRegressor(n_neighbors=4, weights='distance')
+            rr_init = Ridge(alpha=0.001)
+            svr_init = SVR(gamma=0.001, C=200)
             if Y is 'r':
                 score = 'accuracy'
                 kfold = StratifiedKFold(n_splits=CV, shuffle=True)
-                knn_init = KNeighborsClassifier(weights='distance')
-                rr_init = RidgeClassifier(class_weight='balanced')
-                svr_init = SVC(class_weight='balanced')
+                knn_init = KNeighborsClassifier(n_neighbors=4, weights='distance')
+                rr_init = RidgeClassifier(alpha=0.001, class_weight='balanced')
+                svr_init = SVC(gamma=0.001, C=200, class_weight='balanced')
             
-            # CV search the hyperparams
-            knn_grid = {'n_neighbors': np.linspace(1, 50).astype(int)}
-            rr_grid = {'alpha': np.logspace(-4, 10)} 
-            svr_grid = {'C': expon(scale=100), 'gamma': expon(scale=.1)}
-            knn_opt = RandomizedSearchCV(estimator=knn_init, param_distributions=knn_grid, 
-                                         n_iter=20, scoring=score, n_jobs=-1, cv=kfold, 
-                                         return_train_score=True)
-            rr_opt = RandomizedSearchCV(estimator=rr_init, param_distributions=rr_grid,
-                                         n_iter=20, scoring=score, n_jobs=-1, cv=kfold, 
-                                         return_train_score=True)
-            svr_opt = RandomizedSearchCV(estimator=svr_init, param_distributions=svr_grid,
-                                         n_iter=20, scoring=score, n_jobs=-1, cv=kfold, 
-                                         return_train_score=True)
-            knn_opt.fit(trainX, trainY)
-            rr_opt.fit(trainX, trainY)
-            svr_opt.fit(trainX, trainY)
+            ## CV search the hyperparams
+            #knn_grid = {'n_neighbors': np.linspace(1, 50).astype(int)}
+            #rr_grid = {'alpha': np.logspace(-4, 4)} 
+            #svr_grid = {'C': np.logspace(-2, 5), 'gamma': np.logspace(-7, 2)}
+            #knn_opt = RandomizedSearchCV(estimator=knn_init, param_distributions=knn_grid, 
+            #                             n_iter=20, scoring=score, n_jobs=-1, cv=kfold, 
+            #                             return_train_score=True)
+            #rr_opt = RandomizedSearchCV(estimator=rr_init, param_distributions=rr_grid,
+            #                             n_iter=20, scoring=score, n_jobs=-1, cv=kfold, 
+            #                             return_train_score=True)
+            #svr_opt = RandomizedSearchCV(estimator=svr_init, param_distributions=svr_grid,
+            #                             n_iter=20, scoring=score, n_jobs=-1, cv=kfold, 
+            #                             return_train_score=True)
+            #knn_opt.fit(trainX, trainY)
+            #rr_opt.fit(trainX, trainY)
+            #svr_opt.fit(trainX, trainY)
 
             ## Get best params
             #k = knn_opt.best_params_['n_neighbors']
@@ -266,9 +254,9 @@ def main():
             ########################
             
             # gather optimized learners
-            knn_init = knn_opt.best_estimator_
-            rr_init = rr_opt.best_estimator_
-            svr_init = svr_opt.best_estimator_
+            #knn_init = knn_opt.best_estimator_
+            #rr_init = rr_opt.best_estimator_
+            #svr_init = svr_opt.best_estimator_
 
             scores = ['explained_variance', 'neg_mean_absolute_error']
             if Y is 'r':
@@ -276,10 +264,10 @@ def main():
             csv_name = 'trainset_' + trainset + '_' + subset + '_' + parameter
             
             # track predictions 
-            #track_predictions(trainX, trainY, knn_init, rr_init, svr_init, scores, kfold, csv_name)
+            track_predictions(trainX, trainY, knn_init, rr_init, svr_init, scores, kfold, csv_name)
 
             # calculate errors and scores
-            #errors_and_scores(trainX, trainY, knn_init, rr_init, svr_init, scores, kfold, csv_name)
+            errors_and_scores(trainX, trainY, knn_init, rr_init, svr_init, scores, kfold, csv_name)
 
             # learning curves
             learning_curves(trainX, trainY, knn_init, rr_init, svr_init, kfold, csv_name)

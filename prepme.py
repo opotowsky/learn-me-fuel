@@ -173,11 +173,13 @@ def main():
     """
     # Always check this data path
     origen_dir = '../origen/origen-data/'
-    train_dir = '2jul2018_trainset2'
+    train_dir = '22jul2018_trainset3'
     datapath = origen_dir + train_dir + '/' 
     print('Is {} the correct training set directory?\n'.format(datapath), flush=True)
     # Grab training set
-    train_set = create_train_labels()
+    #train_set = create_train_labels()
+    # Grab randomly varied tset instead:
+    train_set = pickle.load(open('../origen/origen-data/varied_tset.pkl', 'rb'))
     # Make pkl files according to nuc subset and measurement source
     subset = ['_all', '_fiss', '_act', '_fissact']
     info_src = ['_nucs',]# '_gammas']
