@@ -1,0 +1,19 @@
+low burnup trainsetv testset 1
+
+The reactor prediction`s best params are k=2, alpha=0.0007196856730011522, gamma=0.04664846403079149, and C=407.41040799088404
+
+The reactor scores are knn=0.7640449438202247, rr=0.7528089887640449, and svr=0.8876404494382022
+
+The burnup prediction`s best params are k=1, alpha=0.0001, gamma=0.03021275840249922, and C=223.0163504404299
+
+The burnup scores are knn=0.9417394531209287, rr=0.9261093992378263, and svr=0.9442797026704651
+
+The cooling prediction`s best params are k=4, alpha=0.0001, gamma=0.15111195879249525, and C=166.7323257884895
+
+The cooling scores are knn=0.7809582565364559, rr=-4.962024545758245, and svr=0.8601463488020968
+
+The enrichment prediction`s best params are k=6, alpha=0.00019306977288832496, gamma=0.32691064375874385, and C=247.11641861640962
+
+The enrichment scores are knn=0.22243234136961565, rr=-2.0893564171165075, and svr=0.2738657724600293
+
+sfcompo trainset v testset 1
