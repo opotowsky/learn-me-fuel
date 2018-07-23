@@ -7,10 +7,74 @@ from sklearn.preprocessing import scale
 from sklearn.neighbors import KNeighborsRegressor, KNeighborsClassifier
 from sklearn.linear_model import Ridge, RidgeClassifier
 from sklearn.svm import SVR, SVC
-from sklearn.model_selection import cross_val_predict, cross_validate, KFold, StratifiedKFold, RandomizedSearchCV, learning_curve, train_test_split
+from sklearn.model_selection import cross_val_predict, cross_validate, KFold, StratifiedKFold, RandomizedSearchCV, learning_curve, validation_curve
 
 import pandas as pd
 import numpy as np
+
+def validation_curves(X, Y, knn, rr, svr, CV, score, csv_name):
+    """
+    
+    Given training data, iteratively runs some ML algorithms (currently, this
+    is nearest neighbor, linear, and support vector methods), varying the
+    training set size for each prediction category: reactor type, cooling
+    time, enrichment, and burnup
+
+    Parameters 
+    ---------- 
+    
+    X : dataframe that includes all training data
+    Y : series with labels for training data
+    knn : optimized kNN learner
+    rr : optimized RR learner
+    svr : optimized SVR learner
+    CV : cross-validation generator
+    score : 
+    csv_name : string containing the train set, nuc subset, and parameter being 
+               predicted for naming purposes
+
+    Returns
+    -------
+    *validation_curve.csv : csv file with val curve results for each 
+                            prediction category
+
+    """    
+    
+    # Note: I'm trying to avoid loops here so the code is inelegant
+
+    # Varied alg params for validation curves
+    k_list = np.linspace(1, 39, 10).astype(int)
+    alpha_list = np.logspace(-3, 5, 10)
+    gamma_list = np.logspace(-4, -1, 10)
+    c_list = np.linspace(0.1, 100000, 10)
+
+    # knn
+    ktrain, kcv = validation_curve(knn, X, Y, 'n_neighbors', k_list, cv=CV, 
+                                   scoring=score)
+    ktrain_mean = np.mean(ktrain, axis=1)
+    kcv_mean = np.mean(kcv, axis=1)
+    knn_df = pd.DataFrame({'ParamList' : k_list, 'TrainScore' : ktrain_mean, 'CV-Score' : kcv_mean})
+    knn_df['Algorithm'] = 'knn'
+
+    # ridge
+    rtrain, rcv = validation_curve(rr, X, Y, 'alpha', alpha_list, cv=CV, 
+                                   scoring=score)
+    rtrain_mean = np.mean(rtrain, axis=1)
+    rcv_mean = np.mean(rcv, axis=1)
+    rr_df = pd.DataFrame({'ParamList' : alpha_list, 'TrainScore' : rtrain_mean, 'CV-Score' : rcv_mean})
+    rr_df['Algorithm'] = 'rr'
+    
+    # svr
+    strain, scv = validation_curve(svr, X, Y, 'gamma', gamma_list, cv=CV, 
+                                   scoring=score)
+    strain_mean = np.mean(strain, axis=1)
+    scv_mean = np.mean(scv, axis=1)
+    svr_df = pd.DataFrame({'ParamList' : gamma_list, 'TrainScore' : strain_mean, 'CV-Score' : scv_mean})
+    svr_df['Algorithm'] = 'svr'
+
+    vc_data = pd.concat([knn_df, rr_df, svr_df])
+    vc_data.to_csv(csv_name + '_validation_curve.csv')
+    return 
 
 def learning_curves(X, Y, knn, rr, svr, CV, csv_name):
     """
@@ -170,6 +234,7 @@ def main():
     for trainset in ('3',):# '1', '2'):
         pkl = pkl_base + trainset + '_nucs_' + subset + '_not-scaled.pkl'
         trainXY = pd.read_pickle(pkl)
+        trainXY = trainXY.sample(frac=0.75)
         trainX, rY, cY, eY, bY = splitXY(trainXY)
         if subset == 'all':
             top_n = 100
@@ -201,15 +266,21 @@ def main():
             # initialize learners
             score = 'explained_variance'
             kfold = KFold(n_splits=CV, shuffle=True)
-            knn_init = KNeighborsRegressor(n_neighbors=4, weights='distance')
-            rr_init = Ridge(alpha=0.001)
-            svr_init = SVR(gamma=0.001, C=200)
+            knn_init = KNeighborsRegressor(weights='distance')
+            rr_init = Ridge()
+            svr_init = SVR(C=200)
+            #knn_init = KNeighborsRegressor(n_neighbors=4, weights='distance')
+            #rr_init = Ridge(alpha=0.001)
+            #svr_init = SVR(gamma=0.001, C=200)
             if Y is 'r':
                 score = 'accuracy'
                 kfold = StratifiedKFold(n_splits=CV, shuffle=True)
-                knn_init = KNeighborsClassifier(n_neighbors=4, weights='distance')
-                rr_init = RidgeClassifier(alpha=0.001, class_weight='balanced')
-                svr_init = SVC(gamma=0.001, C=200, class_weight='balanced')
+                knn_init = KNeighborsClassifier(weights='distance')
+                rr_init = RidgeClassifier(class_weight='balanced')
+                svr_init = SVC(C=200, class_weight='balanced')
+                #knn_init = KNeighborsClassifier(n_neighbors=4, weights='distance')
+                #rr_init = RidgeClassifier(alpha=0.001, class_weight='balanced')
+                #svr_init = SVC(gamma=0.001, C=200, class_weight='balanced')
             
             ## CV search the hyperparams
             #knn_grid = {'n_neighbors': np.linspace(1, 50).astype(int)}
@@ -258,19 +329,22 @@ def main():
             #rr_init = rr_opt.best_estimator_
             #svr_init = svr_opt.best_estimator_
 
-            scores = ['explained_variance', 'neg_mean_absolute_error']
-            if Y is 'r':
-                scores = ['accuracy', ]
+            #scores = ['explained_variance', 'neg_mean_absolute_error']
+            #if Y is 'r':
+            #    scores = ['accuracy', ]
             csv_name = 'trainset_' + trainset + '_' + subset + '_' + parameter
             
             # track predictions 
-            track_predictions(trainX, trainY, knn_init, rr_init, svr_init, scores, kfold, csv_name)
+            #track_predictions(trainX, trainY, knn_init, rr_init, svr_init, scores, kfold, csv_name)
 
             # calculate errors and scores
-            errors_and_scores(trainX, trainY, knn_init, rr_init, svr_init, scores, kfold, csv_name)
+            #errors_and_scores(trainX, trainY, knn_init, rr_init, svr_init, scores, kfold, csv_name)
 
             # learning curves
-            learning_curves(trainX, trainY, knn_init, rr_init, svr_init, kfold, csv_name)
+            #learning_curves(trainX, trainY, knn_init, rr_init, svr_init, kfold, csv_name)
+            
+            # validation curves m = 0.75
+            validation_curves(trainX, trainY, knn_init, rr_init, svr_init, kfold, score, csv_name)
             
             print("The {} predictions in trainset {} are complete\n".format(parameter, trainset), flush=True)
 
