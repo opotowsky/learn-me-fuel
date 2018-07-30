@@ -1,9 +1,0 @@
-Todos for this repository:
-
-- check labeling for vver440, candu, etc rxtrs
-- write tests for this too
-
-- can still ignore training with gammas for now
-
-- implement bayesian model averaging to compare models!
-
