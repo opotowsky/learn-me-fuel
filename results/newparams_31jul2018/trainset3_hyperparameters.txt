@@ -1,0 +1,33 @@
+tset_frac = 0.6
+
+(Note that the ranges changed slightly after rxtr set ran, I maxed out depth at 80, e.g.)
+
+The following parameters are best from the randomized search for the reactor parameter prediction:
+k for knn is 1
+max depth for dtree is 96
+max features for dtree is 37
+gamma for svr is 0.07543120063354623
+C for svr is 1000.0
+
+The following parameters are best from the randomized search for the burnup parameter prediction:
+k for knn is 7
+max depth for dtree is 78
+max features for dtree is 42
+gamma for svr is 0.2559547922699533
+C for svr is 42919.34260128778
+
+The following parameters are best from the randomized search for the cooling parameter prediction:
+k for knn is 3
+max depth for dtree is 12
+max features for dtree is 47
+gamma for svr is 0.0625055192527397
+C for svr is 75431.20063354608
+The best CV score for knn is 0.8555123120826803, dtree is 0.9038120396578802, and svr is 0.9326334493520417
+
+The following parameters are best from the randomized search for the enrichment parameter prediction:
+k for knn is 8
+max depth for dtree is 38
+max features for dtree is 16
+gamma for svr is 0.7906043210907702
+C for svr is 24420.5309454865
+The best CV score for knn is 0.9470553696892648, dtree is 0.97875041040838, and svr is 0.9878441969256128

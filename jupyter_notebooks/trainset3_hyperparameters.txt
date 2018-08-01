@@ -1,6 +1,0 @@
-The following parameters are best from the randomized search for the reactor parameter prediction:
-k for knn is 1
-max depth for dtree is 96
-max features for dtree is 37
-gamma for svr is 0.07543120063354623
-C for svr is 1000.0
