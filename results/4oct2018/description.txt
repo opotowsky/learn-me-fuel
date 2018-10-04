@@ -1,0 +1,16 @@
+This dir contains results that stem from the hyperparam optimization of
+trainset 3 (the param results are in 31jul2018 dir)
+
+Algs:
+- knn
+- decision tree
+- svr
+
+trainset frac = 0.6 for the optimization run, will keep this as the "whole
+training set" for future runs 
+
+but tset frac for burnup is 24% -- needs less data to train well
+
+CV = 5
+
+

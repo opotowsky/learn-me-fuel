@@ -262,8 +262,8 @@ def main():
     CV = 5
     
     trainXY = pd.read_pickle(pkl)
-    # see how 80% of training set does
-    trainXY = trainXY.sample(frac=0.8)
+    # hyperparam optimization was done on 60% of training set
+    trainXY = trainXY.sample(frac=0.6)
     trainX, rY, cY, eY, bY = splitXY(trainXY)
     trainX = scale(trainX)
     
@@ -290,7 +290,7 @@ def main():
             c = 25000 #420
         elif Y == 'b':
             # burnup needs much less training data...this is 24% of data set
-            trainXY = trainXY.sample(frac=0.3)
+            trainXY = trainXY.sample(frac=0.4)
             trainX, rY, cY, eY, bY = splitXY(trainXY)
             trainX = scale(trainX)
             trainY = bY
@@ -309,20 +309,20 @@ def main():
             g = 0.07 #0.2
             c = 1000 #220
         
-        csv_name = 'trainset3_fissact_m80_' + parameter
+        csv_name = 'trainset3_fissact_m60_' + parameter
         
         ## initialize learners
         score = 'explained_variance'
-        #kfold = KFold(n_splits=CV, shuffle=True)
-        #knn_init = KNeighborsRegressor(n_neighbors=k, weights='distance')
-        #dtr_init = DecisionTreeRegressor(max_depth=depth, max_features=feats)
-        #svr_init = SVR(gamma=g, C=c)
-        #if Y is 'r':
-        #    score = 'accuracy'
-        #    kfold = StratifiedKFold(n_splits=CV, shuffle=True)
-        #    knn_init = KNeighborsClassifier(n_neighbors=k, weights='distance')
-        #    dtr_init = DecisionTreeClassifier(max_depth=depth, max_features=feats, class_weight='balanced')
-        #    svr_init = SVC(gamma=g, C=c, class_weight='balanced')
+        kfold = KFold(n_splits=CV, shuffle=True)
+        knn_init = KNeighborsRegressor(n_neighbors=k, weights='distance')
+        dtr_init = DecisionTreeRegressor(max_depth=depth, max_features=feats)
+        svr_init = SVR(gamma=g, C=c)
+        if Y is 'r':
+            score = 'accuracy'
+            kfold = StratifiedKFold(n_splits=CV, shuffle=True)
+            knn_init = KNeighborsClassifier(n_neighbors=k, weights='distance')
+            dtr_init = DecisionTreeClassifier(max_depth=depth, max_features=feats, class_weight='balanced')
+            svr_init = SVC(gamma=g, C=c, class_weight='balanced')
 
         ## track predictions 
         #track_predictions(trainX, trainY, knn_init, dtr_init, svr_init, kfold, csv_name)
@@ -334,22 +334,22 @@ def main():
         #errors_and_scores(trainX, trainY, knn_init, dtr_init, svr_init, scores, kfold, csv_name)
 
         # learning curves
-        #learning_curves(trainX, trainY, knn_init, dtr_init, svr_init, kfold, score, csv_name)
+        learning_curves(trainX, trainY, knn_init, dtr_init, svr_init, kfold, score, csv_name)
         
         # validation curves 
         # VC needs different inits
-        score = 'explained_variance'
-        kfold = KFold(n_splits=CV, shuffle=True)
-        knn_init = KNeighborsRegressor(weights='distance')
-        dtr_init = DecisionTreeRegressor()
-        svr_init = SVR(C=c)
-        if Y is 'r':
-            score = 'accuracy'
-            kfold = StratifiedKFold(n_splits=CV, shuffle=True)
-            knn_init = KNeighborsClassifier(weights='distance')
-            dtr_init = DecisionTreeClassifier(class_weight='balanced')
-            svr_init = SVC(C=c, class_weight='balanced')
-        validation_curves(trainX, trainY, knn_init, dtr_init, svr_init, kfold, score, csv_name)
+        #score = 'explained_variance'
+        #kfold = KFold(n_splits=CV, shuffle=True)
+        #knn_init = KNeighborsRegressor(weights='distance')
+        #dtr_init = DecisionTreeRegressor()
+        #svr_init = SVR(C=c)
+        #if Y is 'r':
+        #    score = 'accuracy'
+        #    kfold = StratifiedKFold(n_splits=CV, shuffle=True)
+        #    knn_init = KNeighborsClassifier(weights='distance')
+        #    dtr_init = DecisionTreeClassifier(class_weight='balanced')
+        #    svr_init = SVC(C=c, class_weight='balanced')
+        #validation_curves(trainX, trainY, knn_init, dtr_init, svr_init, kfold, score, csv_name)
         
         print("The {} predictions are complete\n".format(parameter), flush=True)
 
