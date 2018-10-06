@@ -324,17 +324,17 @@ def main():
             dtr_init = DecisionTreeClassifier(max_depth=depth, max_features=feats, class_weight='balanced')
             svr_init = SVC(gamma=g, C=c, class_weight='balanced')
 
-        ## track predictions 
-        #track_predictions(trainX, trainY, knn_init, dtr_init, svr_init, kfold, csv_name)
+        # track predictions 
+        track_predictions(trainX, trainY, knn_init, dtr_init, svr_init, kfold, csv_name)
 
-        ## calculate errors and scores
-        #scores = ['r2', 'explained_variance', 'neg_mean_absolute_error']
-        #if Y is 'r':
-        #    scores = ['accuracy', ]
-        #errors_and_scores(trainX, trainY, knn_init, dtr_init, svr_init, scores, kfold, csv_name)
+        # calculate errors and scores
+        scores = ['r2', 'explained_variance', 'neg_mean_absolute_error']
+        if Y is 'r':
+            scores = ['accuracy', ]
+        errors_and_scores(trainX, trainY, knn_init, dtr_init, svr_init, scores, kfold, csv_name)
 
         # learning curves
-        learning_curves(trainX, trainY, knn_init, dtr_init, svr_init, kfold, score, csv_name)
+        #learning_curves(trainX, trainY, knn_init, dtr_init, svr_init, kfold, score, csv_name)
         
         # validation curves 
         # VC needs different inits
