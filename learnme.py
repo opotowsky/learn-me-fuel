@@ -44,7 +44,7 @@ def validation_curves(X, Y, alg1, alg2, alg3, CV, score, csv_name):
     # Varied alg params for validation curves
     k_list = np.linspace(1, 39, 10).astype(int)
     depth_list = np.linspace(10, 100, 10).astype(int)
-    feat_list = np.linspace(10, 65, 10).astype(int)
+    feat_list = np.linspace(5, 47, 10).astype(int)
     gamma_list = np.logspace(-4, -1, 10)
     c_list = np.logspace(0, 5, 10)
 
@@ -78,7 +78,7 @@ def validation_curves(X, Y, alg1, alg2, alg3, CV, score, csv_name):
     train_std = np.std(train, axis=1)
     cv_mean = np.mean(cv, axis=1)
     cv_std = np.std(cv, axis=1)
-    df2 = pd.DataFrame({'ParamList' : feat_list, 'TrainScore' : train_mean, 
+    df3 = pd.DataFrame({'ParamList' : feat_list, 'TrainScore' : train_mean, 
                         'TrainStd' : train_std, 'CV-Score' : cv_mean, 
                         'CV-Std' : cv_std})
     df3['Algorithm'] = 'dtree'
