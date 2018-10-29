@@ -1,6 +1,87 @@
 #! /usr/bin/env python3
 
+from sklearn.preprocessing import scale
+from sklearn.neighbors import KNeighborsRegressor, KNeighborsClassifier
+from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
+from sklearn.svm import SVR, SVC
+from sklearn.model_selection import KFold, StratifiedKFold, learning_curve, validation_curve
+
 import pandas as pd
+import numpy as np
+
+def get_data(label):
+    """
+    xxx
+
+    Parameters
+    ----------
+
+    Returns
+    -------
+    """
+    #pkl = '../small_trainset.pkl'
+    pkl = './small_trainset.pkl'
+
+    # trainX and trainY
+    trainXY = pd.read_pickle(pkl)
+    # hyperparam optimization was done on 60% of training set
+    #trainXY = trainXY.sample(frac=0.6)
+    trainX, rY, cY, eY, bY = splitXY(trainXY)
+    trainX = scale(trainX)
+    if label == 'cooling':
+        trainY = cY
+    elif label == 'enrichment': 
+        trainY = eY
+    elif label == 'reactor':
+        trainY = rY
+    else: # label == 'burnup'
+        # burnup needs much less training data...this is 24% of data set
+        #trainXY = trainXY.sample(frac=0.4)
+        #trainX, rY, cY, eY, bY = splitXY(trainXY)
+        #trainX = scale(trainX)
+        trainY = bY
+    csv_name = 'fissact_m60_' + label
+
+    return trainX, trainY, csv_name 
+
+def init_learners(label, validation_inits):
+    """
+    xxx
+
+    Parameters
+    ----------
+
+    Returns
+    -------
+    """
+
+    CV = 10
+    k, depth, feats, g, c = get_algparams(label)
+    score = 'explained_variance'
+    kfold = KFold(n_splits=CV, shuffle=True)
+
+    if validation_inits == True:
+        knn_init = KNeighborsRegressor(weights='distance')
+        dtr_init = DecisionTreeRegressor()
+        svr_init = SVR()
+        if Y is 'r':
+            score = 'accuracy'
+            kfold = StratifiedKFold(n_splits=CV, shuffle=True)
+            knn_init = KNeighborsClassifier(weights='distance')
+            dtr_init = DecisionTreeClassifier(class_weight='balanced')
+            svr_init = SVC(class_weight='balanced')    
+    else:
+        knn_init = KNeighborsRegressor(n_neighbors=k, weights='distance')
+        dtr_init = DecisionTreeRegressor(max_depth=depth, max_features=feats)
+        svr_init = SVR(gamma=g, C=c)
+        if label == 'reactor':
+            score = 'accuracy'
+            kfold = StratifiedKFold(n_splits=CV, shuffle=True)
+            knn_init = KNeighborsClassifier(n_neighbors=k, weights='distance')
+            dtr_init = DecisionTreeClassifier(max_depth=depth, max_features=feats, class_weight='balanced')
+            svr_init = SVC(gamma=g, C=c, class_weight='balanced')
+
+    return knn_init, dtr_init, svr_init, kfold, score
 
 def get_algparams(prediction_name):
     """

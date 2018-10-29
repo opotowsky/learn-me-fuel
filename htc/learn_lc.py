@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 
-from tools import splitXY, top_nucs, filter_nucs, get_algparams
+from tools import splitXY, top_nucs, filter_nucs, get_algparams, get_data, init_learners
 
 from sklearn.preprocessing import scale
 from sklearn.neighbors import KNeighborsRegressor, KNeighborsClassifier
@@ -97,47 +97,12 @@ def main():
     size
 
     """
-    #pkl = '../small_trainset.pkl'
-    pkl = './small_trainset.pkl'
-    
-    # Parameters for the training and predictions
-    CV = 10
-
-    # Get optimized algorithm parameters for specific prediction case
+    # which reactor parameter we are predicting
     label = sys.argv[1]
-    k, depth, feats, g, c = get_algparams(label)
-    # trainX and trainY
-    trainXY = pd.read_pickle(pkl)
-    # hyperparam optimization was done on 60% of training set
-    #trainXY = trainXY.sample(frac=0.6)
-    trainX, rY, cY, eY, bY = splitXY(trainXY)
-    trainX = scale(trainX)
-    if label == 'cooling':
-        trainY = cY
-    elif label == 'enrichment': 
-        trainY = eY
-    elif label == 'reactor':
-        trainY = rY
-    else: # label == 'burnup'
-        # burnup needs much less training data...this is 24% of data set
-        #trainXY = trainXY.sample(frac=0.4)
-        #trainX, rY, cY, eY, bY = splitXY(trainXY)
-        #trainX = scale(trainX)
-        trainY = bY
-    csv_name = 'fissact_m60_' + label
 
-    # initialize learners
-    score = 'explained_variance'
-    kfold = KFold(n_splits=CV, shuffle=True)
-    knn_init = KNeighborsRegressor(n_neighbors=k, weights='distance')
-    dtr_init = DecisionTreeRegressor(max_depth=depth, max_features=feats)
-    svr_init = SVR(gamma=g, C=c)
-    if label == 'reactor':
-        score = 'accuracy'
-        kfold = StratifiedKFold(n_splits=CV, shuffle=True)
-        knn_init = KNeighborsClassifier(n_neighbors=k, weights='distance')
-        dtr_init = DecisionTreeClassifier(max_depth=depth, max_features=feats, class_weight='balanced')
-        svr_init = SVC(gamma=g, C=c, class_weight='balanced')
+    trainX, trainY, csv_name = get_data(label)
+    validation_inits = False
+    knn_init, dtr_init, svr_init, kfold, score = init_learners(label, validation_inits)
 
     # learning curves for 3 algorithms
     learning_curves(trainX, trainY, knn_init, dtr_init, svr_init, kfold, score, csv_name)
