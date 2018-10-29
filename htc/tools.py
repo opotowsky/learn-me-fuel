@@ -2,6 +2,50 @@
 
 import pandas as pd
 
+def get_algparams(prediction_name):
+    """
+    Gives the optimized algorithm hyperparamters with respect to reactor
+    prediction label 
+
+    Parameters
+    ----------
+    prediction_name : string of the reactor parameter to be predicted 
+
+    Returns
+    -------
+    k : integer, number of nearest neighbors in kNN
+    depth : integer, maximum depth of decision trees
+    feats : integer, maximum number of features in decision trees
+    g : float, gamma parameter in support vectors
+    c : float, C parameter in support vectors
+    """
+    name = prediction_name
+    if name == 'cooling':
+        k = 3 #7
+        depth = 50 #50, 12
+        feats = 25 #36, 47 
+        g = 0.06 #0.2
+        c = 50000 #200, 75000
+    elif name == 'enrichment': 
+        k = 7 #8
+        depth = 50 #53, 38
+        feats = 25 #33, 16 
+        g = 0.8 #0.2
+        c = 25000 #420
+    elif name == 'burnup':
+        k = 7 #4
+        depth = 50 #50, 78
+        feats = 25 #23, 42 
+        g = 0.25 #0.025
+        c = 42000 #105
+    else: # name == 'reactor'
+        k = 3 #1, 2, or 12
+        depth = 50 #50, 97
+        feats = 25 # 37, 37 
+        g = 0.07 #0.2
+        c = 1000 #220
+    return k, depth, feats, g, c
+
 def splitXY(dfXY):
     """
     Takes a dataframe with all X (features) and Y (labels) information and 

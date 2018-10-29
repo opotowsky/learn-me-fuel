@@ -151,7 +151,7 @@ def learning_curves(X, Y, alg1, alg2, alg3, CV, score, csv_name):
     # knn
     tsize, train, cv = learning_curve(alg1, X, Y, train_sizes=trainset_frac, 
                                       scoring=score, cv=CV, shuffle=True, 
-                                      n_jobs=-1)
+                                      n_jobs=3)
     train_mean = np.mean(train, axis=1)
     train_std = np.std(train, axis=1)
     cv_mean = np.mean(cv, axis=1)
@@ -163,7 +163,7 @@ def learning_curves(X, Y, alg1, alg2, alg3, CV, score, csv_name):
     # dtree
     tsize, train, cv = learning_curve(alg2, X, Y, train_sizes=trainset_frac, 
                                       scoring=score, cv=CV, shuffle=True, 
-                                      n_jobs=-1)
+                                      n_jobs=3)
     train_mean = np.mean(train, axis=1)
     train_std = np.std(train, axis=1)
     cv_mean = np.mean(cv, axis=1)
@@ -175,7 +175,7 @@ def learning_curves(X, Y, alg1, alg2, alg3, CV, score, csv_name):
     # svr
     tsize, train, cv = learning_curve(alg3, X, Y, train_sizes=trainset_frac, 
                                       scoring=score, cv=CV, shuffle=True, 
-                                      n_jobs=-1)
+                                      n_jobs=3)
     train_mean = np.mean(train, axis=1)
     train_std = np.std(train, axis=1)
     cv_mean = np.mean(cv, axis=1)
@@ -279,10 +279,10 @@ def main():
     training set size
 
     """
-    pkl = './pkl_trainsets/2jul2018/22jul2018_trainset3_nucs_fissact_not-scaled.pkl'
+    pkl = './trainset.pkl'
     
     # Parameters for the training and predictions
-    CV = 5
+    CV = 10
     
     trainXY = pd.read_pickle(pkl)
     # hyperparam optimization was done on 60% of training set
@@ -292,7 +292,7 @@ def main():
     
     # loops through each reactor parameter to do separate predictions
     # burnup is last since its the only tset I'm altering
-    for Y in ('b', 'r', 'e', 'c'):
+    for Y in ('b',):#('b', 'r', 'e', 'c'):
         trainY = pd.Series()
         # get param names and set ground truth
         if Y == 'c':
@@ -335,17 +335,17 @@ def main():
         csv_name = 'trainset3_fissact_m60_' + parameter
         
         ## initialize learners
-        #score = 'explained_variance'
-        #kfold = KFold(n_splits=CV, shuffle=True)
-        #knn_init = KNeighborsRegressor(n_neighbors=k, weights='distance')
-        #dtr_init = DecisionTreeRegressor(max_depth=depth, max_features=feats)
-        #svr_init = SVR(gamma=g, C=c)
-        #if Y is 'r':
-        #    score = 'accuracy'
-        #    kfold = StratifiedKFold(n_splits=CV, shuffle=True)
-        #    knn_init = KNeighborsClassifier(n_neighbors=k, weights='distance')
-        #    dtr_init = DecisionTreeClassifier(max_depth=depth, max_features=feats, class_weight='balanced')
-        #    svr_init = SVC(gamma=g, C=c, class_weight='balanced')
+        score = 'explained_variance'
+        kfold = KFold(n_splits=CV, shuffle=True)
+        knn_init = KNeighborsRegressor(n_neighbors=k, weights='distance')
+        dtr_init = DecisionTreeRegressor(max_depth=depth, max_features=feats)
+        svr_init = SVR(gamma=g, C=c)
+        if Y is 'r':
+            score = 'accuracy'
+            kfold = StratifiedKFold(n_splits=CV, shuffle=True)
+            knn_init = KNeighborsClassifier(n_neighbors=k, weights='distance')
+            dtr_init = DecisionTreeClassifier(max_depth=depth, max_features=feats, class_weight='balanced')
+            svr_init = SVC(gamma=g, C=c, class_weight='balanced')
 
         ## track predictions 
         #track_predictions(trainX, trainY, knn_init, dtr_init, svr_init, kfold, csv_name)
@@ -357,22 +357,22 @@ def main():
         #errors_and_scores(trainX, trainY, knn_init, dtr_init, svr_init, scores, kfold, csv_name)
 
         # learning curves
-        #learning_curves(trainX, trainY, knn_init, dtr_init, svr_init, kfold, score, csv_name)
+        learning_curves(trainX, trainY, knn_init, dtr_init, svr_init, kfold, score, csv_name)
         
         # validation curves 
         # VC needs different inits
-        score = 'explained_variance'
-        kfold = KFold(n_splits=CV, shuffle=True)
-        knn_init = KNeighborsRegressor(weights='distance')
-        dtr_init = DecisionTreeRegressor()
-        svr_init = SVR()
-        if Y is 'r':
-            score = 'accuracy'
-            kfold = StratifiedKFold(n_splits=CV, shuffle=True)
-            knn_init = KNeighborsClassifier(weights='distance')
-            dtr_init = DecisionTreeClassifier(class_weight='balanced')
-            svr_init = SVC(class_weight='balanced')
-        validation_curves(trainX, trainY, knn_init, dtr_init, svr_init, kfold, score, csv_name)
+        #score = 'explained_variance'
+        #kfold = KFold(n_splits=CV, shuffle=True)
+        #knn_init = KNeighborsRegressor(weights='distance')
+        #dtr_init = DecisionTreeRegressor()
+        #svr_init = SVR()
+        #if Y is 'r':
+        #    score = 'accuracy'
+        #    kfold = StratifiedKFold(n_splits=CV, shuffle=True)
+        #    knn_init = KNeighborsClassifier(weights='distance')
+        #    dtr_init = DecisionTreeClassifier(class_weight='balanced')
+        #    svr_init = SVC(class_weight='balanced')
+        #validation_curves(trainX, trainY, knn_init, dtr_init, svr_init, kfold, score, csv_name)
         
         print("The {} predictions are complete\n".format(parameter), flush=True)
 
