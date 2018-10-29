@@ -6,7 +6,7 @@ from sklearn.preprocessing import scale
 from sklearn.neighbors import KNeighborsRegressor, KNeighborsClassifier
 from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
 from sklearn.svm import SVR, SVC
-from sklearn.model_selection import KFold, StratifiedKFold, learning_curve, validation_curve
+from sklearn.model_selection import KFold, StratifiedKFold, cross_val_predict, cross_validate
 
 import pandas as pd
 import numpy as np

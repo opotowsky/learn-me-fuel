@@ -4,7 +4,7 @@ from sklearn.preprocessing import scale
 from sklearn.neighbors import KNeighborsRegressor, KNeighborsClassifier
 from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
 from sklearn.svm import SVR, SVC
-from sklearn.model_selection import KFold, StratifiedKFold, learning_curve, validation_curve
+from sklearn.model_selection import KFold, StratifiedKFold
 
 import pandas as pd
 import numpy as np
@@ -55,7 +55,7 @@ def init_learners(label, validation_inits):
     -------
     """
 
-    CV = 10
+    CV = 5
     k, depth, feats, g, c = get_algparams(label)
     score = 'explained_variance'
     kfold = KFold(n_splits=CV, shuffle=True)
@@ -64,7 +64,7 @@ def init_learners(label, validation_inits):
         knn_init = KNeighborsRegressor(weights='distance')
         dtr_init = DecisionTreeRegressor()
         svr_init = SVR()
-        if Y is 'r':
+        if label == 'reactor':
             score = 'accuracy'
             kfold = StratifiedKFold(n_splits=CV, shuffle=True)
             knn_init = KNeighborsClassifier(weights='distance')
