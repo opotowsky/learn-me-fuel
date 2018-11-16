@@ -100,7 +100,7 @@ def main():
     # which reactor parameter we are predicting
     label = sys.argv[1]
 
-    trainX, trainY, csv_name = get_data(label)
+    trainX, trainY, csv_name, trainX_unscaled = get_data(label)
     validation_inits = False
     knn_init, dtr_init, svr_init, kfold, score = init_learners(label, validation_inits)
 

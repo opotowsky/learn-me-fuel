@@ -26,8 +26,8 @@ def get_data(label):
     trainXY = pd.read_pickle(pkl)
     # hyperparam optimization was done on 60% of training set
     #trainXY = trainXY.sample(frac=0.6)
-    trainX, rY, cY, eY, bY = splitXY(trainXY)
-    trainX = scale(trainX)
+    trainX_unscaled, rY, cY, eY, bY = splitXY(trainXY)
+    trainX = scale(trainX_unscaled)
     if label == 'cooling':
         trainY = cY
     elif label == 'enrichment': 
@@ -42,7 +42,7 @@ def get_data(label):
         trainY = bY
     csv_name = 'fissact_m60_' + label
 
-    return trainX, trainY, csv_name 
+    return trainX, trainY, csv_name, trainX_unscaled 
 
 def init_learners(label, validation_inits):
     """

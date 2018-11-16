@@ -12,14 +12,14 @@ import pandas as pd
 import numpy as np
 import sys
 
-def track_predictions(X, Y, alg1, alg2, alg3, CV, csv_name):
+def track_predictions(X, Y, alg1, alg2, alg3, CV, csv_name, X_unscaled):
     """
     Saves csv's with predictions of each reactor parameter instance.
     
     Parameters 
     ---------- 
     
-    X : dataframe that includes all training data
+    X : numpy array that includes all training data
     Y : series with labels for training data
     alg1 : optimized learner 1
     alg2 : optimized learner 2
@@ -27,6 +27,7 @@ def track_predictions(X, Y, alg1, alg2, alg3, CV, csv_name):
     CV : cross-validation generator
     csv_name : string containing the train set, nuc subset, and parameter being 
                predicted for naming purposes
+    X_unscaled : dataframe with unscaled nuclide concentrations
 
     Returns
     -------
@@ -37,9 +38,11 @@ def track_predictions(X, Y, alg1, alg2, alg3, CV, csv_name):
     dtr = cross_val_predict(alg2, X, y=Y, cv=CV, n_jobs=-1)
     svr = cross_val_predict(alg3, X, y=Y, cv=CV, n_jobs=-1)
 
-    preds_by_alg = pd.DataFrame({'TrueY': Y, 'kNN': knn, 
-                                 'DTree': dtr, 'SVR': svr}, 
-                                 index=Y.index)
+    alg_preds = pd.DataFrame({'TrueY': Y, 'kNN': knn, 
+                              'DTree': dtr, 'SVR': svr}, 
+                              index=Y.index)
+    X = pd.DataFrame(X, index=X_unscaled.index, columns=X_unscaled.columns.values.tolist())
+    preds_by_alg = X.assign(TrueY = Y, kNN = knn, DTree = dtr, SVR = svr)
     preds_by_alg.to_csv(csv_name + '_predictions.csv')
     return
 
@@ -99,12 +102,12 @@ def main():
     # which reactor parameter we are predicting
     label = sys.argv[1]
 
-    trainX, trainY, csv_name = get_data(label)
+    trainX, trainY, csv_name, trainX_unscaled = get_data(label)
     validation_inits = False
     knn_init, dtr_init, svr_init, kfold, score = init_learners(label, validation_inits)
 
     # predictions for 3 algorithms
-    track_predictions(trainX, trainY, knn_init, dtr_init, svr_init, kfold, csv_name)
+    track_predictions(trainX, trainY, knn_init, dtr_init, svr_init, kfold, csv_name, trainX_unscaled)
 
     # scores for 3 algorithms
     errors_and_scores(trainX, trainY, knn_init, dtr_init, svr_init, score, kfold, csv_name) 

@@ -151,7 +151,7 @@ def learning_curves(X, Y, alg1, alg2, alg3, CV, score, csv_name):
     # knn
     tsize, train, cv = learning_curve(alg1, X, Y, train_sizes=trainset_frac, 
                                       scoring=score, cv=CV, shuffle=True, 
-                                      n_jobs=3)
+                                      n_jobs=-1)
     train_mean = np.mean(train, axis=1)
     train_std = np.std(train, axis=1)
     cv_mean = np.mean(cv, axis=1)
@@ -163,7 +163,7 @@ def learning_curves(X, Y, alg1, alg2, alg3, CV, score, csv_name):
     # dtree
     tsize, train, cv = learning_curve(alg2, X, Y, train_sizes=trainset_frac, 
                                       scoring=score, cv=CV, shuffle=True, 
-                                      n_jobs=3)
+                                      n_jobs=-1)
     train_mean = np.mean(train, axis=1)
     train_std = np.std(train, axis=1)
     cv_mean = np.mean(cv, axis=1)
@@ -175,7 +175,7 @@ def learning_curves(X, Y, alg1, alg2, alg3, CV, score, csv_name):
     # svr
     tsize, train, cv = learning_curve(alg3, X, Y, train_sizes=trainset_frac, 
                                       scoring=score, cv=CV, shuffle=True, 
-                                      n_jobs=3)
+                                      n_jobs=-1)
     train_mean = np.mean(train, axis=1)
     train_std = np.std(train, axis=1)
     cv_mean = np.mean(cv, axis=1)
@@ -190,14 +190,14 @@ def learning_curves(X, Y, alg1, alg2, alg3, CV, score, csv_name):
     return 
 
 
-def track_predictions(X, Y, alg1, alg2, alg3, CV, csv_name):
+def track_predictions(X, Y, alg1, alg2, alg3, CV, csv_name, X_unscaled):
     """
     Saves csv's with predictions of each reactor parameter instance.
     
     Parameters 
     ---------- 
     
-    X : dataframe that includes all training data
+    X : numpy array that includes all training data
     Y : series with labels for training data
     alg1 : optimized learner 1
     alg2 : optimized learner 2
@@ -205,6 +205,7 @@ def track_predictions(X, Y, alg1, alg2, alg3, CV, csv_name):
     CV : cross-validation generator
     csv_name : string containing the train set, nuc subset, and parameter being 
                predicted for naming purposes
+    X_unscaled : dataframe with unscaled nuclide concentrations
 
     Returns
     -------
@@ -215,9 +216,11 @@ def track_predictions(X, Y, alg1, alg2, alg3, CV, csv_name):
     dtr = cross_val_predict(alg2, X, y=Y, cv=CV, n_jobs=-1)
     svr = cross_val_predict(alg3, X, y=Y, cv=CV, n_jobs=-1)
 
-    preds_by_alg = pd.DataFrame({'TrueY': Y, 'kNN': knn, 
-                                 'DTree': dtr, 'SVR': svr}, 
-                                 index=Y.index)
+    alg_preds = pd.DataFrame({'TrueY': Y, 'kNN': knn, 
+                              'DTree': dtr, 'SVR': svr}, 
+                              index=Y.index)
+    X = pd.DataFrame(X, index=Y.index, columns=X_unscaled.columns.values.tolist())
+    preds_by_alg = X.assign(TrueY = Y, kNN = knn, DTree = dtr, SVR = svr)
     preds_by_alg.to_csv(csv_name + '_predictions.csv')
     return
 
@@ -285,14 +288,17 @@ def main():
     CV = 10
     
     trainXY = pd.read_pickle(pkl)
+    # gotta get rid of duplicate indices
+    # this creates an index column...but we don't want this in the training data. deleting for now via drop.
+    trainXY.reset_index(inplace=True, drop=True) 
     # hyperparam optimization was done on 60% of training set
     trainXY = trainXY.sample(frac=0.6)
-    trainX, rY, cY, eY, bY = splitXY(trainXY)
-    trainX = scale(trainX)
+    trainX_unscaled, rY, cY, eY, bY = splitXY(trainXY)
+    trainX = scale(trainX_unscaled)
     
     # loops through each reactor parameter to do separate predictions
     # burnup is last since its the only tset I'm altering
-    for Y in ('b',):#('b', 'r', 'e', 'c'):
+    for Y in ('r', 'b'):# 'b', 'e', 'c'):
         trainY = pd.Series()
         # get param names and set ground truth
         if Y == 'c':
@@ -340,7 +346,7 @@ def main():
         knn_init = KNeighborsRegressor(n_neighbors=k, weights='distance')
         dtr_init = DecisionTreeRegressor(max_depth=depth, max_features=feats)
         svr_init = SVR(gamma=g, C=c)
-        if Y is 'r':
+        if Y == 'r':
             score = 'accuracy'
             kfold = StratifiedKFold(n_splits=CV, shuffle=True)
             knn_init = KNeighborsClassifier(n_neighbors=k, weights='distance')
@@ -348,7 +354,7 @@ def main():
             svr_init = SVC(gamma=g, C=c, class_weight='balanced')
 
         ## track predictions 
-        #track_predictions(trainX, trainY, knn_init, dtr_init, svr_init, kfold, csv_name)
+        track_predictions(trainX, trainY, knn_init, dtr_init, svr_init, kfold, csv_name, trainX_unscaled)
 
         ## calculate errors and scores
         #scores = ['r2', 'explained_variance', 'neg_mean_absolute_error']
@@ -357,7 +363,7 @@ def main():
         #errors_and_scores(trainX, trainY, knn_init, dtr_init, svr_init, scores, kfold, csv_name)
 
         # learning curves
-        learning_curves(trainX, trainY, knn_init, dtr_init, svr_init, kfold, score, csv_name)
+        #learning_curves(trainX, trainY, knn_init, dtr_init, svr_init, kfold, score, csv_name)
         
         # validation curves 
         # VC needs different inits
@@ -366,7 +372,7 @@ def main():
         #knn_init = KNeighborsRegressor(weights='distance')
         #dtr_init = DecisionTreeRegressor()
         #svr_init = SVR()
-        #if Y is 'r':
+        #if Y == 'r':
         #    score = 'accuracy'
         #    kfold = StratifiedKFold(n_splits=CV, shuffle=True)
         #    knn_init = KNeighborsClassifier(weights='distance')
@@ -374,7 +380,7 @@ def main():
         #    svr_init = SVC(class_weight='balanced')
         #validation_curves(trainX, trainY, knn_init, dtr_init, svr_init, kfold, score, csv_name)
         
-        print("The {} predictions are complete\n".format(parameter), flush=True)
+        #print("The {} predictions are complete\n".format(parameter), flush=True)
 
     return
 
