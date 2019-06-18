@@ -1,7 +1,5 @@
 #! /usr/bin/env python3
 
-import testing_set_1 as ts
-#import testing_set_2 as ts
 import pickle
 import numpy as np
 import pandas as pd
@@ -133,6 +131,7 @@ def main():
     datapath = origen_dir + data_dir + '/' 
     print('Is {} the correct testing set directory?\n'.format(datapath), flush=True)
     # Grab data set
+    print('Need to redirect code to grab file from origen-data repo', flush=True)
     data_set = create_train_labels()
     # Make pkl files according to nuc subset and measurement source
     subset = ['_fiss', '_act', '_fissact']#, '_all']

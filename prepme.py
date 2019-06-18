@@ -1,7 +1,5 @@
 #! /usr/bin/env python3
 
-#import training_set_1 as ts
-import training_set_2 as ts
 import pickle
 import numpy as np
 import pandas as pd
@@ -141,28 +139,28 @@ def dataframeXY(train_labels, info):
     dfXY.fillna(value=0, inplace=True)
     return dfXY
 
-def create_train_labels():
-    """
-    Creates a list of dictionaries containing the entire training set from the 
-    imported training set file
-
-    Returns
-    -------
-    train_set : list of dictionaries, each of which contains the simulation 
-                subsets by ORIGEN rxtr
-
-    """
-
-    train_set = []
-    for rxtr_data in [ts.pwr_data, ts.bwr_data, ts.vver_data, ts.phwr_data]:
-        for o_rxtr in rxtr_data['rxtrs']:
-            for enrich in rxtr_data['enrich']:
-                train_set.append( {'ReactorType' : rxtr_data['type'],
-                                   'OrigenReactor' : o_rxtr,
-                                   'Enrichment' : enrich,
-                                   'Burnups' : rxtr_data['burnup'],
-                                   'CoolingInts' : rxtr_data['cooling_intervals'] } )
-    return train_set
+#def create_train_labels():
+#    """
+#    Creates a list of dictionaries containing the entire training set from the 
+#    imported training set file
+#
+#    Returns
+#    -------
+#    train_set : list of dictionaries, each of which contains the simulation 
+#                subsets by ORIGEN rxtr
+#
+#    """
+#
+#    train_set = []
+#    for rxtr_data in [ts.pwr_data, ts.bwr_data, ts.vver_data, ts.phwr_data]:
+#        for o_rxtr in rxtr_data['rxtrs']:
+#            for enrich in rxtr_data['enrich']:
+#                train_set.append( {'ReactorType' : rxtr_data['type'],
+#                                   'OrigenReactor' : o_rxtr,
+#                                   'Enrichment' : enrich,
+#                                   'Burnups' : rxtr_data['burnup'],
+#                                   'CoolingInts' : rxtr_data['cooling_intervals'] } )
+#    return train_set
 
 def main():
     """
