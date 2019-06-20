@@ -141,35 +141,43 @@ def dataframeXY(train_labels, info):
 
 def main():
     """
-    Takes all origen files in the hard-coded datapath and compiles them into 
-    the appropriate dataframe for the training set. Saves the training set as
-    a pickle file.
+    Takes all origen files in the hard-coded datapath and compiles them into
+    the appropriate dataframe for a data set ready for pandas/scikit learn use.
+    Saves the data set as a pickle file.
 
     """
-    # Always check this data path
     origen_dir = '../origen/origen-data/gendata/'
-    train_dir = '22jul2018_trainset3'
-    datapath = origen_dir + train_dir + '/' 
-    print('Is {} the correct training set directory?\n'.format(datapath), flush=True)
-    # Grab training set labels
-    pkl_labels = datapath + 'varied_tset.pkl'
-    train_set_labels = pickle.load(open(pkl_labels, 'rb'))
+    data_dir = '22jul2018_trainset3' # '2jul2018_testset1' if using test set
+    datapath = origen_dir + data_dir + '/' 
+    testset = True if 'test' in datapath
+    print('Is {} the correct data set directory?\n'.format(datapath), flush=True)
+    # Grab data set labels
+    if testset == True:
+        print('Note from June 2019: Need to re-run generate_testingdata.py in origen-data project to get the .pkl file!', flush=True)
+        pkl_labels = datapath + 'test_set.pkl'
+    else:
+        pkl_labels = datapath + 'varied_tset.pkl'
+    data_set_labels = pickle.load(open(pkl_labels, 'rb'))
     # Make pkl files according to nuc subset and measurement source
     subset = ['_all', '_fiss', '_act', '_fissact']
     info_src = ['_nucs',]# '_gammas']
     for nucs_tracked in subset:
         for src in info_src:
-            train_files = {}
-            for train_sim in train_set_labels:
-                o_rxtr = train_sim['OrigenReactor']
-                enrich = train_sim['Enrichment']
+            i = 1
+            for sim in data_set_labels:
+                o_rxtr = sim['OrigenReactor']
+                enrich = sim['Enrichment']
                 rxtrpath = datapath + o_rxtr + "/"
-                csvfile = o_rxtr + "_enr" + str(enrich) + nucs_tracked + src + ".csv"
-                trainpath = os.path.join(rxtrpath, csvfile)
-                train_sim['filename'] = trainpath
-            trainXY = dataframeXY(train_set, src)
-            pkl_tset = train_dir + src + nucs_tracked + '_not-scaled.pkl'
-            pickle.dump(trainXY, open(pkl_tset, 'wb'), protocol=2)
+                if testset == True:
+                    csvfile = o_rxtr + '_' + str(i)  + "_enr" + str(enrich) + '_' + str(i) + nucs_tracked + src + ".csv"
+                else:
+                    csvfile = o_rxtr + "_enr" + str(enrich) + nucs_tracked + src + ".csv"
+                filepath = os.path.join(rxtrpath, csvfile)
+                sim['filename'] = filepath
+                i = i + 1
+            dataXY = dataframeXY(data_set_labels, src)
+            pkl_set = data_dir + src + nucs_tracked + '_not-scaled.pkl'
+            pickle.dump(dataXY, open(pkl_set, 'wb'), protocol=2)
     return
 
 if __name__ == "__main__":
