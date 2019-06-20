@@ -139,29 +139,6 @@ def dataframeXY(train_labels, info):
     dfXY.fillna(value=0, inplace=True)
     return dfXY
 
-#def create_train_labels():
-#    """
-#    Creates a list of dictionaries containing the entire training set from the 
-#    imported training set file
-#
-#    Returns
-#    -------
-#    train_set : list of dictionaries, each of which contains the simulation 
-#                subsets by ORIGEN rxtr
-#
-#    """
-#
-#    train_set = []
-#    for rxtr_data in [ts.pwr_data, ts.bwr_data, ts.vver_data, ts.phwr_data]:
-#        for o_rxtr in rxtr_data['rxtrs']:
-#            for enrich in rxtr_data['enrich']:
-#                train_set.append( {'ReactorType' : rxtr_data['type'],
-#                                   'OrigenReactor' : o_rxtr,
-#                                   'Enrichment' : enrich,
-#                                   'Burnups' : rxtr_data['burnup'],
-#                                   'CoolingInts' : rxtr_data['cooling_intervals'] } )
-#    return train_set
-
 def main():
     """
     Takes all origen files in the hard-coded datapath and compiles them into 
@@ -170,21 +147,20 @@ def main():
 
     """
     # Always check this data path
-    origen_dir = '../origen/origen-data/'
+    origen_dir = '../origen/origen-data/gendata/'
     train_dir = '22jul2018_trainset3'
     datapath = origen_dir + train_dir + '/' 
     print('Is {} the correct training set directory?\n'.format(datapath), flush=True)
-    # Grab training set
-    #train_set = create_train_labels()
-    # Grab randomly varied tset instead:
-    train_set = pickle.load(open('../origen/origen-data/varied_tset.pkl', 'rb'))
+    # Grab training set labels
+    pkl_labels = datapath + 'varied_tset.pkl'
+    train_set_labels = pickle.load(open(pkl_labels, 'rb'))
     # Make pkl files according to nuc subset and measurement source
     subset = ['_all', '_fiss', '_act', '_fissact']
     info_src = ['_nucs',]# '_gammas']
     for nucs_tracked in subset:
         for src in info_src:
             train_files = {}
-            for train_sim in train_set:
+            for train_sim in train_set_labels:
                 o_rxtr = train_sim['OrigenReactor']
                 enrich = train_sim['Enrichment']
                 rxtrpath = datapath + o_rxtr + "/"
@@ -192,8 +168,8 @@ def main():
                 trainpath = os.path.join(rxtrpath, csvfile)
                 train_sim['filename'] = trainpath
             trainXY = dataframeXY(train_set, src)
-            pkl_name = train_dir + src + nucs_tracked + '_not-scaled.pkl'
-            pickle.dump(trainXY, open(pkl_name, 'wb'), protocol=2)
+            pkl_tset = train_dir + src + nucs_tracked + '_not-scaled.pkl'
+            pickle.dump(trainXY, open(pkl_tset, 'wb'), protocol=2)
     return
 
 if __name__ == "__main__":
