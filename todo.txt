@@ -1,3 +1,1 @@
-1. check all hardcoded paths (ones pointing to origen dir)
-2. change all other paths to be files entered in the program call (ie not hardcoded, user entered)
-
+1. check track_predictions method (the alg_preds df isn't used))
