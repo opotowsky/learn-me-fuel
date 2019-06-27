@@ -28,8 +28,7 @@ def format_gdf(filename):
     gamma_bins = ()
     with open(filename) as f:
         gamma = csv.reader(f, delimiter=',')
-        i = 1
-        for row in gamma:
+        for i, row in enumerate(gamma, 1):
             if len(row) > 0:
                 if i < 6:
                     pass
@@ -45,7 +44,6 @@ def format_gdf(filename):
                             row[0] = row[0] + '.1'
                         gamma_bins = gamma_bins + (row[0],)    
                     spectrum.append(row[1])
-                i = i + 1
         spectra.append(spectrum)
     data = pd.DataFrame(spectra, index=time_idx, columns=gamma_bins)
     return data
@@ -153,7 +151,6 @@ def main():
     print('Is {} the correct data set directory?\n'.format(datapath), flush=True)
     # Grab data set labels
     if testset == True:
-        print('Note from June 2019: Need to re-run generate_testingdata.py in origen-data project to get the .pkl file!', flush=True)
         pkl_labels = datapath + 'test_set.pkl'
     else:
         pkl_labels = datapath + 'varied_tset.pkl'
@@ -163,8 +160,7 @@ def main():
     info_src = ['_nucs',]# '_gammas']
     for nucs_tracked in subset:
         for src in info_src:
-            i = 1
-            for sim in data_set_labels:
+            for i, sim in enumerate(data_set_labels, 1):
                 o_rxtr = sim['OrigenReactor']
                 enrich = sim['Enrichment']
                 rxtrpath = datapath + o_rxtr + "/"
@@ -174,7 +170,6 @@ def main():
                     csvfile = o_rxtr + "_enr" + str(enrich) + nucs_tracked + src + ".csv"
                 filepath = os.path.join(rxtrpath, csvfile)
                 sim['filename'] = filepath
-                i = i + 1
             dataXY = dataframeXY(data_set_labels, src)
             pkl_set = data_dir + src + nucs_tracked + '_not-scaled.pkl'
             pickle.dump(dataXY, open(pkl_set, 'wb'), protocol=2)
