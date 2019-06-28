@@ -144,8 +144,8 @@ def main():
     Saves the data set as a pickle file.
 
     """
-    origen_dir = '../origen/origen-data/gendata/'
-    data_dir = '22jul2018_trainset3' # '2jul2018_testset1' if using test set
+    origen_dir = '../origen/origen-data/'
+    data_dir = '28jun2019' # '2jul2018_testset1' if using test set
     datapath = origen_dir + data_dir + '/' 
     testset = True if 'test' in datapath
     print('Is {} the correct data set directory?\n'.format(datapath), flush=True)
@@ -171,7 +171,7 @@ def main():
                 filepath = os.path.join(rxtrpath, csvfile)
                 sim['filename'] = filepath
             dataXY = dataframeXY(data_set_labels, src)
-            pkl_set = data_dir + src + nucs_tracked + '_not-scaled.pkl'
+            pkl_set = src + nucs_tracked + '_not-scaled.pkl'
             pickle.dump(dataXY, open(pkl_set, 'wb'), protocol=2)
     return
 

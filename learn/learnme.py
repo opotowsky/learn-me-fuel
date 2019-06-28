@@ -31,17 +31,20 @@ def main():
     tset_frac = 0.6
     
     parser = argparse.ArgumentParser(description='Performs machine learning-based predictions or model selection techniques.')
-    parser.add_argument('-tp', '--track_preds', action='store_true', default=False, help='run the track_predictions function')
-    parser.add_argument('-es', '--err_n_scores', action='store_true', default=False, help='run the errors_and_scores function')
-    parser.add_argument('-lc', '--learn_curves', action='store_true', default=False, help='run the learning_curves function')
-    parser.add_argument('-vc', '--valid_curves', action='store_true', default=False, help='run the validation_curves function')
-    parser.add_argument('-tc', '--test_compare', action='store_true', default=False, help='run the test_set_compare function')
+    parser.add_argument('-tp', '--track_preds', action='store_true', 
+                        default=False, help='run the track_predictions function')
+    parser.add_argument('-es', '--err_n_scores', action='store_true', 
+                        default=False, help='run the errors_and_scores function')
+    parser.add_argument('-lc', '--learn_curves', action='store_true', 
+                        default=False, help='run the learning_curves function')
+    parser.add_argument('-vc', '--valid_curves', action='store_true', 
+                        default=False, help='run the validation_curves function')
+    parser.add_argument('-tc', '--test_compare', action='store_true', 
+                        default=False, help='run the test_set_compare function')
     args = parser.parse_args()
 
-    pkl = './pkl_trainsets/22jul2018/22jul2018_trainset3_nucs_fissact_not-scaled.pkl'
+    pkl = './pkl_trainsets/28jun2019/nucs_fissact_not-scaled.pkl'
     trainXY = pd.read_pickle(pkl)
-    # gotta get rid of duplicate indices
-    # this creates an index column...but we don't want this in the training data. deleting for now via drop.
     trainXY.reset_index(inplace=True, drop=True) 
     # hyperparam optimization was done on 60% of training set
     trainXY = trainXY.sample(frac=tset_frac)
@@ -90,7 +93,7 @@ def main():
             g = 0.07
             c = 1000
         
-        csv_name = 'trainset3_fissact_m60_' + parameter
+        csv_name = 'fissact_m60_' + parameter
         
         ## initialize learners
         score = 'explained_variance'
@@ -107,8 +110,7 @@ def main():
 
         ## track predictions
         if args.track_preds == True:
-            print('yyy', flush=True)
-            #track_predictions(trainX, trainY, knn_init, dtr_init, svr_init, kfold, csv_name, trainX_unscaled)
+            track_predictions(trainX, trainY, knn_init, dtr_init, svr_init, kfold, csv_name, trainX_unscaled)
 
         ## calculate errors and scores
         if args.err_n_scores == True:
