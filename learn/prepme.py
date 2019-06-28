@@ -144,15 +144,16 @@ def main():
     Saves the data set as a pickle file.
 
     """
-    origen_dir = '../origen/origen-data/'
+    origen_dir = '../../origen/origen-data/'
     data_dir = '28jun2019' # '2jul2018_testset1' if using test set
     datapath = origen_dir + data_dir + '/' 
-    testset = True if 'test' in datapath
     print('Is {} the correct data set directory?\n'.format(datapath), flush=True)
     # Grab data set labels
-    if testset == True:
+    if 'test' in datapath:
+        testset = True
         pkl_labels = datapath + 'test_set.pkl'
     else:
+        testset = False
         pkl_labels = datapath + 'varied_tset.pkl'
     data_set_labels = pickle.load(open(pkl_labels, 'rb'))
     # Make pkl files according to nuc subset and measurement source
