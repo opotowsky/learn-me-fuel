@@ -9,4 +9,4 @@ export PATH=$(pwd)/python/bin:$PATH
 mkdir home
 export HOME=$(pwd)/home
 # run your script
-python my_script.py
+python learnme.py
