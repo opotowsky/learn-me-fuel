@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 
-from learn.tools import splitXY, top_nucs, filter_nucs, track_predictions, errors_and_scores, validation_curves, learning_curves, test_set_compare
+from learn.tools import splitXY, top_nucs, filter_nucs, track_predictions, errors_and_scores, validation_curves, learning_curves, ext_test_compare
 
 from sklearn.preprocessing import scale
 from sklearn.neighbors import KNeighborsRegressor, KNeighborsClassifier
@@ -23,7 +23,7 @@ def main():
     training set size
     4. validation_curves provides the prediction accuracy with respect to
     algorithm hyperparameter variations
-    5. test_set_compare provides the predictions of each algorithm of an 
+    5. ext_test_compare provides the predictions of each algorithm of an 
     external test set
 
     """
@@ -40,7 +40,7 @@ def main():
     parser.add_argument('-vc', '--valid_curves', action='store_true', 
                         default=False, help='run the validation_curves function')
     parser.add_argument('-tc', '--test_compare', action='store_true', 
-                        default=False, help='run the test_set_compare function')
+                        default=False, help='run the ext_test_compare function')
     args = parser.parse_args()
 
     pkl = './pkl_trainsets/28jun2019/nucs_fissact_not-scaled.pkl'
@@ -141,10 +141,10 @@ def main():
        
         # compare against external test set (right now the only one is 
         # Dayman test set)
-        ##### 21 Jun 2019: this is untested and may not work without some imports 
-        ##### added to tools.py
+        ##### 21 Jun 2019: this is untested and may not work without some of the 
+        ##### algorithm imports added to tools.py
         if args.test_compare == True:
-            test_set_compare(trainX, trainY, knn_init, dtr_init, svr_init, csv_name)
+            ext_test_compare(trainX, trainY, knn_init, dtr_init, svr_init, csv_name)
 
         print("The {} predictions are complete\n".format(parameter), flush=True)
 

@@ -1,8 +1,9 @@
 #! /usr/bin/env python3
 
+from sklearn.model_selection import cross_val_predict, cross_validate, learning_curve, validation_curve
+
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import cross_val_predict, cross_validate, learning_curve, validation_curve
 
 def splitXY(dfXY):
     """
@@ -297,10 +298,6 @@ def track_predictions(X, Y, alg1, alg2, alg3, CV, csv_name, X_unscaled):
     knn = cross_val_predict(alg1, X, y=Y, cv=CV, n_jobs=-1)
     dtr = cross_val_predict(alg2, X, y=Y, cv=CV, n_jobs=-1)
     svr = cross_val_predict(alg3, X, y=Y, cv=CV, n_jobs=-1)
-
-    alg_preds = pd.DataFrame({'TrueY': Y, 'kNN': knn, 
-                              'DTree': dtr, 'SVR': svr}, 
-                              index=Y.index)
     X = pd.DataFrame(X, index=Y.index, columns=X_unscaled.columns.values.tolist())
     preds_by_alg = X.assign(TrueY = Y, kNN = knn, DTree = dtr, SVR = svr)
     preds_by_alg.to_csv(csv_name + '_predictions.csv')
@@ -351,7 +348,7 @@ def errors_and_scores(X, Y, alg1, alg2, alg3, scores, CV, csv_name):
     
     return
 
-def test_set_compare(X, Y, alg1, alg2, alg3, csv_name):
+def ext_test_compare(X, Y, alg1, alg2, alg3, csv_name):
     """
     X : dataframe that includes all training data
     Y : series with labels for training data
@@ -366,16 +363,16 @@ def test_set_compare(X, Y, alg1, alg2, alg3, csv_name):
     *.csv : csv file with each alg's predictions compared to ground truth
     
     """
-
-    testpkl_base = './pkl_trainsets/2jul2018/2jul2018_testset1'
-    pkl = testpkl_base + '_nucs_fissact_not-scaled.pkl'
-    testXY = pd.read_pickle(pkl)
+    testpath = 'learn/pkl_trainsets/2jul2018/2jul2018_testset1_'
+    test_pkl = testpath + 'nucs_fissact_not-scaled.pkl'
+    testXY = pd.read_pickle(test_pkl)
+    testXY.reset_index(inplace=True, drop=True) 
     testX, rY, cY, eY, bY = splitXY(testXY)
-    if 'reactor' in csv_name:
+    if 'reactor' in str(csv_name):
         testY = rY
-    elif 'cooling' in csv_name:
+    elif 'cooling' in str(csv_name):
         testY = cY
-    elif 'enrichment' in csv_name:
+    elif 'enrichment' in str(csv_name):
         testY = eY
     else:
         testY = bY
@@ -390,5 +387,5 @@ def test_set_compare(X, Y, alg1, alg2, alg3, csv_name):
     alg_preds = pd.DataFrame({'TrueY': testY, 'kNN': knn, 
                               'DTree': dtr, 'SVR': svr}, 
                               index=testY.index)
-    preds_by_alg.to_csv(csv_name + '_test_set_compare.csv')
+    alg_preds.to_csv(csv_name + '_ext_test_compare.csv')
     return
