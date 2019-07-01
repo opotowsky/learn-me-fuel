@@ -1,322 +1,77 @@
 #! /usr/bin/env python3
 
-from tools import splitXY, top_nucs, filter_nucs
+from learn.tools import splitXY, top_nucs, filter_nucs, track_predictions, errors_and_scores, validation_curves, learning_curves, ext_test_compare
 
 from sklearn.preprocessing import scale
 from sklearn.neighbors import KNeighborsRegressor, KNeighborsClassifier
 from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
 from sklearn.svm import SVR, SVC
-from sklearn.model_selection import cross_val_predict, cross_validate, KFold, StratifiedKFold, learning_curve, validation_curve
+from sklearn.model_selection import KFold, StratifiedKFold
 
 import pandas as pd
-import numpy as np
-
-def validation_curves(X, Y, alg1, alg2, alg3, CV, score, csv_name):
-    """
-    
-    Given training data, iteratively runs some ML algorithms (currently, this
-    is nearest neighbor, decision tree, and support vector methods), varying
-    the training set size for each prediction category: reactor type, cooling
-    time, enrichment, and burnup
-
-    Parameters 
-    ---------- 
-    
-    X : dataframe that includes all training data
-    Y : series with labels for training data
-    alg1 : optimized learner 1
-    alg2 : optimized learner 2
-    alg3 : optimized learner 3
-    CV : cross-validation generator
-    score : 
-    csv_name : string containing the train set, nuc subset, and parameter being 
-               predicted for naming purposes
-
-    Returns
-    -------
-    *validation_curve.csv : csv file with val curve results for each 
-                            prediction category
-
-    """    
-    
-    # Note: I'm trying to avoid loops here so the code is inelegant
-
-    # Varied alg params for validation curves
-    k_list = np.linspace(1, 39, 10).astype(int)
-    depth_list = np.linspace(10, 100, 10).astype(int)
-    feat_list = np.linspace(5, 47, 10).astype(int)
-    gamma_list = np.logspace(-4, -1, 10)
-    c_list = np.logspace(0, 5, 10)
-
-    # knn
-    train, cv = validation_curve(alg1, X, Y, 'n_neighbors', k_list, cv=CV, 
-                                 scoring=score, n_jobs=-1)
-    train_mean = np.mean(train, axis=1)
-    train_std = np.std(train, axis=1)
-    cv_mean = np.mean(cv, axis=1)
-    cv_std = np.std(cv, axis=1)
-    df1 = pd.DataFrame({'ParamList' : k_list, 'TrainScore' : train_mean, 
-                        'TrainStd' : train_std, 'CV-Score' : cv_mean, 
-                        'CV-Std' : cv_std})
-    df1['Algorithm'] = 'knn'
-
-    # dtree
-    train, cv = validation_curve(alg2, X, Y, 'max_depth', depth_list, cv=CV, 
-                                 scoring=score, n_jobs=-1)
-    train_mean = np.mean(train, axis=1)
-    train_std = np.std(train, axis=1)
-    cv_mean = np.mean(cv, axis=1)
-    cv_std = np.std(cv, axis=1)
-    df2 = pd.DataFrame({'ParamList' : depth_list, 'TrainScore' : train_mean, 
-                        'TrainStd' : train_std, 'CV-Score' : cv_mean, 
-                        'CV-Std' : cv_std})
-    df2['Algorithm'] = 'dtree'
-    
-    train, cv = validation_curve(alg2, X, Y, 'max_features', feat_list, cv=CV, 
-                                 scoring=score, n_jobs=-1)
-    train_mean = np.mean(train, axis=1)
-    train_std = np.std(train, axis=1)
-    cv_mean = np.mean(cv, axis=1)
-    cv_std = np.std(cv, axis=1)
-    df3 = pd.DataFrame({'ParamList' : feat_list, 'TrainScore' : train_mean, 
-                        'TrainStd' : train_std, 'CV-Score' : cv_mean, 
-                        'CV-Std' : cv_std})
-    df3['Algorithm'] = 'dtree'
-    
-    # svr
-    train, cv = validation_curve(alg3, X, Y, 'gamma', gamma_list, cv=CV, 
-                                 scoring=score, n_jobs=-1)
-    train_mean = np.mean(train, axis=1)
-    train_std = np.std(train, axis=1)
-    cv_mean = np.mean(cv, axis=1)
-    cv_std = np.std(cv, axis=1)
-    df4 = pd.DataFrame({'ParamList' : gamma_list, 'TrainScore' : train_mean, 
-                        'TrainStd' : train_std, 'CV-Score' : cv_mean, 
-                        'CV-Std' : cv_std})
-    df4['Algorithm'] = 'svr'
-
-    train, cv = validation_curve(alg3, X, Y, 'C', c_list, cv=CV, 
-                                 scoring=score, n_jobs=-1)
-    train_mean = np.mean(train, axis=1)
-    train_std = np.std(train, axis=1)
-    cv_mean = np.mean(cv, axis=1)
-    cv_std = np.std(cv, axis=1)
-    df5 = pd.DataFrame({'ParamList' : c_list, 'TrainScore' : train_mean, 
-                        'TrainStd' : train_std, 'CV-Score' : cv_mean, 
-                        'CV-Std' : cv_std})
-    df5['Algorithm'] = 'svr'
-
-    vc_data = pd.concat([df1, df2, df3, df4, df5])
-    vc_data.to_csv(csv_name + '_validation_curve.csv')
-    return 
-
-def learning_curves(X, Y, alg1, alg2, alg3, CV, score, csv_name):
-    """
-    
-    Given training data, iteratively runs some ML algorithms (currently, this
-    is nearest neighbor, decision tree, and support vector methods), varying
-    the training set size for each prediction category: reactor type, cooling
-    time, enrichment, and burnup
-
-    Parameters 
-    ---------- 
-    
-    X : dataframe that includes all training data
-    Y : series with labels for training data
-    alg1 : optimized learner 1
-    alg2 : optimized learner 2
-    alg3 : optimized learner 3
-    CV : cross-validation generator
-    csv_name : string containing the train set, nuc subset, and parameter being 
-               predicted for naming purposes
-
-    Returns
-    -------
-    *learning_curve.csv : csv file with learning curve results for each 
-                          prediction category
-
-    """    
-    
-    # Note: I'm trying to avoid loops here so the code is inelegant
-
-    trainset_frac = np.array( [0.1, 0.2, 0.3, 0.4, 0.5, 0.55, 0.6, 0.65, 
-                               0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0] )
-    col_names = ['AbsTrainSize', 'TrainScore', 'CV-Score']
-    tsze = 'AbsTrainSize'
-    tscr = 'TrainScore'
-    cscr = 'CV-Score'
-    tstd = 'TrainStd'
-    cstd = 'CV-Std'
-
-    # knn
-    tsize, train, cv = learning_curve(alg1, X, Y, train_sizes=trainset_frac, 
-                                      scoring=score, cv=CV, shuffle=True, 
-                                      n_jobs=-1)
-    train_mean = np.mean(train, axis=1)
-    train_std = np.std(train, axis=1)
-    cv_mean = np.mean(cv, axis=1)
-    cv_std = np.std(cv, axis=1)
-    df1 = pd.DataFrame({tsze : tsize, tscr : train_mean, tstd : train_std, 
-                        cscr : cv_mean, cstd : cv_std}, index=trainset_frac)
-    df1['Algorithm'] = 'knn'
-
-    # dtree
-    tsize, train, cv = learning_curve(alg2, X, Y, train_sizes=trainset_frac, 
-                                      scoring=score, cv=CV, shuffle=True, 
-                                      n_jobs=-1)
-    train_mean = np.mean(train, axis=1)
-    train_std = np.std(train, axis=1)
-    cv_mean = np.mean(cv, axis=1)
-    cv_std = np.std(cv, axis=1)
-    df2 = pd.DataFrame({tsze : tsize, tscr : train_mean, tstd : train_std, 
-                        cscr : cv_mean, cstd : cv_std}, index=trainset_frac)
-    df2['Algorithm'] = 'dtree'
-    
-    # svr
-    tsize, train, cv = learning_curve(alg3, X, Y, train_sizes=trainset_frac, 
-                                      scoring=score, cv=CV, shuffle=True, 
-                                      n_jobs=-1)
-    train_mean = np.mean(train, axis=1)
-    train_std = np.std(train, axis=1)
-    cv_mean = np.mean(cv, axis=1)
-    cv_std = np.std(cv, axis=1)
-    df3 = pd.DataFrame({tsze : tsize, tscr : train_mean, tstd : train_std, 
-                        cscr : cv_mean, cstd : cv_std}, index=trainset_frac)
-    df3['Algorithm'] = 'svr'
-
-    lc_data = pd.concat([df1, df2, df3])
-    lc_data.index.name = 'TrainSizeFrac'
-    lc_data.to_csv(csv_name + '_learning_curve.csv')
-    return 
-
-
-def track_predictions(X, Y, alg1, alg2, alg3, CV, csv_name, X_unscaled):
-    """
-    Saves csv's with predictions of each reactor parameter instance.
-    
-    Parameters 
-    ---------- 
-    
-    X : numpy array that includes all training data
-    Y : series with labels for training data
-    alg1 : optimized learner 1
-    alg2 : optimized learner 2
-    alg3 : optimized learner 3
-    CV : cross-validation generator
-    csv_name : string containing the train set, nuc subset, and parameter being 
-               predicted for naming purposes
-    X_unscaled : dataframe with unscaled nuclide concentrations
-
-    Returns
-    -------
-    *predictions.csv : csv file with prediction results 
-
-    """
-    knn = cross_val_predict(alg1, X, y=Y, cv=CV, n_jobs=-1)
-    dtr = cross_val_predict(alg2, X, y=Y, cv=CV, n_jobs=-1)
-    svr = cross_val_predict(alg3, X, y=Y, cv=CV, n_jobs=-1)
-
-    alg_preds = pd.DataFrame({'TrueY': Y, 'kNN': knn, 
-                              'DTree': dtr, 'SVR': svr}, 
-                              index=Y.index)
-    X = pd.DataFrame(X, index=Y.index, columns=X_unscaled.columns.values.tolist())
-    preds_by_alg = X.assign(TrueY = Y, kNN = knn, DTree = dtr, SVR = svr)
-    preds_by_alg.to_csv(csv_name + '_predictions.csv')
-    return
-
-def errors_and_scores(X, Y, alg1, alg2, alg3, scores, CV, csv_name):
-    """
-    Saves csv's with each reactor parameter regression wrt scoring metric and 
-    algorithm
-
-    Parameters 
-    ---------- 
-    
-    X : dataframe that includes all training data
-    Y : series with labels for training data
-    alg1 : optimized learner 1
-    alg2 : optimized learner 2
-    alg3 : optimized learner 3
-    scores : list of scoring types (from sckikit-learn)
-    CV : cross-validation generator
-    csv_name : string containing the train set, nuc subset, and parameter being 
-               predicted for naming purposes
-
-    Returns
-    -------
-    *scores.csv : csv file with scores for each CV fold
-    
-    """
-    
-    cv_scr = cross_validate(alg1, X, Y, scoring=scores, cv=CV, 
-                            return_train_score=False, n_jobs=-1)
-    df1 = pd.DataFrame(cv_scr)
-    df1['Algorithm'] = 'knn'
-    
-    cv_scr = cross_validate(alg2, X, Y, scoring=scores, cv=CV, 
-                            return_train_score=False, n_jobs=-1)
-    df2 = pd.DataFrame(cv_scr)
-    df2['Algorithm'] = 'dtree'
-    
-    cv_scr = cross_validate(alg3, X, Y, scoring=scores, cv=CV, 
-                            return_train_score=False, n_jobs=-1)
-    df3 = pd.DataFrame(cv_scr)
-    df3['Algorithm'] = 'svr'
-    
-    cv_results = [df1, df2, df3]
-    df = pd.concat(cv_results)
-    df.to_csv(csv_name + '_scores.csv')
-    
-    return
+import argparse
 
 def main():
     """
-    Given training data, this script performs a number of ML tasks for three
-    algorithms:
-    1. errors_and_scores provides the prediction accuracy for each algorithm
+    Given training data, this script performs a user-defined number of ML 
+    tasks for three algorithms (kNN, decision trees, SVR), saving the results
+    as .csv files:
+    1. track_predictions provides the prediction of each training instance
+    2. errors_and_scores provides the prediction accuracy for each algorithm
     for each CV fold
-    2. train_and_predict provides the prediction of each training instance
-    3. validation_curves provides the prediction accuracy with respect to
-    algorithm hyperparameter variations
-    4. learning_curves  provides the prediction accuracy with respect to
+    3. learning_curves provides the prediction accuracy with respect to
     training set size
+    4. validation_curves provides the prediction accuracy with respect to
+    algorithm hyperparameter variations
+    5. ext_test_compare provides the predictions of each algorithm of an 
+    external test set
 
     """
-    pkl = './trainset.pkl'
+    CV = 5
+    tset_frac = 0.6
     
-    # Parameters for the training and predictions
-    CV = 10
-    
+    parser = argparse.ArgumentParser(description='Performs machine learning-based predictions or model selection techniques.')
+    parser.add_argument('-tp', '--track_preds', action='store_true', 
+                        default=False, help='run the track_predictions function')
+    parser.add_argument('-es', '--err_n_scores', action='store_true', 
+                        default=False, help='run the errors_and_scores function')
+    parser.add_argument('-lc', '--learn_curves', action='store_true', 
+                        default=False, help='run the learning_curves function')
+    parser.add_argument('-vc', '--valid_curves', action='store_true', 
+                        default=False, help='run the validation_curves function')
+    parser.add_argument('-tc', '--test_compare', action='store_true', 
+                        default=False, help='run the ext_test_compare function')
+    args = parser.parse_args()
+
+    pkl = './pkl_trainsets/28jun2019/nucs_fissact_not-scaled.pkl'
     trainXY = pd.read_pickle(pkl)
-    # gotta get rid of duplicate indices
-    # this creates an index column...but we don't want this in the training data. deleting for now via drop.
     trainXY.reset_index(inplace=True, drop=True) 
     # hyperparam optimization was done on 60% of training set
-    trainXY = trainXY.sample(frac=0.6)
+    trainXY = trainXY.sample(frac=tset_frac)
     trainX_unscaled, rY, cY, eY, bY = splitXY(trainXY)
     trainX = scale(trainX_unscaled)
     
     # loops through each reactor parameter to do separate predictions
     # burnup is last since its the only tset I'm altering
-    for Y in ('r', 'b'):# 'b', 'e', 'c'):
+    for Y in ('r',):# 'b', 'e', 'c'):
         trainY = pd.Series()
         # get param names and set ground truth
         if Y == 'c':
             trainY = cY
             parameter = 'cooling'
-            k = 3 #7
-            depth = 50 #50, 12
-            feats = 25 #36, 47 
-            g = 0.06 #0.2
-            c = 50000 #200, 75000
+            k = 3
+            depth = 50
+            feats = 25
+            g = 0.06
+            c = 50000
         elif Y == 'e': 
             trainY = eY
             parameter = 'enrichment'
-            k = 7 #8
-            depth = 50 #53, 38
-            feats = 25 #33, 16 
-            g = 0.8 #0.2
-            c = 25000 #420
+            k = 7
+            depth = 50
+            feats = 25
+            g = 0.8
+            c = 25000
         elif Y == 'b':
             # burnup needs much less training data...this is 24% of data set
             trainXY = trainXY.sample(frac=0.4)
@@ -324,21 +79,21 @@ def main():
             trainX = scale(trainX)
             trainY = bY
             parameter = 'burnup'
-            k = 7 #4
-            depth = 50 #50, 78
-            feats = 25 #23, 42 
-            g = 0.25 #0.025
-            c = 42000 #105
+            k = 7
+            depth = 50
+            feats = 25
+            g = 0.25
+            c = 42000
         else:
             trainY = rY
             parameter = 'reactor'
-            k = 3 #1, 2, or 12
-            depth = 50 #50, 97
-            feats = 25 # 37, 37 
-            g = 0.07 #0.2
-            c = 1000 #220
+            k = 3
+            depth = 50
+            feats = 25 
+            g = 0.07
+            c = 1000
         
-        csv_name = 'trainset3_fissact_m60_' + parameter
+        csv_name = 'fissact_m60_' + parameter
         
         ## initialize learners
         score = 'explained_variance'
@@ -353,34 +108,45 @@ def main():
             dtr_init = DecisionTreeClassifier(max_depth=depth, max_features=feats, class_weight='balanced')
             svr_init = SVC(gamma=g, C=c, class_weight='balanced')
 
-        ## track predictions 
-        track_predictions(trainX, trainY, knn_init, dtr_init, svr_init, kfold, csv_name, trainX_unscaled)
+        ## track predictions
+        if args.track_preds == True:
+            track_predictions(trainX, trainY, knn_init, dtr_init, svr_init, kfold, csv_name, trainX_unscaled)
 
         ## calculate errors and scores
-        #scores = ['r2', 'explained_variance', 'neg_mean_absolute_error']
-        #if Y is 'r':
-        #    scores = ['accuracy', ]
-        #errors_and_scores(trainX, trainY, knn_init, dtr_init, svr_init, scores, kfold, csv_name)
+        if args.err_n_scores == True:
+            scores = ['r2', 'explained_variance', 'neg_mean_absolute_error']
+            if Y is 'r':
+                scores = ['accuracy', ]
+            errors_and_scores(trainX, trainY, knn_init, dtr_init, svr_init, scores, kfold, csv_name)
 
         # learning curves
-        #learning_curves(trainX, trainY, knn_init, dtr_init, svr_init, kfold, score, csv_name)
+        if args.learn_curves == True:
+            learning_curves(trainX, trainY, knn_init, dtr_init, svr_init, kfold, score, csv_name)
         
         # validation curves 
-        # VC needs different inits
-        #score = 'explained_variance'
-        #kfold = KFold(n_splits=CV, shuffle=True)
-        #knn_init = KNeighborsRegressor(weights='distance')
-        #dtr_init = DecisionTreeRegressor()
-        #svr_init = SVR()
-        #if Y == 'r':
-        #    score = 'accuracy'
-        #    kfold = StratifiedKFold(n_splits=CV, shuffle=True)
-        #    knn_init = KNeighborsClassifier(weights='distance')
-        #    dtr_init = DecisionTreeClassifier(class_weight='balanced')
-        #    svr_init = SVC(class_weight='balanced')
-        #validation_curves(trainX, trainY, knn_init, dtr_init, svr_init, kfold, score, csv_name)
-        
-        #print("The {} predictions are complete\n".format(parameter), flush=True)
+        if args.valid_curves == True:
+            # VC needs different inits
+            score = 'explained_variance'
+            kfold = KFold(n_splits=CV, shuffle=True)
+            knn_init = KNeighborsRegressor(weights='distance')
+            dtr_init = DecisionTreeRegressor()
+            svr_init = SVR()
+            if Y is 'r':
+                score = 'accuracy'
+                kfold = StratifiedKFold(n_splits=CV, shuffle=True)
+                knn_init = KNeighborsClassifier(weights='distance')
+                dtr_init = DecisionTreeClassifier(class_weight='balanced')
+                svr_init = SVC(class_weight='balanced')
+            validation_curves(trainX, trainY, knn_init, dtr_init, svr_init, kfold, score, csv_name)
+       
+        # compare against external test set (right now the only one is 
+        # Dayman test set)
+        ##### 21 Jun 2019: this is untested and may not work without some of the 
+        ##### algorithm imports added to tools.py
+        if args.test_compare == True:
+            ext_test_compare(trainX, trainY, knn_init, dtr_init, svr_init, csv_name)
+
+        print("The {} predictions are complete\n".format(parameter), flush=True)
 
     return
 
