@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 
-from tools import splitXY, top_nucs, filter_nucs, track_predictions, errors_and_scores, validation_curves, learning_curves, test_set_compare
+from learn.tools import splitXY, top_nucs, filter_nucs, track_predictions, errors_and_scores, validation_curves, learning_curves, test_set_compare
 
 from sklearn.preprocessing import scale
 from sklearn.neighbors import KNeighborsRegressor, KNeighborsClassifier
