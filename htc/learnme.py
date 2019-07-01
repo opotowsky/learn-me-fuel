@@ -1,4 +1,4 @@
-#! /usr/bin/env python3
+#! /usr/bin/env python
 
 from learn.tools import splitXY, track_predictions, errors_and_scores, validation_curves, learning_curves, ext_test_compare
 
