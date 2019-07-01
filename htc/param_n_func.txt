@@ -1,0 +1,16 @@
+'reactor', --track-preds
+'reactor', --err_n_scores
+'reactor', --learn_curves
+'reactor', --valid-curves
+'cooling', --track-preds
+'cooling', --err_n_scores
+'cooling', --learn_curves
+'cooling', --valid-curves
+'enrichment', --track-preds
+'enrichment', --err_n_scores
+'enrichment', --learn_curves
+'enrichment', --valid-curves
+'burnup', --track-preds
+'burnup', --err_n_scores
+'burnup', --learn_curves
+'burnup', --valid-curves
