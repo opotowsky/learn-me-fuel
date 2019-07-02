@@ -1,6 +1,6 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
-from learn.tools import splitXY, track_predictions, errors_and_scores, validation_curves, learning_curves, ext_test_compare
+from tools import splitXY, track_predictions, errors_and_scores, validation_curves, learning_curves, ext_test_compare
 
 from sklearn.preprocessing import scale
 from sklearn.neighbors import KNeighborsRegressor, KNeighborsClassifier
@@ -59,7 +59,6 @@ def main():
     # get param names and set ground truth
     if args.rxtr_param == 'cooling':
         trainY = cY
-        parameter = 'cooling'
         k = 3
         depth = 50
         feats = 25
@@ -67,7 +66,6 @@ def main():
         c = 50000
     elif args.rxtr_param == 'enrichment': 
         trainY = eY
-        parameter = 'enrichment'
         k = 7
         depth = 50
         feats = 25
@@ -79,7 +77,6 @@ def main():
         trainX, rY, cY, eY, bY = splitXY(trainXY)
         trainX = scale(trainX)
         trainY = bY
-        parameter = 'burnup'
         k = 7
         depth = 50
         feats = 25
@@ -87,7 +84,6 @@ def main():
         c = 42000
     else:
         trainY = rY
-        parameter = 'reactor'
         k = 3
         depth = 50
         feats = 25 
