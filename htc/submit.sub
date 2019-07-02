@@ -13,6 +13,6 @@ transfer_input_files = python.tar.gz, learnme.py, small_trainset.pkl, tools.py
 
 request_cpus = 4
 request_memory = 1GB
-request_disk = 10MB
+request_disk = 400MB
 
 queue param,func from param_func.txt
