@@ -133,7 +133,7 @@ def validation_curves(X, Y, alg1, alg2, alg3, CV, score, csv_name):
 
     # knn
     train, cv = validation_curve(alg1, X, Y, 'n_neighbors', k_list, cv=CV, 
-                                 scoring=score, n_jobs=-1)
+                                 scoring=score, n_jobs=4)
     train_mean = np.mean(train, axis=1)
     train_std = np.std(train, axis=1)
     cv_mean = np.mean(cv, axis=1)
@@ -145,7 +145,7 @@ def validation_curves(X, Y, alg1, alg2, alg3, CV, score, csv_name):
 
     # dtree
     train, cv = validation_curve(alg2, X, Y, 'max_depth', depth_list, cv=CV, 
-                                 scoring=score, n_jobs=-1)
+                                 scoring=score, n_jobs=4)
     train_mean = np.mean(train, axis=1)
     train_std = np.std(train, axis=1)
     cv_mean = np.mean(cv, axis=1)
@@ -156,7 +156,7 @@ def validation_curves(X, Y, alg1, alg2, alg3, CV, score, csv_name):
     df2['Algorithm'] = 'dtree'
     
     train, cv = validation_curve(alg2, X, Y, 'max_features', feat_list, cv=CV, 
-                                 scoring=score, n_jobs=-1)
+                                 scoring=score, n_jobs=4)
     train_mean = np.mean(train, axis=1)
     train_std = np.std(train, axis=1)
     cv_mean = np.mean(cv, axis=1)
@@ -168,7 +168,7 @@ def validation_curves(X, Y, alg1, alg2, alg3, CV, score, csv_name):
     
     # svr
     train, cv = validation_curve(alg3, X, Y, 'gamma', gamma_list, cv=CV, 
-                                 scoring=score, n_jobs=-1)
+                                 scoring=score, n_jobs=4)
     train_mean = np.mean(train, axis=1)
     train_std = np.std(train, axis=1)
     cv_mean = np.mean(cv, axis=1)
@@ -179,7 +179,7 @@ def validation_curves(X, Y, alg1, alg2, alg3, CV, score, csv_name):
     df4['Algorithm'] = 'svr'
 
     train, cv = validation_curve(alg3, X, Y, 'C', c_list, cv=CV, 
-                                 scoring=score, n_jobs=-1)
+                                 scoring=score, n_jobs=4)
     train_mean = np.mean(train, axis=1)
     train_std = np.std(train, axis=1)
     cv_mean = np.mean(cv, axis=1)
@@ -234,7 +234,7 @@ def learning_curves(X, Y, alg1, alg2, alg3, CV, score, csv_name):
     # knn
     tsize, train, cv = learning_curve(alg1, X, Y, train_sizes=trainset_frac, 
                                       scoring=score, cv=CV, shuffle=True, 
-                                      n_jobs=-1)
+                                      n_jobs=4)
     train_mean = np.mean(train, axis=1)
     train_std = np.std(train, axis=1)
     cv_mean = np.mean(cv, axis=1)
@@ -246,7 +246,7 @@ def learning_curves(X, Y, alg1, alg2, alg3, CV, score, csv_name):
     # dtree
     tsize, train, cv = learning_curve(alg2, X, Y, train_sizes=trainset_frac, 
                                       scoring=score, cv=CV, shuffle=True, 
-                                      n_jobs=-1)
+                                      n_jobs=4)
     train_mean = np.mean(train, axis=1)
     train_std = np.std(train, axis=1)
     cv_mean = np.mean(cv, axis=1)
@@ -258,7 +258,7 @@ def learning_curves(X, Y, alg1, alg2, alg3, CV, score, csv_name):
     # svr
     tsize, train, cv = learning_curve(alg3, X, Y, train_sizes=trainset_frac, 
                                       scoring=score, cv=CV, shuffle=True, 
-                                      n_jobs=-1)
+                                      n_jobs=4)
     train_mean = np.mean(train, axis=1)
     train_std = np.std(train, axis=1)
     cv_mean = np.mean(cv, axis=1)
@@ -295,9 +295,9 @@ def track_predictions(X, Y, alg1, alg2, alg3, CV, csv_name, X_unscaled):
     *predictions.csv : csv file with prediction results 
 
     """
-    knn = cross_val_predict(alg1, X, y=Y, cv=CV, n_jobs=-1)
-    dtr = cross_val_predict(alg2, X, y=Y, cv=CV, n_jobs=-1)
-    svr = cross_val_predict(alg3, X, y=Y, cv=CV, n_jobs=-1)
+    knn = cross_val_predict(alg1, X, y=Y, cv=CV, n_jobs=4)
+    dtr = cross_val_predict(alg2, X, y=Y, cv=CV, n_jobs=4)
+    svr = cross_val_predict(alg3, X, y=Y, cv=CV, n_jobs=4)
     X = pd.DataFrame(X, index=Y.index, columns=X_unscaled.columns.values.tolist())
     preds_by_alg = X.assign(TrueY = Y, kNN = knn, DTree = dtr, SVR = svr)
     preds_by_alg.to_csv(csv_name + '_predictions.csv')
@@ -328,17 +328,17 @@ def errors_and_scores(X, Y, alg1, alg2, alg3, scores, CV, csv_name):
     """
     
     cv_scr = cross_validate(alg1, X, Y, scoring=scores, cv=CV, 
-                            return_train_score=False, n_jobs=-1)
+                            return_train_score=False, n_jobs=4)
     df1 = pd.DataFrame(cv_scr)
     df1['Algorithm'] = 'knn'
     
     cv_scr = cross_validate(alg2, X, Y, scoring=scores, cv=CV, 
-                            return_train_score=False, n_jobs=-1)
+                            return_train_score=False, n_jobs=4)
     df2 = pd.DataFrame(cv_scr)
     df2['Algorithm'] = 'dtree'
     
     cv_scr = cross_validate(alg3, X, Y, scoring=scores, cv=CV, 
-                            return_train_score=False, n_jobs=-1)
+                            return_train_score=False, n_jobs=4)
     df3 = pd.DataFrame(cv_scr)
     df3['Algorithm'] = 'svr'
     
