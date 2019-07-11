@@ -144,7 +144,7 @@ def main():
     Saves the data set as a pickle file.
 
     """
-    origen_dir = '../../origen/origen-data/'
+    origen_dir = '../../origen-data/'
     data_dir = '28jun2019' # '2jul2018_testset1' if using test set
     datapath = origen_dir + data_dir + '/' 
     print('Is {} the correct data set directory?\n'.format(datapath), flush=True)
