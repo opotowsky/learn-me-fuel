@@ -139,10 +139,7 @@ def main():
                 svr_init = SVC(class_weight='balanced')
             validation_curves(trainX, trainY, knn_init, dtr_init, svr_init, kfold, score, csv_name)
        
-        # compare against external test set (right now the only one is 
-        # Dayman test set)
-        ##### 21 Jun 2019: this is untested and may not work without some of the 
-        ##### algorithm imports added to tools.py
+        # compare against external test set
         if args.test_compare == True:
             ext_test_compare(trainX, trainY, knn_init, dtr_init, svr_init, csv_name)
 
