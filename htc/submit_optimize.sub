@@ -1,0 +1,18 @@
+universe = vanilla
+log = submit_$(param)_$(func).log
+error = submit_$(param)_$(func).err
+output = submit_$(param)_$(func).out
+
+requirements = (OpSysMajorVer == 7)
+executable = run_python.sh
+arguments = $(param) $(func)
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+transfer_input_files = http://proxy.chtc.wisc.edu/SQUID/opotowsky/python.tar.gz,learnme.py,trainset.pkl,tools.py
+
+request_cpus = 4
+request_memory = 8GB
+request_disk = 2GB
+
+queue param,func from param_func_optimize.txt
