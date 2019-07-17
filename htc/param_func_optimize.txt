@@ -1,0 +1,8 @@
+reactor, grid
+reactor, random
+burnup, grid
+burnup, random
+cooling, grid
+cooling, random
+enrichment, grid
+enrichment, random
