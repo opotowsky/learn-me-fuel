@@ -28,7 +28,7 @@ def main():
 
     """
     CV = 5
-    tset_frac = 1.0
+    tset_frac = 0.6
     
     parser = argparse.ArgumentParser(description='Performs machine learning-based predictions or model selection techniques.')
     parser.add_argument('rxtr_param', choices=['reactor', 'cooling', 'enrichment', 'burnup'], 
@@ -45,13 +45,15 @@ def main():
     #                    default=False, help='run the ext_test_compare function')
     args = parser.parse_args()
 
-    pkl = 'small_trainset.pkl'
+    pkl = 'trainset.pkl'
     trainXY = pd.read_pickle(pkl)
     trainXY.reset_index(inplace=True, drop=True) 
     # hyperparam optimization was done on 60% of training set
     trainXY = trainXY.sample(frac=tset_frac)
     trainX_unscaled, rY, cY, eY, bY = splitXY(trainXY)
     trainX = scale(trainX_unscaled)
+    
+    csv_name = 'trainset_m60_' + args.rxtr_param
     
     # loops through each reactor parameter to do separate predictions
     # burnup is last since its the only tset I'm altering
@@ -72,6 +74,7 @@ def main():
         g = 0.8
         c = 25000
     elif args.rxtr_param == 'burnup':
+        csv_name = 'trainset_m24_' + args.rxtr_param
         # burnup needs much less training data...this is 24% of data set
         trainXY = trainXY.sample(frac=0.4)
         trainX, rY, cY, eY, bY = splitXY(trainXY)
@@ -89,8 +92,6 @@ def main():
         feats = 25 
         g = 0.07
         c = 1000
-    
-    csv_name = 'small_trainset_' + args.rxtr_param
     
     ## initialize learners
     score = 'explained_variance'
