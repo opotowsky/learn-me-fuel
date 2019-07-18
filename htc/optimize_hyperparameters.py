@@ -19,6 +19,7 @@ def main():
     tset_frac = 0.6
     iters = 30
     jobs = 4
+    c = 10000
     parser = argparse.ArgumentParser(description='Performs hyperparameter optimization for various machine learning algorithms.')
     parser.add_argument('rxtr_param', choices=['reactor', 'cooling', 'enrichment', 'burnup'], 
                         metavar='prediction-param', help='which reactor parameter is to be predicted [reactor, cooling, enrichment, burnup]')
@@ -36,13 +37,13 @@ def main():
     knn_grid = {'n_neighbors': np.linspace(1, 40, 20).astype(int)}
     dtr_grid = {"max_depth": np.linspace(3, 100, 20).astype(int),
                 "max_features": np.linspace(5, len(trainXY.columns)-6, 20).astype(int)}
-    svr_grid = {'C': np.logspace(-2, 5, 20), 'gamma': np.logspace(-7, 2, 20)} 
+    svr_grid = {'C': np.logspace(0, 5, 20), 'gamma': np.logspace(-7, 2, 20)} 
     
     score = 'explained_variance'
     kfold = KFold(n_splits=CV, shuffle=True)
     knn_init = KNeighborsRegressor(weights='distance')
     dtr_init = DecisionTreeRegressor()
-    svr_init = SVR()  
+    svr_init = SVR(C=c)
     # save results
     param_file = args.rxtr_param + '_' + args.opt_type + '_hyperparameters.txt'
     with open(param_file, 'a') as pf:
@@ -65,7 +66,7 @@ def main():
         kfold = StratifiedKFold(n_splits=CV, shuffle=True)
         knn_init = KNeighborsClassifier(weights='distance')
         dtr_init = DecisionTreeClassifier(class_weight='balanced')
-        svr_init = SVC(class_weight='balanced')
+        svr_init = SVC(C=c, class_weight='balanced')
     
     if args.opt_type == 'grid':
         knn_opt = GridSearchCV(estimator=knn_init, param_grid=knn_grid, 
