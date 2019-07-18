@@ -124,17 +124,13 @@ def main():
     # validation curves 
     if args.valid_curves == True:
         # VC needs different inits
-        score = 'explained_variance'
-        kfold = KFold(n_splits=CV, shuffle=True)
         knn_init = KNeighborsRegressor(weights='distance')
         dtr_init = DecisionTreeRegressor()
-        svr_init = SVR()
+        svr_init = SVR(C=c)
         if args.rxtr_param == 'reactor':
-            score = 'accuracy'
-            kfold = StratifiedKFold(n_splits=CV, shuffle=True)
             knn_init = KNeighborsClassifier(weights='distance')
             dtr_init = DecisionTreeClassifier(class_weight='balanced')
-            svr_init = SVC(class_weight='balanced')
+            svr_init = SVC(C=c, class_weight='balanced')
         validation_curves(trainX, trainY, knn_init, dtr_init, svr_init, kfold, score, csv_name)
     
     # compare against external test set (right now the only one is 
