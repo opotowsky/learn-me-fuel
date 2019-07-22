@@ -17,7 +17,7 @@ def main():
 
     CV = 5
     tset_frac = 0.6
-    iters = 30
+    iters = 40
     jobs = 4
     c = 10000
     parser = argparse.ArgumentParser(description='Performs hyperparameter optimization for various machine learning algorithms.')
@@ -34,10 +34,10 @@ def main():
     trainX, rY, cY, eY, bY = splitXY(trainXY)
     trainX = scale(trainX)
     # define search breadth
-    knn_grid = {'n_neighbors': np.linspace(1, 40, 20).astype(int)}
-    dtr_grid = {"max_depth": np.linspace(3, 100, 20).astype(int),
-                "max_features": np.linspace(5, len(trainXY.columns)-6, 20).astype(int)}
-    svr_grid = {'C': np.logspace(0, 5, 20), 'gamma': np.logspace(-7, 2, 20)} 
+    knn_grid = {'n_neighbors': np.linspace(1, 41, iters).astype(int)}
+    dtr_grid = {"max_depth": np.linspace(3, 100, iters).astype(int),
+                "max_features": np.linspace(5, len(trainXY.columns)-6, iters).astype(int)}
+    svr_grid = {'C': np.logspace(0, 5, iters), 'gamma': np.logspace(-7, 2, iters)} 
     
     score = 'explained_variance'
     kfold = KFold(n_splits=CV, shuffle=True)
@@ -52,16 +52,12 @@ def main():
     trainY = pd.Series()
     if args.rxtr_param == 'cooling':
         trainY = cY
-        parameter = 'cooling'
     elif args.rxtr_param == 'burnup':
         trainY = bY
-        parameter = 'burnup'
     elif args.rxtr_param == 'enrichment': 
         trainY = eY
-        parameter = 'enrichment'
     else:
         trainY = rY
-        parameter = 'reactor'
         score = 'accuracy'
         kfold = StratifiedKFold(n_splits=CV, shuffle=True)
         knn_init = KNeighborsClassifier(weights='distance')
