@@ -126,7 +126,7 @@ def dataframeXY(train_labels, info):
     all_data = []
     col_order = []
     for training_set in train_labels:
-        if info == '_gammas':
+        if info == '_gamma':
             data = format_gdf(training_set['filename'])
         else:
             data = format_ndf(training_set['filename'])
@@ -145,7 +145,7 @@ def main():
 
     """
     origen_dir = '../../origen-data/'
-    data_dir = '28jun2019' # '2jul2018_testset1' if using test set
+    data_dir = '19aug2019_opusupdate' # '2jul2018_testset1' if using test set
     datapath = origen_dir + data_dir + '/' 
     print('Is {} the correct data set directory?\n'.format(datapath), flush=True)
     # Grab data set labels
@@ -156,24 +156,21 @@ def main():
         testset = False
         pkl_labels = datapath + 'varied_tset.pkl'
     data_set_labels = pickle.load(open(pkl_labels, 'rb'))
-    # Make pkl files according to nuc subset and measurement source
-    subset = ['_all', '_fiss', '_act', '_fissact']
-    info_src = ['_nucs',]# '_gammas']
-    for nucs_tracked in subset:
-        for src in info_src:
-            for i, sim in enumerate(data_set_labels, 1):
-                o_rxtr = sim['OrigenReactor']
-                enrich = sim['Enrichment']
-                rxtrpath = datapath + o_rxtr + "/"
-                if testset == True:
-                    csvfile = o_rxtr + '_' + str(i)  + "_enr" + str(enrich) + '_' + str(i) + nucs_tracked + src + ".csv"
-                else:
-                    csvfile = o_rxtr + "_enr" + str(enrich) + nucs_tracked + src + ".csv"
-                filepath = os.path.join(rxtrpath, csvfile)
-                sim['filename'] = filepath
-            dataXY = dataframeXY(data_set_labels, src)
-            pkl_set = src + nucs_tracked + '_not-scaled.pkl'
-            pickle.dump(dataXY, open(pkl_set, 'wb'), protocol=2)
+    opus_files = ['_fiss', '_act', '_fissact', '_15nuc', '_all', '_gamma']
+    for ofile in opus_files:
+        for i, sim in enumerate(data_set_labels, 1):
+            o_rxtr = sim['OrigenReactor']
+            enrich = sim['Enrichment']
+            rxtrpath = datapath + o_rxtr + "/"
+            if testset == True:
+                csvfile = o_rxtr + '_' + str(i)  + '_enr' + str(enrich) + '_' + str(i) + ofile + '.csv'
+            else:
+                csvfile = o_rxtr + '_enr' + str(enrich) + ofile + '.csv'
+            filepath = os.path.join(rxtrpath, csvfile)
+            sim['filename'] = filepath
+        dataXY = dataframeXY(data_set_labels, ofile)
+        pkl_set = 'not-scaled' + ofile + '.pkl'
+        pickle.dump(dataXY, open(pkl_set, 'wb'), protocol=2)
     return
 
 if __name__ == "__main__":
