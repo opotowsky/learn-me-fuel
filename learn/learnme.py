@@ -43,7 +43,7 @@ def main():
                         default=False, help='run the ext_test_compare function')
     args = parser.parse_args()
 
-    pkl = './pkl_trainsets/28jun2019/_nucs_fissact_not-scaled.pkl'
+    pkl = './pkl_trainsets/19aug2019_opusupdate/not-scaled_15nuc.pkl'
     trainXY = pd.read_pickle(pkl)
     trainXY.reset_index(inplace=True, drop=True) 
     # hyperparam optimization was done on 60% of training set
@@ -93,7 +93,7 @@ def main():
             g = 0.07
             c = 1000
         
-        csv_name = 'fissact_m60_' + parameter
+        csv_name = '15nuc_m60_' + parameter
         
         ## initialize learners
         score = 'explained_variance'
