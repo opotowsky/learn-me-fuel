@@ -1,0 +1,5 @@
+most of these are radionuclides in curies
+
+nuc-conc*15nucs is the same origen sims as the above in concentration units
+
+mlecompare is a different set of origen sims, documented elsewhere, in concentration units
