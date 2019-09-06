@@ -43,7 +43,7 @@ def main():
                         default=False, help='run the ext_test_compare function')
     args = parser.parse_args()
 
-    pkl = './pkl_trainsets/19aug2019_opusupdate/not-scaled_15nuc.pkl'
+    pkl = '../prep-pkls/pkl_dir/file.pkl'
     trainXY = pd.read_pickle(pkl)
     trainXY.reset_index(inplace=True, drop=True) 
     # hyperparam optimization was done on 60% of training set
