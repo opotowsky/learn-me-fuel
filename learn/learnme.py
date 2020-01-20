@@ -43,17 +43,20 @@ def main():
                         default=False, help='run the ext_test_compare function')
     args = parser.parse_args()
 
-    pkl = '../prep-pkls/pkl_dir/file.pkl'
+    # pkl file location should look like: '../../prep-pkls/pkl_dir/file.pkl'
+    pkl = '../../prep-pkls/nucmoles_opusupdate_aug2019/not-scaled_15nuc.pkl'  
     trainXY = pd.read_pickle(pkl)
     trainXY.reset_index(inplace=True, drop=True) 
-    # hyperparam optimization was done on 60% of training set
+    # hyperparam optimization was done on 60% of training set using fissact 
+    # (if I remember correctly, need to double check) and not the 15 nuclides
+    # so we are using non-officially optimized values!
     trainXY = trainXY.sample(frac=tset_frac)
     trainX_unscaled, rY, cY, eY, bY = splitXY(trainXY)
     trainX = scale(trainX_unscaled)
     
     # loops through each reactor parameter to do separate predictions
     # burnup is last since its the only tset I'm altering
-    for Y in ('r',):# 'b', 'e', 'c'):
+    for Y in ('r', 'b'):#, 'e', 'c'):
         trainY = pd.Series()
         # get param names and set ground truth
         if Y == 'c':
@@ -80,18 +83,18 @@ def main():
             trainY = bY
             parameter = 'burnup'
             k = 7
-            depth = 50
-            feats = 25
-            g = 0.25
-            c = 42000
+            depth = 20
+            feats = 15
+            g = 0.1
+            c = 1500
         else:
             trainY = rY
             parameter = 'reactor'
             k = 3
-            depth = 50
-            feats = 25 
-            g = 0.07
-            c = 1000
+            depth = 20 
+            feats = 15 
+            g = 0.1
+            c = 1500
         
         csv_name = '15nuc_m60_' + parameter
         

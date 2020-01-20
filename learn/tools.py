@@ -125,10 +125,10 @@ def validation_curves(X, Y, alg1, alg2, alg3, CV, score, csv_name):
     # Note: I'm trying to avoid loops here so the code is inelegant
 
     # Varied alg params for validation curves
-    k_list = np.linspace(1, 20, 15).astype(int)
-    depth_list = np.linspace(1, 15, 15).astype(int)
+    k_list = np.linspace(1, 30, 15).astype(int)
+    depth_list = np.linspace(3, 30, 15).astype(int)
     feat_list = np.linspace(1, 15, 15).astype(int)
-    gamma_list = np.logspace(-4, -1, 15)
+    gamma_list = np.logspace(-4, 0, 15)
     c_list = np.logspace(0, 5, 15)
 
     # knn
