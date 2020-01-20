@@ -125,11 +125,11 @@ def validation_curves(X, Y, alg1, alg2, alg3, CV, score, csv_name):
     # Note: I'm trying to avoid loops here so the code is inelegant
 
     # Varied alg params for validation curves
-    k_list = np.linspace(1, 25, 10).astype(int)
-    depth_list = np.linspace(3, 25, 10).astype(int)
-    feat_list = np.linspace(5, 47, 10).astype(int)
-    gamma_list = np.logspace(-4, -1, 10)
-    c_list = np.logspace(0, 5, 10)
+    k_list = np.linspace(1, 20, 15).astype(int)
+    depth_list = np.linspace(1, 15, 15).astype(int)
+    feat_list = np.linspace(1, 15, 15).astype(int)
+    gamma_list = np.logspace(-4, -1, 15)
+    c_list = np.logspace(0, 5, 15)
 
     # knn
     train, cv = validation_curve(alg1, X, Y, 'n_neighbors', k_list, cv=CV, 
