@@ -56,7 +56,7 @@ def main():
     
     # loops through each reactor parameter to do separate predictions
     # burnup is last since its the only tset I'm altering
-    for Y in ('r', 'b'):#, 'e', 'c'):
+    for Y in ('b',):# 'r'):#, 'e', 'c'):
         trainY = pd.Series()
         # get param names and set ground truth
         if Y == 'c':
@@ -131,11 +131,11 @@ def main():
             # VC needs different inits
             knn_init = KNeighborsRegressor(weights='distance')
             dtr_init = DecisionTreeRegressor()
-            svr_init = SVR(C=c)
+            svr_init = SVR(gamma='auto', C=c)
             if Y is 'r':
                 knn_init = KNeighborsClassifier(weights='distance')
                 dtr_init = DecisionTreeClassifier(class_weight='balanced')
-                svr_init = SVC(C=c, class_weight='balanced')
+                svr_init = SVC(gamma='auto', C=c, class_weight='balanced')
             validation_curves(trainX, trainY, knn_init, dtr_init, svr_init, kfold, score, csv_name)
        
         # compare against external test set
