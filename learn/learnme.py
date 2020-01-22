@@ -50,13 +50,13 @@ def main():
     # hyperparam optimization was done on 60% of training set using fissact 
     # (if I remember correctly, need to double check) and not the 15 nuclides
     # so we are using non-officially optimized values!
-    trainXY = trainXY.sample(frac=tset_frac)
+    #trainXY = trainXY.sample(frac=tset_frac)
     trainX_unscaled, rY, cY, eY, bY = splitXY(trainXY)
     trainX = scale(trainX_unscaled)
     
     # loops through each reactor parameter to do separate predictions
     # burnup is last since its the only tset I'm altering
-    for Y in ('b',):# 'r'):#, 'e', 'c'):
+    for Y in ('b', 'r'):#, 'e', 'c'):
         trainY = pd.Series()
         # get param names and set ground truth
         if Y == 'c':
@@ -77,12 +77,12 @@ def main():
             c = 25000
         elif Y == 'b':
             # burnup needs much less training data...this is 24% of data set
-            trainXY = trainXY.sample(frac=0.4)
-            trainX, rY, cY, eY, bY = splitXY(trainXY)
-            trainX = scale(trainX)
+            #trainXY = trainXY.sample(frac=0.4)
+            #trainX, rY, cY, eY, bY = splitXY(trainXY)
+            #trainX = scale(trainX)
             trainY = bY
             parameter = 'burnup'
-            k = 7
+            k = 3
             depth = 20
             feats = 15
             g = 0.1
@@ -96,7 +96,7 @@ def main():
             g = 0.1
             c = 1500
         
-        csv_name = '15nuc_m60_' + parameter
+        csv_name = '15nuc_m100_' + parameter
         
         ## initialize learners
         score = 'explained_variance'
