@@ -106,7 +106,7 @@ def ratios(XY, labels):
     XY_ratios.fillna(0, inplace = True)
     return XY_ratios
 
-def calc_ll(XY, test_sample, unc):
+def get_pred(XY, test_sample, unc, lbls):
     """
     dddd
 
@@ -115,6 +115,7 @@ def calc_ll(XY, test_sample, unc):
     XY : 
     test_sample :
     unc : 
+    lbls : 
 
     Returns
     -------
@@ -124,12 +125,19 @@ def calc_ll(XY, test_sample, unc):
     ll_name = 'LogLikelihood_' + str(unc)
     unc_name = 'LLUncertainty_' + str(unc)
     X = XY.drop(lbls, axis=1).copy()
+    
     XY[ll_name] = X.apply(lambda row: ll_calc(row, test_sample, unc*row), axis=1)
     #XY[unc_name] = X.apply(lambda row: unc_calc(row, test_sample, (unc*row)**2, (unc*test_sample)**2), axis=1)
-    max_ll = XY[ll_name].max()
+    
+    #max_ll = XY[ll_name].max()
     max_idx = XY[ll_name].idxmax()
-    pred_answer = XY.loc[XY.index == max_idx].drop(ll_name, axis=1)
-    return max_ll, max_idx, pred_answer
+    pred_answer = XY.loc[XY.index == max_idx]#.drop(ll_name, axis=1)
+    
+    pred_lbls = ["Pred_" + s for s in lbls] 
+    pred_answer.rename(columns=dict(zip(lbls, pred_lbls)), inplace=True)
+    pred_answer = pred_answer.loc[:, pred_lbls.append(ll_name)]
+    
+    return pred_answer
 
 def main():
     """
@@ -148,19 +156,22 @@ def main():
     if 'total' in XY.columns:
         XY.drop('total', axis=1, inplace=True)
     XY = XY.loc[XY['Burnup'] > 0]
-
+    XY = XY.sample(frac=0.1)
+    
     lbls = ['ReactorType', 'CoolingTime', 'Enrichment', 'Burnup', 'OrigenReactor']
     if args.ratios == True:
         XY = ratios(XY, lbls)
 
     unc = float(args.unc)
-
+    pred_df = pd.DataFrame()
     for sim_idx, row in XY.iterrows():
         test_sample = XY.loc[XY.index == sim_idx].drop(lbls, axis=1)
         test_answer = XY.loc[XY.index == sim_idx, lbls]
-        max_ll, max_idx, pred_answer = calc_ll(XY, test_sample, unc)
-        pred_sample = pred_answer.drop(lbls, axis=1)
-        pred_answer = pred_answer.loc[:, lbls]
+        XY.drop(sim_idx, inplace=True)
+        pred_answer = get_pred(XY, test_sample, unc, lbls)
+        if pred_df.empty:
+            pred_df = pd.DataFrame(columns = pred_answer.columns.to_list())
+        pred_df = pred_df.append(pred_answer)
 
     return
 
