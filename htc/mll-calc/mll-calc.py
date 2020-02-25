@@ -4,6 +4,7 @@ import argparse
 import numpy as np
 import pandas as pd
 import scipy.stats as stats
+from sklearn.metrics import accuracy_score, explained_variance_score, mean_absolute_error
 
 def like_calc(y_sim, y_mes, std):
     """
