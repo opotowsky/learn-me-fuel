@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 
+import pickle
 import argparse
 import numpy as np
 import pandas as pd
@@ -131,13 +132,14 @@ def get_pred(XY, test_sample, unc, lbls):
     
     #max_ll = XY[ll_name].max()
     max_idx = XY[ll_name].idxmax()
-    pred_answer = XY.loc[XY.index == max_idx]#.drop(ll_name, axis=1)
+    pred_ll = XY.loc[XY.index == max_idx]#.drop(ll_name, axis=1)
     
     pred_lbls = ["Pred_" + s for s in lbls] 
-    pred_answer.rename(columns=dict(zip(lbls, pred_lbls)), inplace=True)
-    pred_answer = pred_answer.loc[:, pred_lbls.append(ll_name)]
+    pred_ll.rename(columns=dict(zip(lbls, pred_lbls)), inplace=True)
+    pred_lbls.append(ll_name)
+    pred_ll = pred_ll.loc[:, pred_lbls]
     
-    return pred_answer
+    return pred_ll
 
 def main():
     """
@@ -156,7 +158,8 @@ def main():
     if 'total' in XY.columns:
         XY.drop('total', axis=1, inplace=True)
     XY = XY.loc[XY['Burnup'] > 0]
-    XY = XY.sample(frac=0.1)
+    # small db for testing code
+    XY = XY.sample(50)
     
     lbls = ['ReactorType', 'CoolingTime', 'Enrichment', 'Burnup', 'OrigenReactor']
     if args.ratios == True:
@@ -167,11 +170,18 @@ def main():
     for sim_idx, row in XY.iterrows():
         test_sample = XY.loc[XY.index == sim_idx].drop(lbls, axis=1)
         test_answer = XY.loc[XY.index == sim_idx, lbls]
-        XY.drop(sim_idx, inplace=True)
-        pred_answer = get_pred(XY, test_sample, unc, lbls)
+        trainXY = XY.drop(sim_idx)#copy()
+        pred_ll = get_pred(trainXY, test_sample, unc, lbls)
         if pred_df.empty:
-            pred_df = pd.DataFrame(columns = pred_answer.columns.to_list())
-        pred_df = pred_df.append(pred_answer)
+            pred_df = pd.DataFrame(columns = pred_ll.columns.to_list())
+        pred_df = pred_df.append(pred_ll)
+    
+    fname = 'test_mll'
+    pred_pkl = fname + '.pkl'
+    pickle.dump(pred_df, open(pred_pkl, 'wb'))
+    pred_df.to_csv(fname + '.csv')
+    compression_opts = dict(method='zip', archive_name='fname' + '_comp.csv')
+    pred_df.to_csv(fname + '.zip', compression=compression_opts)
 
     return
 
