@@ -136,7 +136,7 @@ def get_pred(XY, test_sample, unc, lbls):
     
     pred_lbls = ["Pred_" + s for s in lbls] 
     pred_ll.rename(columns=dict(zip(lbls, pred_lbls)), inplace=True)
-    pred_lbls.append(ll_name)
+    pred_lbls.append(ll_name)#.append('Pred_idx')
     pred_ll = pred_ll.loc[:, pred_lbls]
     
     return pred_ll
@@ -158,6 +158,7 @@ def main():
     if 'total' in XY.columns:
         XY.drop('total', axis=1, inplace=True)
     XY = XY.loc[XY['Burnup'] > 0]
+
     # small db for testing code
     XY = XY.sample(50)
     
@@ -175,7 +176,10 @@ def main():
         if pred_df.empty:
             pred_df = pd.DataFrame(columns = pred_ll.columns.to_list())
         pred_df = pred_df.append(pred_ll)
-    
+    pred_df = pd.concat([XY.loc[:, lbls].rename_axis('sim_idx').reset_index(), 
+                         pred_df.rename_axis('pred_idx').reset_index()
+                         ], axis=1)
+
     fname = 'test_mll'
     pred_pkl = fname + '.pkl'
     pickle.dump(pred_df, open(pred_pkl, 'wb'))
