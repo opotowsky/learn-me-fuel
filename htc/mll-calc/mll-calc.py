@@ -139,7 +139,67 @@ def get_pred(XY, test_sample, unc, lbls):
     pred_lbls.append(ll_name)#.append('Pred_idx')
     pred_ll = pred_ll.loc[:, pred_lbls]
     
-    return pred_ll
+    return pred_ll, pred_lbls
+
+def calc_errors(pred_df, true_lbls, pred_lbls):
+    """
+    dddd
+
+    Parameters
+    ----------
+    pred_df : 
+    true_lbls : 
+    pred_lbls : 
+    
+    Returns
+    -------
+    pred_df : 
+    
+    """
+    for true, pred in zip(true_lbls, pred_lbls):
+        if 'Reactor' in true:
+            col_name = true + '_Score'
+            pred_df[col_name] = np.where(pred_df.loc[:, true] == pred_df.loc[:, pred], True, False)
+        else: 
+            col_name = true + '_Error'
+            pred_df[col_name] = np.abs(pred_df.loc[:, true]  - pred_df.loc[:, pred])
+
+    return pred_df
+
+def loop_db(XY, unc, lbls):
+    """
+    dddd
+
+    Parameters
+    ----------
+    XY : 
+    unc : 
+    lbls : 
+
+    """
+    pred_df = pd.DataFrame()
+    for sim_idx, row in XY.iterrows():
+        test_sample = XY.loc[XY.index == sim_idx].drop(lbls, axis=1)
+        test_answer = XY.loc[XY.index == sim_idx, lbls]
+        trainXY = XY.drop(sim_idx)
+        pred_ll, pred_lbls = get_pred(trainXY, test_sample, unc, lbls)
+        if pred_df.empty:
+            pred_df = pd.DataFrame(columns = pred_ll.columns.to_list())
+        pred_df = pred_df.append(pred_ll)
+    pred_df = pd.concat([XY.loc[:, lbls].rename_axis('sim_idx').reset_index(), 
+                         pred_df.rename_axis('pred_idx').reset_index()
+                         ], axis=1)
+    
+    pred_df = calc_errors(pred_df, lbls, pred_lbls)
+
+    fname = 'test_mll'
+    pred_pkl = fname + '.pkl'
+    pickle.dump(pred_df, open(pred_pkl, 'wb'))
+    pred_df.to_csv(fname + '.csv')
+    compression_opts = dict(method='zip', archive_name='fname' + '_comp.csv')
+    pred_df.to_csv(fname + '.zip', compression=compression_opts)
+    
+    return
 
 def main():
     """
@@ -165,27 +225,9 @@ def main():
     lbls = ['ReactorType', 'CoolingTime', 'Enrichment', 'Burnup', 'OrigenReactor']
     if args.ratios == True:
         XY = ratios(XY, lbls)
-
     unc = float(args.unc)
-    pred_df = pd.DataFrame()
-    for sim_idx, row in XY.iterrows():
-        test_sample = XY.loc[XY.index == sim_idx].drop(lbls, axis=1)
-        test_answer = XY.loc[XY.index == sim_idx, lbls]
-        trainXY = XY.drop(sim_idx)#copy()
-        pred_ll = get_pred(trainXY, test_sample, unc, lbls)
-        if pred_df.empty:
-            pred_df = pd.DataFrame(columns = pred_ll.columns.to_list())
-        pred_df = pred_df.append(pred_ll)
-    pred_df = pd.concat([XY.loc[:, lbls].rename_axis('sim_idx').reset_index(), 
-                         pred_df.rename_axis('pred_idx').reset_index()
-                         ], axis=1)
 
-    fname = 'test_mll'
-    pred_pkl = fname + '.pkl'
-    pickle.dump(pred_df, open(pred_pkl, 'wb'))
-    pred_df.to_csv(fname + '.csv')
-    compression_opts = dict(method='zip', archive_name='fname' + '_comp.csv')
-    pred_df.to_csv(fname + '.zip', compression=compression_opts)
+    loop_db(XY, unc, lbls)
 
     return
 
