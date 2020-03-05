@@ -1,2 +1,3 @@
 0.05
-0.05, --ratios
+0.05, --ext-test
+0.05, --ext-test, --ratios

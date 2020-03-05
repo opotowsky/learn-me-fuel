@@ -166,27 +166,27 @@ def calc_errors(pred_df, true_lbls, pred_lbls):
 
     return pred_df
 
-def loop_db(XY, unc, lbls):
+def loop_db(train, test, unc, lbls):
     """
     dddd
 
     Parameters
     ----------
-    XY : 
+    train : 
+    test : 
     unc : 
     lbls : 
 
     """
     pred_df = pd.DataFrame()
-    for sim_idx, row in XY.iterrows():
-        test_sample = XY.loc[XY.index == sim_idx].drop(lbls, axis=1)
-        test_answer = XY.loc[XY.index == sim_idx, lbls]
-        trainXY = XY.drop(sim_idx)
-        pred_ll, pred_lbls = get_pred(trainXY, test_sample, unc, lbls)
+    for sim_idx, row in test.iterrows():
+        test_sample = test.loc[test.index == sim_idx].drop(lbls, axis=1)
+        test_answer = test.loc[test.index == sim_idx, lbls]
+        pred_ll, pred_lbls = get_pred(train, test_sample, unc, lbls)
         if pred_df.empty:
             pred_df = pd.DataFrame(columns = pred_ll.columns.to_list())
         pred_df = pred_df.append(pred_ll)
-    pred_df = pd.concat([XY.loc[:, lbls].rename_axis('sim_idx').reset_index(), 
+    pred_df = pd.concat([test.loc[:, lbls].rename_axis('sim_idx').reset_index(), 
                          pred_df.rename_axis('pred_idx').reset_index()
                          ], axis=1)
     
@@ -208,26 +208,40 @@ def main():
     parser = argparse.ArgumentParser(description='Performs maximum likelihood calculations for reactor parameter prediction.')
     parser.add_argument('unc', metavar='simulation-uncertainty', 
                         help='value of simulation uncertainty (in fraction) to apply to likelihood calculations')
+    parser.add_argument('-e', '--ext-test', action='store_true', default=False, 
+                        help='execute script with external testing set instead of training set evaluation (default)')
     parser.add_argument('-r', '--ratios', action='store_true', default=False, 
                         help='compute isotopic ratios instead of using concentrations (default)')
     args = parser.parse_args()
     
-    pklfile = '~/prep-pkls/nucmoles_opusupdate_aug2019/not-scaled_15nuc.pkl'
-    XY = pd.read_pickle(pklfile)
-    XY.reset_index(inplace=True, drop=True)
-    if 'total' in XY.columns:
-        XY.drop('total', axis=1, inplace=True)
-    XY = XY.loc[XY['Burnup'] > 0]
+    # hard-coded filepaths
+    trainfile = '~/prep-pkls/nucmoles_opusupdate_aug2019/not-scaled_15nuc.pkl'
+    sfcompofile = '~/sfcompo/format_clean/sfcompo_format.pkl'
+
+    # training set
+    train = pd.read_pickle(trainfile)
+    train.reset_index(inplace=True, drop=True)
+    if 'total' in train.columns:
+        train.drop('total', axis=1, inplace=True)
+    train = train.loc[XY['Burnup'] > 0]
 
     # small db for testing code
-    XY = XY.sample(50)
-    
+    train = train.sample(50)
+
+    # testing set
+    if args.ext-test == True:
+        test = pd.read_pickle(sfcompofile)
+        #test.reset_index(inplace=True, drop=True)
+    else: 
+        test = train
+        
+
     lbls = ['ReactorType', 'CoolingTime', 'Enrichment', 'Burnup', 'OrigenReactor']
     if args.ratios == True:
-        XY = ratios(XY, lbls)
+        train = ratios(train, lbls)
     unc = float(args.unc)
 
-    loop_db(XY, unc, lbls)
+    loop_db(train, test, unc, lbls)
 
     return
 
