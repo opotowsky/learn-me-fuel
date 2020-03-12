@@ -127,6 +127,9 @@ def get_pred(XY, test_sample, unc, lbls):
     unc_name = 'LLUncertainty_' + str(unc)
     X = XY.drop(lbls, axis=1).copy()
     
+    ##### need to test that the rows are matching isos properly, have test columns set sorted for now ####
+    #### might need to do in in the function that calls this one
+
     XY[ll_name] = X.apply(lambda row: ll_calc(row, test_sample, unc*row), axis=1)
     #XY[unc_name] = X.apply(lambda row: unc_calc(row, test_sample, (unc*row)**2, (unc*test_sample)**2), axis=1)
     
@@ -208,7 +211,7 @@ def main():
     parser = argparse.ArgumentParser(description='Performs maximum likelihood calculations for reactor parameter prediction.')
     parser.add_argument('unc', metavar='simulation-uncertainty', 
                         help='value of simulation uncertainty (in fraction) to apply to likelihood calculations')
-    parser.add_argument('-e', '--ext-test', action='store_true', default=False, 
+    parser.add_argument('-e', '--ext_test', action='store_true', default=False, 
                         help='execute script with external testing set instead of training set evaluation (default)')
     parser.add_argument('-r', '--ratios', action='store_true', default=False, 
                         help='compute isotopic ratios instead of using concentrations (default)')
@@ -216,31 +219,34 @@ def main():
     
     # hard-coded filepaths
     trainfile = '~/prep-pkls/nucmoles_opusupdate_aug2019/not-scaled_15nuc.pkl'
-    sfcompofile = '~/sfcompo/format_clean/sfcompo_format.pkl'
+    sfcompofile = '~/sfcompo/format_clean/sfcompo_formatted.pkl'
 
     # training set
     train = pd.read_pickle(trainfile)
     train.reset_index(inplace=True, drop=True)
     if 'total' in train.columns:
         train.drop('total', axis=1, inplace=True)
-    train = train.loc[XY['Burnup'] > 0]
+    train = train.loc[train['Burnup'] > 0]
 
     # small db for testing code
     train = train.sample(50)
 
     # testing set
-    if args.ext-test == True:
+    if args.ext_test == True:
         test = pd.read_pickle(sfcompofile)
+        # NEED TO TEST HERE THAT COLUMNS IN TRAIN/TEST MATCH
         #test.reset_index(inplace=True, drop=True)
+        # small db for testing code
+        test = test.sample(10)
     else: 
-        test = train
+        test = train.copy()
         
-
     lbls = ['ReactorType', 'CoolingTime', 'Enrichment', 'Burnup', 'OrigenReactor']
     if args.ratios == True:
         train = ratios(train, lbls)
+        test = ratios(test, lbls)
+    
     unc = float(args.unc)
-
     loop_db(train, test, unc, lbls)
 
     return
