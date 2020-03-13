@@ -40,6 +40,8 @@ def ll_calc(y_sim, y_mes, std):
     like: 
 
     """
+    #print(y_sim, flush=True)
+    #print(y_mes, flush=True)
     ll = np.sum(stats.norm.logpdf(y_sim, loc=y_mes, scale=std))
     return ll
 
@@ -135,7 +137,9 @@ def get_pred(XY, test_sample, unc, lbls):
     
     #max_ll = XY[ll_name].max()
     max_idx = XY[ll_name].idxmax()
-    pred_ll = XY.loc[XY.index == max_idx]#.drop(ll_name, axis=1)
+    pred_ll = XY.loc[XY.index == max_idx]
+    # need to delete so next test sample can be calculated
+    XY.drop(ll_name, axis=1, inplace=True)
     
     pred_lbls = ["Pred_" + s for s in lbls] 
     pred_ll.rename(columns=dict(zip(lbls, pred_lbls)), inplace=True)
@@ -183,6 +187,7 @@ def loop_db(train, test, unc, lbls):
     """
     pred_df = pd.DataFrame()
     for sim_idx, row in test.iterrows():
+        # can I just replace the test.loc[].drop with row.drop and the next line with row[lbls]
         test_sample = test.loc[test.index == sim_idx].drop(lbls, axis=1)
         test_answer = test.loc[test.index == sim_idx, lbls]
         pred_ll, pred_lbls = get_pred(train, test_sample, unc, lbls)
