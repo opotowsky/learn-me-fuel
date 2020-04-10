@@ -190,6 +190,8 @@ def loop_db(train, test, unc, lbls):
         # can I just replace the test.loc[].drop with row.drop and the next line with row[lbls]
         test_sample = test.loc[test.index == sim_idx].drop(lbls, axis=1)
         test_answer = test.loc[test.index == sim_idx, lbls]
+        if train.equals(test):
+            train.drop(sim_idx, inplace=True)
         pred_ll, pred_lbls = get_pred(train, test_sample, unc, lbls)
         if pred_df.empty:
             pred_df = pd.DataFrame(columns = pred_ll.columns.to_list())
