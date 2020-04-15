@@ -9,17 +9,18 @@ from sklearn.metrics import accuracy_score, explained_variance_score, mean_absol
 
 def like_calc(y_sim, y_mes, std):
     """
-    ddddd
-
+    Given a simulated entry with uncertainty and a test entry, calculates the
+    likelihood that they are the same. 
+    
     Parameters
     ----------
-    y_sim : 
-    y_mes : 
-    std : 
+    y_sim : series of nuclide measurements for simulated entry
+    y_mes : series of nuclide measurements for test ("measured") entry
+    std : standard deviation for each entry in y_sim
 
     Returns
     -------
-    like: 
+    like: likelihood that the test entry is the simulated entry
 
     """
     like = np.prod(stats.norm.pdf(y_sim, loc=y_mes, scale=std))
@@ -27,38 +28,38 @@ def like_calc(y_sim, y_mes, std):
 
 def ll_calc(y_sim, y_mes, std):
     """
-    ddddd
+    Given a simulated entry with uncertainty and a test entry, calculates the
+    log-likelihood that they are the same. 
 
     Parameters
     ----------
-    y_sim : 
-    y_mes : 
-    std : 
+    y_sim : series of nuclide measurements for simulated entry
+    y_mes : series of nuclide measurements for test ("measured") entry
+    std : standard deviation for each entry in y_sim
 
     Returns
     -------
-    like: 
+    ll: log-likelihood that the test entry is the simulated entry
 
     """
-    #print(y_sim, flush=True)
-    #print(y_mes, flush=True)
     ll = np.sum(stats.norm.logpdf(y_sim, loc=y_mes, scale=std))
     return ll
 
 def unc_calc(y_sim, y_mes, sim_unc_sq, mes_unc_sq):
     """
-    ddddd
+    Given a simulated entry and a test entry with uniform uncertainty,
+    calculates the uncertainty in the log-likelihood calculation. 
 
     Parameters
     ----------
-    y_sim : 
-    y_mes : 
-    sim_unc_sq : 
-    mes_unc_sq : 
+    y_sim : series of nuclide measurements for simulated entry
+    y_mes : series of nuclide measurements for test ("measured") entry
+    sim_unc_sq : float of squared uniform uncertainty for each entry in y_sim
+    mes_unc_sq : float of squared uniform uncertainty for each entry in y_mes
 
     Returns
     -------
-    ll_unc : 
+    ll_unc: uncertainty of the log-likelihood calculation
 
     """
     unc = ((y_sim - y_mes) / sim_unc_sq)**2 * (sim_unc_sq + mes_unc_sq)
@@ -69,16 +70,19 @@ def unc_calc(y_sim, y_mes, sim_unc_sq, mes_unc_sq):
 
 def ratios(XY, labels):
     """
-    dddd
+    Given a dataframe with entries (rows) that contain nuclide measurements and
+    some labels, calculate the predetermined ratios of the measurements.
 
     Parameters
     ----------
-    XY : 
-    labels : 
+    XY : dataframe of spent fuel entries containing nuclide measurements and 
+         their labels
+    labels : list of label titles in the dataframe
 
     Returns
     -------
-    XY_ratios : 
+    XY_ratios : dataframe of spent fuel entries containing nuclide measurement 
+                ratios and their labels
 
     """
 
@@ -111,19 +115,25 @@ def ratios(XY, labels):
 
 def get_pred(XY, test_sample, unc, lbls):
     """
-    dddd
+    Given a database of spent fuel entries and a test sample (nuclide
+    measurements only), calculates the log-likelihood (and LL-uncertainty) of
+    that sample against every database entry.  Determines the max LL, and
+    therefore the corresponding prediction in the database.  Returns that
+    prediction as a single row dataframe.
 
     Parameters
     ----------
-    XY : 
-    test_sample :
-    unc : 
-    lbls : 
+    XY : dataframe with nuclide measurements and reactor parameters
+    test_sample : series of a sample to be predicted (nuclide measurements only)
+    unc : float that represents the simulation uncertainty in nuclide measurements
+    lbls : list of reactor parameters to be predicted
 
     Returns
     -------
-    XY : 
-    
+    pred_ll : dataframe with single row of prediction (predicted labels only) 
+              and its log-likelihood
+    pred_lbls : list of predicted label titles
+
     """
     ll_name = 'LogLikelihood_' + str(unc)
     unc_name = 'LLUncertainty_' + str(unc)
@@ -150,17 +160,20 @@ def get_pred(XY, test_sample, unc, lbls):
 
 def calc_errors(pred_df, true_lbls, pred_lbls):
     """
-    dddd
+    Given a dataframe containing predictions and log-likelihood value,
+    calculates absolute error between predictions and ground truth (or boolean
+    where applicable)
 
     Parameters
     ----------
-    pred_df : 
-    true_lbls : 
-    pred_lbls : 
+    pred_df : dataframe with ground truth and predicted labels
+    true_lbls : list of ground truth column labels 
+    pred_lbls : list of prediction column labels
     
     Returns
     -------
-    pred_df : 
+    pred_df : dataframe with ground truth, predictions, and errors between the 
+              two
     
     """
     for true, pred in zip(true_lbls, pred_lbls):
@@ -175,14 +188,19 @@ def calc_errors(pred_df, true_lbls, pred_lbls):
 
 def loop_db(train, test, unc, lbls):
     """
-    dddd
+    Given a database of spent fuel entries containing a nuclide vector and the
+    reactor operation parameters, and an equally formatted database of test
+    cases to predict, this function loops through the test database to perform
+    a series of predictions.  It first formats the test sample for prediction,
+    gathers all the predictions from the test database entries, and calculates
+    the error on those predictions before saving them as a CSV file. 
 
     Parameters
     ----------
-    train : 
-    test : 
-    unc : 
-    lbls : 
+    train : dataframe with nuclide measurements and reactor parameters
+    test : dataframe with test cases to predict in same format as train
+    unc : float that represents the simulation uncertainty in nuclide measurements
+    lbls : list of reactor parameters to be predicted
 
     """
     pred_df = pd.DataFrame()
@@ -202,6 +220,7 @@ def loop_db(train, test, unc, lbls):
     
     pred_df = calc_errors(pred_df, lbls, pred_lbls)
 
+    # testing multiple formats in case the DBs get big enough for this to matter
     fname = 'test_mll'
     pred_pkl = fname + '.pkl'
     pickle.dump(pred_df, open(pred_pkl, 'wb'))
@@ -213,6 +232,12 @@ def loop_db(train, test, unc, lbls):
 
 def main():
     """
+    Given a database of spent fuel entries (containing nuclide measurements and
+    labels of reactor operation parameters of interest for prediction) and a
+    testing database containing spent fuel entries formatted in the same way,
+    this script calculates the maximum log-likelihood of each test sample
+    against the database for a prediction. 
+    
     """
     
     parser = argparse.ArgumentParser(description='Performs maximum likelihood calculations for reactor parameter prediction.')
