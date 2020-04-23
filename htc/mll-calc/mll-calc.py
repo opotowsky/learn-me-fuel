@@ -186,7 +186,7 @@ def calc_errors(pred_df, true_lbls, pred_lbls):
 
     return pred_df
 
-def loop_db(train, test, unc, lbls):
+def loop_db(XY, test, unc, lbls):
     """
     Given a database of spent fuel entries containing a nuclide vector and the
     reactor operation parameters, and an equally formatted database of test
@@ -208,9 +208,9 @@ def loop_db(train, test, unc, lbls):
         # can I just replace the test.loc[].drop with row.drop and the next line with row[lbls]
         test_sample = test.loc[test.index == sim_idx].drop(lbls, axis=1)
         test_answer = test.loc[test.index == sim_idx, lbls]
-        if train.equals(test):
-            train.drop(sim_idx, inplace=True)
-        pred_ll, pred_lbls = get_pred(train, test_sample, unc, lbls)
+        if XY.equals(test):
+            XY.drop(sim_idx, inplace=True)
+        pred_ll, pred_lbls = get_pred(XY, test_sample, unc, lbls)
         if pred_df.empty:
             pred_df = pd.DataFrame(columns = pred_ll.columns.to_list())
         pred_df = pred_df.append(pred_ll)
@@ -250,18 +250,18 @@ def main():
     args = parser.parse_args()
     
     # hard-coded filepaths
-    trainfile = '~/prep-pkls/nucmoles_opusupdate_aug2019/not-scaled_15nuc.pkl'
+    dbfile = '~/prep-pkls/nucmoles_opusupdate_aug2019/not-scaled_15nuc.pkl'
     sfcompofile = '~/sfcompo/format_clean/sfcompo_formatted.pkl'
 
     # training set
-    train = pd.read_pickle(trainfile)
-    train.reset_index(inplace=True, drop=True)
-    if 'total' in train.columns:
-        train.drop('total', axis=1, inplace=True)
-    train = train.loc[train['Burnup'] > 0]
+    XY = pd.read_pickle(dbfile)
+    XY.reset_index(inplace=True, drop=True)
+    if 'total' in XY.columns:
+        XY.drop('total', axis=1, inplace=True)
+    XY = XY.loc[XY['Burnup'] > 0]
 
     # small db for testing code
-    train = train.sample(50)
+    XY = XY.sample(50)
 
     # testing set
     if args.ext_test == True:
@@ -271,15 +271,15 @@ def main():
         # small db for testing code
         test = test.sample(10)
     else: 
-        test = train.copy()
+        test = XY.copy()
         
     lbls = ['ReactorType', 'CoolingTime', 'Enrichment', 'Burnup', 'OrigenReactor']
     if args.ratios == True:
-        train = ratios(train, lbls)
+        XY = ratios(XY, lbls)
         test = ratios(test, lbls)
     
     unc = float(args.unc)
-    loop_db(train, test, unc, lbls)
+    loop_db(XY, test, unc, lbls)
 
     return
 
