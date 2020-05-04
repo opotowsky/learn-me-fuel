@@ -68,7 +68,7 @@ def unc_calc(y_sim, y_mes, sim_unc_sq, mes_unc_sq):
     ll_unc = np.sqrt(unc.sum(axis=1))
     return ll_unc
 
-def ratios(XY, labels):
+def ratios(XY, ratio_list, labels):
     """
     Given a dataframe with entries (rows) that contain nuclide measurements and
     some labels, calculate the predetermined ratios of the measurements.
@@ -77,6 +77,7 @@ def ratios(XY, labels):
     ----------
     XY : dataframe of spent fuel entries containing nuclide measurements and 
          their labels
+    ratio_list : list of ratios desired
     labels : list of label titles in the dataframe
 
     Returns
@@ -87,30 +88,14 @@ def ratios(XY, labels):
     """
 
     XY_ratios = XY.loc[:, labels].copy()
-    
-    #cs137/cs133
-    XY_ratios['cs137/cs133'] = XY['cs137'] / XY['cs133']
-    #cs134/cs137
-    XY_ratios['cs134/cs137'] = XY['cs134'] / XY['cs137']
-    #cs135/cs137
-    XY_ratios['cs135/cs137'] = XY['cs135'] / XY['cs137']
-    #ba136/ba138
-    XY_ratios['ba136/ba138'] = XY['ba136'] / XY['ba138']
-    #sm150/sm149
-    XY_ratios['sm150/sm149'] = XY['sm150'] / XY['sm149']
-    #sm152/sm149
-    XY_ratios['sm152/sm149'] = XY['sm152'] / XY['sm149']
-    #eu154/eu153
-    XY_ratios['eu154/eu153'] = XY['eu154'] / XY['eu153']
-    #pu240/pu239
-    XY_ratios['pu240/pu239'] = XY['pu240'] / XY['pu239']
-    #pu241/pu239
-    XY_ratios['pu241/pu239'] = XY['pu241'] / XY['pu239']
-    #pu242/pu239
-    XY_ratios['pu242/pu239'] = XY['pu242'] / XY['pu239']
-    
+    for ratio in ratio_list: 
+        nucs = ratio.split('/')
+        XY_ratios[ratio] = XY[nucs[0]] / XY[nucs[1]]
     XY_ratios.replace([np.inf, -np.inf], 0, inplace=True)
     XY_ratios.fillna(0, inplace = True)
+    # reorganize columns
+    cols = ratio_list + labels
+    XY_ratios = XY_ratios[cols]
     return XY_ratios
 
 def get_pred(XY, test_sample, unc, lbls):
@@ -273,10 +258,15 @@ def main():
     else: 
         test = XY.copy()
         
+    tamu_list = ['cs137/cs133', 'cs134/cs137', 'cs135/cs137', 'ba136/ba138', 
+                 'sm150/sm149', 'sm152/sm149', 'eu154/eu153', 'pu240/pu239', 
+                 'pu241/pu239', 'pu242/pu239'
+                 ]
     lbls = ['ReactorType', 'CoolingTime', 'Enrichment', 'Burnup', 'OrigenReactor']
     if args.ratios == True:
-        XY = ratios(XY, lbls)
-        test = ratios(test, lbls)
+        ratio_list = tamu_list
+        XY = ratios(XY, ratio_list, lbls)
+        test = ratios(test, ratio_list, lbls)
     
     unc = float(args.unc)
     loop_db(XY, test, unc, lbls)
