@@ -19,11 +19,13 @@ def test_like_calc():
 def test_ratios():
     ratio_list = ['A/B', 'B/A']
     labels = ['label']
-    XY = pd.DataFrame({'A' : [1., 2., 3.], 
-                       'B' : [1., 1., 0.],
-                       'label' : [1, 1, 1]})
-    exp = pd.DataFrame({'A/B' : [1., 2., 0.], 
-                        'B/A' : [1., 0.5, 0.],
-                        'label' : [1, 1, 1]})
+    XY = pd.DataFrame({'A' : [1., 2., 3., np.nan], 
+                       'B' : [1., 1., 0., 0],
+                       'label' : [1, 1, 1, 1]})
+    exp = pd.DataFrame({'A/B' : [1., 2., 0., 0.], 
+                        'B/A' : [1., 0.5, 0, 0],
+                        'label' : [1, 1, 1, 1]})
     obs = ratios(XY, ratio_list, labels)
     assert obs.equals(exp)
+
+
