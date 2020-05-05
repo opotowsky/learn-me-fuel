@@ -237,7 +237,8 @@ def main():
     
     # hard-coded filepaths
     dbfile = '~/prep-pkls/nucmoles_opusupdate_aug2019/not-scaled_15nuc.pkl'
-    sfcompofile = '~/sfcompo/format_clean/sfcompo_formatted.pkl'
+    #sfcompofile = '~/sfcompo/format_clean/sfcompo_formatted.pkl'
+    sfcompofile = '~/sfcompo/format_clean/sfcompo_formatted_to_fail.pkl'
 
     # training set
     XY = pd.read_pickle(dbfile)
@@ -252,12 +253,13 @@ def main():
     # testing set
     if args.ext_test == True:
         test = pd.read_pickle(sfcompofile)
-        if len(train.columns.tolist()) != len(test.columns.tolist()):
-            sys.exit("Feature sets are different")
         # order of columns must match
-        if train.columns.tolist() != test.columns.tolist():
-            test = test[train.columns]
-        # to remove: small db for testing code
+        if sorted(XY.columns.tolist()) == sorted(test.columns.tolist()):
+            test = test[XY.columns]
+        else:
+            sys.exit("Feature sets are different")
+        #### TO REMOVE ####
+        # small db for testing code
         test = test.sample(10)
     else: 
         test = XY.copy()
