@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 
+import sys
 import pickle
 import argparse
 import numpy as np
@@ -251,9 +252,12 @@ def main():
     # testing set
     if args.ext_test == True:
         test = pd.read_pickle(sfcompofile)
-        # NEED TO TEST HERE THAT COLUMNS IN TRAIN/TEST MATCH
-        #test.reset_index(inplace=True, drop=True)
-        # small db for testing code
+        if len(train.columns.tolist()) != len(test.columns.tolist()):
+            sys.exit("Feature sets are different")
+        # order of columns must match
+        if train.columns.tolist() != test.columns.tolist():
+            test = test[train.columns]
+        # to remove: small db for testing code
         test = test.sample(10)
     else: 
         test = XY.copy()
