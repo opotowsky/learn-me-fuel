@@ -178,8 +178,7 @@ def loop_db(XY, test, unc, lbls):
     reactor operation parameters, and an equally formatted database of test
     cases to predict, this function loops through the test database to perform
     a series of predictions.  It first formats the test sample for prediction,
-    gathers all the predictions from the test database entries, and calculates
-    the error on those predictions before saving them as a CSV file. 
+    then gathers all the predictions from the test database entries
 
     Parameters
     ----------
@@ -191,9 +190,8 @@ def loop_db(XY, test, unc, lbls):
     """
     pred_df = pd.DataFrame()
     for sim_idx, row in test.iterrows():
-        # can I just replace the test.loc[].drop with row.drop and the next line with row[lbls]
-        test_sample = test.loc[test.index == sim_idx].drop(lbls, axis=1)
-        test_answer = test.loc[test.index == sim_idx, lbls]
+        test_sample = row.drop(lbls)
+        test_answer = row[lbls]
         if XY.equals(test):
             XY.drop(sim_idx, inplace=True)
         pred_ll, pred_lbls = get_pred(XY, test_sample, unc, lbls)
@@ -204,17 +202,7 @@ def loop_db(XY, test, unc, lbls):
                          pred_df.rename_axis('pred_idx').reset_index()
                          ], axis=1)
     
-    pred_df = calc_errors(pred_df, lbls, pred_lbls)
-
-    # testing multiple formats in case the DBs get big enough for this to matter
-    fname = 'test_mll'
-    pred_pkl = fname + '.pkl'
-    pickle.dump(pred_df, open(pred_pkl, 'wb'))
-    pred_df.to_csv(fname + '.csv')
-    compression_opts = dict(method='zip', archive_name='fname' + '_comp.csv')
-    pred_df.to_csv(fname + '.zip', compression=compression_opts)
-    
-    return
+    return pred_df, pred_lbls
 
 def main():
     """
@@ -222,7 +210,8 @@ def main():
     labels of reactor operation parameters of interest for prediction) and a
     testing database containing spent fuel entries formatted in the same way,
     this script calculates the maximum log-likelihood of each test sample
-    against the database for a prediction. 
+    against the database for a prediction. The errors of those predictions are
+    then calculated and saved as a CSV file.
     
     """
     
@@ -276,7 +265,16 @@ def main():
         test = ratios(test, ratio_list, lbls)
     
     unc = float(args.unc)
-    loop_db(XY, test, unc, lbls)
+    pred_df, pred_lbls = loop_db(XY, test, unc, lbls)
+    pred_df = calc_errors(pred_df, lbls, pred_lbls)
+
+    # testing multiple formats in case the DBs get big enough for this to matter
+    fname = 'test_mll'
+    pred_pkl = fname + '.pkl'
+    pickle.dump(pred_df, open(pred_pkl, 'wb'))
+    pred_df.to_csv(fname + '.csv')
+    compression_opts = dict(method='zip', archive_name='fname' + '_comp.csv')
+    pred_df.to_csv(fname + '.zip', compression=compression_opts)
 
     return
 
