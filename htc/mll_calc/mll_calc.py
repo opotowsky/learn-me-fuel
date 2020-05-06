@@ -187,6 +187,11 @@ def loop_db(XY, test, unc, lbls):
     unc : float that represents the simulation uncertainty in nuclide measurements
     lbls : list of reactor parameters to be predicted
 
+    Returns
+    -------
+    pred_df : dataframe with ground truth and predictions
+    pred_lbls : list of predicted label titles
+    
     """
     pred_df = pd.DataFrame()
     for sim_idx, row in test.iterrows():
@@ -238,6 +243,7 @@ def main():
     #### TO REMOVE ####
     # small db for testing code
     XY = XY.sample(50)
+    #### END REMOVE ####
 
     # testing set
     if args.ext_test == True:
@@ -251,6 +257,7 @@ def main():
         #### TO REMOVE ####
         # small db for testing code
         test = test.sample(10)
+        #### END REMOVE ####
     else: 
         test = XY.copy()
         
@@ -260,7 +267,13 @@ def main():
                  ]
     lbls = ['ReactorType', 'CoolingTime', 'Enrichment', 'Burnup', 'OrigenReactor']
     if args.ratios == True:
+        #### TO DO ####
+        # This list (in future, lists) will correspond with the dbs that are 
+        # imported, currently hard-coded filepaths above. This will need to be
+        # moved outside the script and handled differently via some kind of 
+        # config file
         ratio_list = tamu_list
+        #### END TO DO ####
         XY = ratios(XY, ratio_list, lbls)
         test = ratios(test, ratio_list, lbls)
     
