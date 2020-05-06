@@ -237,8 +237,7 @@ def main():
     
     # hard-coded filepaths
     dbfile = '~/prep-pkls/nucmoles_opusupdate_aug2019/not-scaled_15nuc.pkl'
-    #sfcompofile = '~/sfcompo/format_clean/sfcompo_formatted.pkl'
-    sfcompofile = '~/sfcompo/format_clean/sfcompo_formatted_to_fail.pkl'
+    sfcompofile = '~/sfcompo/format_clean/sfcompo_formatted.pkl'
 
     # training set
     XY = pd.read_pickle(dbfile)
@@ -247,6 +246,7 @@ def main():
         XY.drop('total', axis=1, inplace=True)
     XY = XY.loc[XY['Burnup'] > 0]
 
+    #### TO REMOVE ####
     # small db for testing code
     XY = XY.sample(50)
 
@@ -254,10 +254,11 @@ def main():
     if args.ext_test == True:
         test = pd.read_pickle(sfcompofile)
         # order of columns must match
-        if sorted(XY.columns.tolist()) == sorted(test.columns.tolist()):
-            test = test[XY.columns]
-        else:
-            sys.exit("Feature sets are different")
+        if XY.columns.tolist() != test.columns.tolist():
+            if sorted(XY.columns.tolist()) == sorted(test.columns.tolist()):
+                test = test[XY.columns]
+            else:
+                sys.exit("Feature sets are different")
         #### TO REMOVE ####
         # small db for testing code
         test = test.sample(10)
