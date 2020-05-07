@@ -132,7 +132,12 @@ def get_pred(XY, test_sample, unc, lbls):
     #XY[unc_name] = X.apply(lambda row: unc_calc(row, test_sample, (unc*row)**2, (unc*test_sample)**2), axis=1)
     
     #max_ll = XY[ll_name].max()
+    #### TO DO ####
+    # will there ever be more than one max? unlikely but maybe should see about 
+    # handling this just in case there are somehow duplicate entries. script 
+    # will likely fail
     max_idx = XY[ll_name].idxmax()
+    #### END TO DO ####
     pred_ll = XY.loc[XY.index == max_idx]
     # need to delete so next test sample can be calculated
     XY.drop(ll_name, axis=1, inplace=True)
@@ -172,7 +177,7 @@ def calc_errors(pred_df, true_lbls, pred_lbls):
 
     return pred_df
 
-def loop_db(XY, test, unc, lbls):
+def testset_mll(XY, test, unc, lbls):
     """
     Given a database of spent fuel entries containing a nuclide vector and the
     reactor operation parameters, and an equally formatted database of test
@@ -198,8 +203,12 @@ def loop_db(XY, test, unc, lbls):
         test_sample = row.drop(lbls)
         test_answer = row[lbls]
         if XY.equals(test):
-            XY.drop(sim_idx, inplace=True)
-        pred_ll, pred_lbls = get_pred(XY, test_sample, unc, lbls)
+            pred_ll, pred_lbls = get_pred(XY.drop(sim_idx, inplace=True), test_sample, unc, lbls)
+            # replace the deleted sim row for future calculations 
+            # (appends to end of df)
+            XY.loc[sim_idx] = row
+        else :
+            pred_ll, pred_lbls = get_pred(XY, test_sample, unc, lbls)
         if pred_df.empty:
             pred_df = pd.DataFrame(columns = pred_ll.columns.to_list())
         pred_df = pred_df.append(pred_ll)
@@ -278,7 +287,7 @@ def main():
         test = ratios(test, ratio_list, lbls)
     
     unc = float(args.unc)
-    pred_df, pred_lbls = loop_db(XY, test, unc, lbls)
+    pred_df, pred_lbls = testset_mll(XY, test, unc, lbls)
     pred_df = calc_errors(pred_df, lbls, pred_lbls)
 
     # testing multiple formats in case the DBs get big enough for this to matter
