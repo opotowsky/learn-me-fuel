@@ -3,7 +3,6 @@
 from mll_calc.mll_calc import *
 
 import math
-#import os
 import numpy as np
 import pandas as pd
 
@@ -28,35 +27,39 @@ def test_ratios():
     obs = ratios(XY, ratio_list, labels)
     assert obs.equals(exp)
 
-def test_loop_db_XY_XY():
-    # left off designing XY and ext-test
-    XY = pd.DataFrame({'A' : [1., 2., 3., np.nan], 
-                       'B' : [1., 1., 0., 0],
+def test_testset_mll_XY():
+    XY = pd.DataFrame({'A' : [0, 0, 0, 0], 
+                       'B' : [0, 0, 0, 0],
+                       'C' : [0, 0, 0, 0],
                        'label' : [1, 1, 1, 1]})
-    unc = 0.1
+    test = XY.copy()
+    unc = 1
     lbls = ['label']
     exp_1 = pd.DataFrame({'A' : [1., 2., 3., np.nan], 
                           'B' : [1., 1., 0., 0],
                           'label' : [1, 1, 1, 1]})
     exp_2 = ['Pred_label']
-    obs_1, obs_2 = loop_db(XY, XY, unc, lbls)
+    obs_1, obs_2 = testset_mll(XY, test, unc, lbls)
     assert obs_1.equals(exp_1)
     assert obs_2 == exp_2
 
-def test_loop_db_XY_exttest():
+#def test_testset_mll_ext():
+#
+#    XY = pd.DataFrame({'A' : [1., 2., 3., np.nan], 
+#                       'B' : [1., 1., 0., 0],
+#                       'label' : [1, 1, 1, 1]})
+#    test = pd.DataFrame({'A' : [1., 2., 3., np.nan], 
+#                         'B' : [1., 1., 0., 0],
+#                         'label' : [1, 1, 1, 1]})
+#    unc = 1
+#    lbls = ['label']
+#    exp_1 = pd.DataFrame({'A' : [1., 2., 3., np.nan], 
+#                          'B' : [1., 1., 0., 0],
+#                          'label' : [1, 1, 1, 1]})
+#    exp_2 = ['Pred_label']
+#    obs_1, obs_2 = testset_mll(XY, test, unc, lbls)
+#    assert obs_1.equals(exp_1)
+#    assert obs_2 == exp_2
 
-    XY = pd.DataFrame({'A' : [1., 2., 3., np.nan], 
-                       'B' : [1., 1., 0., 0],
-                       'label' : [1, 1, 1, 1]})
-    test = pd.DataFrame({'A' : [1., 2., 3., np.nan], 
-                         'B' : [1., 1., 0., 0],
-                         'label' : [1, 1, 1, 1]})
-    unc = 0.1
-    lbls = ['label']
-    exp_1 = pd.DataFrame({'A' : [1., 2., 3., np.nan], 
-                          'B' : [1., 1., 0., 0],
-                          'label' : [1, 1, 1, 1]})
-    exp_2 = ['Pred_label']
-    obs_1, obs_2 = loop_db(XY, test, unc, lbls)
-    assert obs_1.equals(exp_1)
-    assert obs_2 == exp_2
+# def test_testset_mll_drop_replace():
+# need to test that the db is in fact stating the same (not slowly getting deleted)

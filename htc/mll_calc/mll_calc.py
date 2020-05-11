@@ -199,15 +199,23 @@ def testset_mll(XY, test, unc, lbls):
     
     """
     pred_df = pd.DataFrame()
+    loov = XY.equals(test)
+    print(loov, flush=True)
+    #if XY.equals(test):
+    #    loov = True
+    #else:
+    #    loov = False
     for sim_idx, row in test.iterrows():
         test_sample = row.drop(lbls)
         test_answer = row[lbls]
-        if XY.equals(test):
-            pred_ll, pred_lbls = get_pred(XY.drop(sim_idx, inplace=True), test_sample, unc, lbls)
+        if loov:
+            pred_ll, pred_lbls = get_pred(XY.drop(sim_idx), test_sample, unc, lbls)
+            #XY.drop(sim_idx, inplace=True)
+            #pred_ll, pred_lbls = get_pred(XY, test_sample, unc, lbls)
             # replace the deleted sim row for future calculations 
             # (appends to end of df)
-            XY.loc[sim_idx] = row
-        else :
+            #XY.loc[sim_idx] = row
+        else:
             pred_ll, pred_lbls = get_pred(XY, test_sample, unc, lbls)
         if pred_df.empty:
             pred_df = pd.DataFrame(columns = pred_ll.columns.to_list())
@@ -251,7 +259,8 @@ def main():
 
     #### TO REMOVE ####
     # small db for testing code
-    XY = XY.sample(50)
+    #XY = XY.sample(50)
+    XY = XY.head(25)
     #### END REMOVE ####
 
     # testing set
