@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 
 def ll_calc(x):
+    # where x = y_sim - y_mes
     ll = -0.5 * (x**2 + np.log(2 * np.pi))
     return ll
 
@@ -46,24 +47,26 @@ def test_get_pred():
     assert obs_1.equals(exp_1)
     assert obs_2 == exp_2
 
-#def test_testset_mll_XY():
-#    XY = pd.DataFrame({'feature' : [0, 1, 3], 
-#                       'label' : ['X', 'Y', 'Z']})
-#    test = XY.copy()
-#    unc = 1
-#    lbls = ['label']
-#    ll_name = 'LogLikelihood_' + str(unc)
-#    exp_1 = pd.DataFrame({'sim_idx' : [0, 1, 2],
-#                          'label' : [0, 1, 2],
-#                          'pred_idx' : [1, 0, 1],
-#                          'pred_label' : ['Y', 'X', 'Y'],
-#                          ll_name : [ll_calc(1), ll_calc(1), ll_calc(2)]})
-#    exp_2 = ['pred_label', ll_name]
-#    obs_1, obs_2 = testset_mll(XY, test, unc, lbls)
-#    assert obs_1.equals(exp_1)
-#    assert obs_2 == exp_2
+def test_mll_testset_XY():
+    XY = pd.DataFrame({'feature' : [1., 2., 4.], 
+                       'label' : ['X', 'Y', 'Z']},
+                       index = [0, 1, 2])
+    test = XY.copy()
+    unc = 1
+    lbls = ['label']
+    ll_name = 'LogLikelihood_' + str(unc)
+    exp_1 = pd.DataFrame({'sim_idx' : [0, 1, 2],
+                          'label' : ['X', 'Y', 'Z'],
+                          'pred_idx' : [1, 0, 1],
+                          'pred_label' : ['Y', 'X', 'Y'],
+                          ll_name : [ll_calc(1), ll_calc(1), ll_calc(2)]}, 
+                          index = [0, 1, 2])
+    exp_2 = ['pred_label', ll_name]
+    obs_1, obs_2 = mll_testset(XY, test, unc, lbls)
+    assert obs_1.equals(exp_1)
+    assert obs_2 == exp_2
 
-#def test_testset_mll_ext():
+#def test_mll_testset_ext():
 #
 #    XY = pd.DataFrame({'A' : [1., 2., 3., np.nan], 
 #                       'B' : [1., 1., 0., 0],
@@ -77,9 +80,9 @@ def test_get_pred():
 #                          'B' : [1., 1., 0., 0],
 #                          'label' : [1, 1, 1, 1]})
 #    exp_2 = ['Pred_label']
-#    obs_1, obs_2 = testset_mll(XY, test, unc, lbls)
+#    obs_1, obs_2 = mll_testset(XY, test, unc, lbls)
 #    assert obs_1.equals(exp_1)
 #    assert obs_2 == exp_2
 
-# def test_testset_mll_drop_replace():
+# def test_mll_testset_drop_replace():
 # need to test that the db is in fact stating the same (not slowly getting deleted)
