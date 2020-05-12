@@ -138,15 +138,20 @@ def get_pred(XY, test_sample, unc, lbls):
     # will likely fail
     max_idx = XY[ll_name].idxmax()
     #### END TO DO ####
-    pred_ll = XY.loc[XY.index == max_idx]
+    pred_ll = XY.loc[XY.index == max_idx].copy()
+    #print(pred_ll, flush=True)
     # need to delete so next test sample can be calculated
     XY.drop(ll_name, axis=1, inplace=True)
     
-    pred_lbls = ["Pred_" + s for s in lbls] 
+    pred_lbls = ["pred_" + s for s in lbls] 
     pred_ll.rename(columns=dict(zip(lbls, pred_lbls)), inplace=True)
     pred_lbls.append(ll_name)#.append('Pred_idx')
     pred_ll = pred_ll.loc[:, pred_lbls]
-    
+
+    #df = isinstance(pred_ll, pd.DataFrame)
+    #print(pred_ll, flush=True)
+    #print(df, flush = True)
+    #print(pred_lbls, flush=True)
     return pred_ll, pred_lbls
 
 def calc_errors(pred_df, true_lbls, pred_lbls):
@@ -167,6 +172,10 @@ def calc_errors(pred_df, true_lbls, pred_lbls):
               two
     
     """
+    #### TO DO ####
+    # can I separate true from pred here so pred_lbls doesn't need to be 
+    # passed around a bunch?
+    #### END TO DO ####
     for true, pred in zip(true_lbls, pred_lbls):
         if 'Reactor' in true:
             col_name = true + '_Score'
@@ -177,7 +186,7 @@ def calc_errors(pred_df, true_lbls, pred_lbls):
 
     return pred_df
 
-def testset_mll(XY, test, unc, lbls):
+def mll_testset(XY, test, unc, lbls):
     """
     Given a database of spent fuel entries containing a nuclide vector and the
     reactor operation parameters, and an equally formatted database of test
@@ -187,7 +196,7 @@ def testset_mll(XY, test, unc, lbls):
 
     Parameters
     ----------
-    train : dataframe with nuclide measurements and reactor parameters
+    XY : dataframe with nuclide measurements and reactor parameters
     test : dataframe with test cases to predict in same format as train
     unc : float that represents the simulation uncertainty in nuclide measurements
     lbls : list of reactor parameters to be predicted
@@ -200,11 +209,6 @@ def testset_mll(XY, test, unc, lbls):
     """
     pred_df = pd.DataFrame()
     loov = XY.equals(test)
-    print(loov, flush=True)
-    #if XY.equals(test):
-    #    loov = True
-    #else:
-    #    loov = False
     for sim_idx, row in test.iterrows():
         test_sample = row.drop(lbls)
         test_answer = row[lbls]
@@ -218,12 +222,15 @@ def testset_mll(XY, test, unc, lbls):
         else:
             pred_ll, pred_lbls = get_pred(XY, test_sample, unc, lbls)
         if pred_df.empty:
+            #### TO DO ####
+            # If pred_lbls stays, can make this columns = line shorter
             pred_df = pd.DataFrame(columns = pred_ll.columns.to_list())
+            #### END TO DO ####
         pred_df = pred_df.append(pred_ll)
     pred_df = pd.concat([test.loc[:, lbls].rename_axis('sim_idx').reset_index(), 
                          pred_df.rename_axis('pred_idx').reset_index()
                          ], axis=1)
-    
+    #print(pred_df, flush=True)
     return pred_df, pred_lbls
 
 def main():
@@ -274,7 +281,7 @@ def main():
                 sys.exit("Feature sets are different")
         #### TO REMOVE ####
         # small db for testing code
-        test = test.sample(10)
+        test = test.sample(1)
         #### END REMOVE ####
     else: 
         test = XY.copy()
@@ -296,7 +303,7 @@ def main():
         test = ratios(test, ratio_list, lbls)
     
     unc = float(args.unc)
-    pred_df, pred_lbls = testset_mll(XY, test, unc, lbls)
+    pred_df, pred_lbls = mll_testset(XY, test, unc, lbls)
     pred_df = calc_errors(pred_df, lbls, pred_lbls)
 
     # testing multiple formats in case the DBs get big enough for this to matter
