@@ -1,3 +1,5 @@
+htmlcov/
+.coverage*
 *.ipynb_*
 *.swp
 *.swo
