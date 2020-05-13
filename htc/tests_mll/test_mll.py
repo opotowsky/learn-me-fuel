@@ -48,7 +48,7 @@ def test_get_pred():
     assert obs_2 == exp_2
 
 def test_mll_testset_XY():
-    XY = pd.DataFrame({'feature' : [1., 2., 4.], 
+    XY = pd.DataFrame({'feature' : [0, 1, 3], 
                        'label' : ['X', 'Y', 'Z']},
                        index = [0, 1, 2])
     test = XY.copy()
