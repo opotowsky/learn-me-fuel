@@ -1,0 +1,4 @@
+To run pytest with coverage:
+1. pytest --cov=mll_calc .
+2. coverage html
+3. open index.html in htmlcov/ dir (e.g.: google-chrome index.html from cmd line)
