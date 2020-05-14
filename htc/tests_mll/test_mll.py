@@ -1,13 +1,24 @@
 #! /usr/bin/env python3
 
 from mll_calc.mll_calc import *
-
+import pytest
 import numpy as np
 import pandas as pd
 
-def ll_calc(x):
+@pytest.fixture
+def dfXY():
+    unc = 1
+    lbls = ['label']
+    ll_name = 'LogLikelihood_' + str(unc)
+    XY = pd.DataFrame({'feature' : [0, 1, 3], 
+                       'label' : ['X', 'Y', 'Z']},
+                       index = [0, 1, 2])
+    return XY, unc, lbls, ll_name
+
+def ll_calc(x, std):
     # where x = y_sim - y_mes
-    ll = -0.5 * (x**2 + np.log(2 * np.pi))
+    # where std = unc * y_sim
+    ll = -0.5 * ((x / std)**2 + np.log(2 * np.pi) + 2 * np.log(std))
     return ll
 
 # dummy test (don't need to test single line scipy func, I think)
@@ -31,40 +42,61 @@ def test_ratios():
     obs = ratios(XY, ratio_list, labels)
     assert obs.equals(exp)
 
-def test_get_pred():
-    XY = pd.DataFrame({'feature' : [1, 3], 
-                       'label' : ['Y', 'Z']},
-                       index = [1, 2])
-    test_sample = pd.Series([0], index=['feature'])
-    unc = 1
-    lbls = ['label']
-    ll_name = 'LogLikelihood_' + str(unc)
+def test_get_pred_0(dfXY):
+    XY, unc, lbls, ll_name = dfXY
+    sim_idx = 0
+    test_sample = XY.loc[sim_idx].drop(lbls)
+    XY.drop(sim_idx, inplace=True)
     exp_1 = pd.DataFrame({'pred_label' : ['Y'],
-                          ll_name : [ll_calc(1)]},
+                          ll_name : [ll_calc(1, 1)]},
                           index = [1])
     exp_2 = ['pred_label', ll_name]
     obs_1, obs_2 = get_pred(XY, test_sample, unc, lbls)
     assert obs_1.equals(exp_1)
     assert obs_2 == exp_2
 
-def test_mll_testset_XY():
-    XY = pd.DataFrame({'feature' : [0, 1, 3], 
-                       'label' : ['X', 'Y', 'Z']},
-                       index = [0, 1, 2])
-    test = XY.copy()
-    unc = 1
-    lbls = ['label']
-    ll_name = 'LogLikelihood_' + str(unc)
-    exp_1 = pd.DataFrame({'sim_idx' : [0, 1, 2],
-                          'label' : ['X', 'Y', 'Z'],
-                          'pred_idx' : [1, 0, 1],
-                          'pred_label' : ['Y', 'X', 'Y'],
-                          ll_name : [ll_calc(1), ll_calc(1), ll_calc(2)]}, 
-                          index = [0, 1, 2])
+def test_get_pred_1(dfXY):
+    XY, unc, lbls, ll_name = dfXY
+    sim_idx = 1
+    test_sample = XY.loc[sim_idx].drop(lbls)
+    XY.drop(sim_idx, inplace=True)
+    exp_1 = pd.DataFrame({'pred_label' : ['X'],
+                          ll_name : [ll_calc(1, 1)]},
+                          index = [0])
     exp_2 = ['pred_label', ll_name]
-    obs_1, obs_2 = mll_testset(XY, test, unc, lbls)
+    obs_1, obs_2 = get_pred(XY, test_sample, unc, lbls)
     assert obs_1.equals(exp_1)
     assert obs_2 == exp_2
+
+def test_get_pred_2(dfXY):
+    XY, unc, lbls, ll_name = dfXY
+    sim_idx = 2
+    test_sample = XY.loc[sim_idx].drop(lbls)
+    XY.drop(sim_idx, inplace=True)
+    exp_1 = pd.DataFrame({'pred_label' : ['Y'],
+                          ll_name : [ll_calc(2, 1)]},
+                          index = [1])
+    exp_2 = ['pred_label', ll_name]
+    obs_1, obs_2 = get_pred(XY, test_sample, unc, lbls)
+    assert obs_1.equals(exp_1)
+    assert obs_2 == exp_2
+
+#def test_mll_testset_XY(dfXY):
+#    XY = dfXY
+#    test = XY.copy()
+#    unc = 1
+#    lbls = ['label']
+#    ll_name = 'LogLikelihood_' + str(unc)
+#    exp_1 = pd.DataFrame({'sim_idx' : [0, 1, 2],
+#                          'label' : ['X', 'Y', 'Z'],
+#                          'pred_idx' : [1, 0, 1],
+#                          'pred_label' : ['Y', 'X', 'Y'],
+#                          ll_name : [ll_calc(1), ll_calc(1), ll_calc(2)]}, 
+#                          index = [0, 1, 2])
+#    exp_2 = ['pred_label', ll_name]
+#    obs_1, obs_2 = mll_testset(XY, test, unc, lbls)
+#    assert obs_1.equals(exp_1)
+#    assert obs_2 == exp_2
 
 #def test_mll_testset_ext():
 #
