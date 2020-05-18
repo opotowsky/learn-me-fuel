@@ -123,3 +123,21 @@ def test_mll_testset_ext(dfXY):
 
 # def test_mll_testset_drop_replace():
 # need to test that the db is in fact stating the same (not slowly getting deleted)
+# want to also test the drop is working, that a test sample can't predict itself from the train db
+
+def test_calc_errors():
+    pred_df = pd.DataFrame({'sim_idx' : ['A', 'B'],
+                            'NumLabel' : [1.2, 7.5],
+                            'Reactor' : ['X', 'Y'],
+                            'pred_idx' : [0, 1],
+                            'pred_NumLabel' : [0.2, 10],
+                            'pred_Reactor' : ['X', 'Z'],
+                            'LogLikelihood_xx' : [1, 2]}, 
+                            index = [0, 1])
+    true_lbls = ['Reactor', 'NumLabel']
+    pred_lbls = ['pred_Reactor', 'pred_NumLabel']
+    exp = pred_df.copy()
+    exp['Reactor_Score'] = [True, False]
+    exp['NumLabel_Error'] = [1, 2.5]
+    obs = calc_errors(pred_df, true_lbls, pred_lbls)
+    assert obs.equals(exp)
