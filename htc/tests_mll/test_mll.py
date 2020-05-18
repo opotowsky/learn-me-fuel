@@ -140,3 +140,11 @@ def test_calc_errors():
     exp['Reactor_Score'], exp['NumLabel_Error'] = [[True, False], [1, 2.5]]
     obs = calc_errors(pred_df, true_lbls, pred_lbls)
     assert obs.equals(exp)
+
+#def test_parse_args():
+#    arglist = [args.unc, args.train_db, args.test_db, args.ext_test, args.ratios]
+#    argv1 = ['']
+#    args = parse_args(argv1)
+#    assert ()
+#    argv2 = 
+    

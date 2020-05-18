@@ -233,15 +233,13 @@ def parse_args(args):
     dbfile = '~/prep-pkls/nucmoles_opusupdate_aug2019/not-scaled_15nuc.pkl'
     sfcompofile = '~/sfcompo/format_clean/sfcompo_formatted.pkl'
     
-    parser.add_argument('train', metavar='training-set', 
-                        nargs='?', default=dbfile, 
-                        help='specify file path to a training set to override default path in script')
-    parser.add_argument('test', metavar='testing-set', 
-                        nargs='?', default=sfcompofile,
-                        help='specify file path to a testing set to override default path in script')
     parser.add_argument('unc', metavar='simulation-uncertainty', 
                         nargs='?', default=0.05, type=float,
-                        help='value of simulation uncertainty (in fraction) to apply to likelihood calculations')
+                        help='value of simulation uncertainty (in fraction) to apply to likelihood calculations, default is 0.05')
+    parser.add_argument('-train', '--train_db', default=dbfile,
+                        help='file path to a training set to override default path')
+    parser.add_argument('-test', '--test_db', default=sfcompofile,
+                        help='file path to a testing set to override default path (Note: -e flag required to utilize ext test set)')
     parser.add_argument('-e', '--ext_test', action='store_true', default=False, 
                         help='execute script with external testing set instead of training set evaluation (default)')
     parser.add_argument('-r', '--ratios', action='store_true', default=False, 
@@ -263,7 +261,7 @@ def main():
     args = parse_args(sys.argv[1:])
 
     # training set
-    XY = pd.read_pickle(args.train)
+    XY = pd.read_pickle(args.train_db)
     XY.reset_index(inplace=True, drop=True)
     if 'total' in XY.columns:
         XY.drop('total', axis=1, inplace=True)
@@ -277,7 +275,7 @@ def main():
 
     # testing set
     if args.ext_test == True:
-        test = pd.read_pickle(args.test)
+        test = pd.read_pickle(args.test_db)
         # order of columns must match
         if XY.columns.tolist() != test.columns.tolist():
             if sorted(XY.columns.tolist()) == sorted(test.columns.tolist()):
@@ -297,13 +295,7 @@ def main():
                  ]
     lbls = ['ReactorType', 'CoolingTime', 'Enrichment', 'Burnup', 'OrigenReactor']
     if args.ratios == True:
-        #### TO DO ####
-        # This list (in future, lists) will correspond with the dbs that are 
-        # imported, currently hard-coded filepaths above. This will need to be
-        # moved outside the script and handled differently via some kind of 
-        # config file
         ratio_list = tamu_list
-        #### END TO DO ####
         XY = ratios(XY, ratio_list, lbls)
         test = ratios(test, ratio_list, lbls)
     
@@ -311,11 +303,11 @@ def main():
     pred_df, pred_lbls = mll_testset(XY, test, unc, lbls)
     pred_df = calc_errors(pred_df, lbls, pred_lbls)
 
-    # testing multiple formats in case the DBs get big enough for this to matter
     fname = 'test_mll'
+    pred_df.to_csv(fname + '.csv')
+    # testing multiple formats in case the DBs get big enough for this to matter
     #pred_pkl = fname + '.pkl'
     #pickle.dump(pred_df, open(pred_pkl, 'wb'))
-    pred_df.to_csv(fname + '.csv')
     #compression_opts = dict(method='zip', archive_name='fname' + '_comp.csv')
     #pred_df.to_csv(fname + '.zip', compression=compression_opts)
 
