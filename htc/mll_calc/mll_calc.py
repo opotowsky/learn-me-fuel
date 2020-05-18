@@ -139,19 +139,14 @@ def get_pred(XY, test_sample, unc, lbls):
     max_idx = XY[ll_name].idxmax()
     #### END TO DO ####
     pred_ll = XY.loc[XY.index == max_idx].copy()
-    #print(pred_ll, flush=True)
-    # need to delete so next test sample can be calculated
+    # need to delete likelihood column so next test sample can be calculated
     XY.drop(ll_name, axis=1, inplace=True)
     
     pred_lbls = ["pred_" + s for s in lbls] 
     pred_ll.rename(columns=dict(zip(lbls, pred_lbls)), inplace=True)
-    pred_lbls.append(ll_name)#.append('Pred_idx')
+    pred_lbls.append(ll_name)
     pred_ll = pred_ll.loc[:, pred_lbls]
 
-    #df = isinstance(pred_ll, pd.DataFrame)
-    #print(pred_ll, flush=True)
-    #print(df, flush = True)
-    #print(pred_lbls, flush=True)
     return pred_ll, pred_lbls
 
 def calc_errors(pred_df, true_lbls, pred_lbls):
@@ -175,6 +170,8 @@ def calc_errors(pred_df, true_lbls, pred_lbls):
     #### TO DO ####
     # can I separate true from pred here so pred_lbls doesn't need to be 
     # passed around a bunch?
+    # This also assumes two lists match feature ordering, should check for 
+    # that somewhere in-script
     #### END TO DO ####
     for true, pred in zip(true_lbls, pred_lbls):
         if 'Reactor' in true:
@@ -214,11 +211,7 @@ def mll_testset(XY, test, unc, lbls):
         test_answer = row[lbls]
         if loov:
             pred_ll, pred_lbls = get_pred(XY.drop(sim_idx), test_sample, unc, lbls)
-            #XY.drop(sim_idx, inplace=True)
-            #pred_ll, pred_lbls = get_pred(XY, test_sample, unc, lbls)
-            # replace the deleted sim row for future calculations 
-            # (appends to end of df)
-            #XY.loc[sim_idx] = row
+            #XY.loc[sim_idx] = row # don't need since drop is now not saving df inplace
         else:
             pred_ll, pred_lbls = get_pred(XY, test_sample, unc, lbls)
         if pred_df.empty:
@@ -230,7 +223,7 @@ def mll_testset(XY, test, unc, lbls):
     pred_df = pd.concat([test.loc[:, lbls].rename_axis('sim_idx').reset_index(), 
                          pred_df.rename_axis('pred_idx').reset_index()
                          ], axis=1)
-    #print(pred_df, flush=True)
+    
     return pred_df, pred_lbls
 
 def main():
@@ -308,11 +301,11 @@ def main():
 
     # testing multiple formats in case the DBs get big enough for this to matter
     fname = 'test_mll'
-    pred_pkl = fname + '.pkl'
-    pickle.dump(pred_df, open(pred_pkl, 'wb'))
+    #pred_pkl = fname + '.pkl'
+    #pickle.dump(pred_df, open(pred_pkl, 'wb'))
     pred_df.to_csv(fname + '.csv')
-    compression_opts = dict(method='zip', archive_name='fname' + '_comp.csv')
-    pred_df.to_csv(fname + '.zip', compression=compression_opts)
+    #compression_opts = dict(method='zip', archive_name='fname' + '_comp.csv')
+    #pred_df.to_csv(fname + '.zip', compression=compression_opts)
 
     return
 
