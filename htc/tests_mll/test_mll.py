@@ -137,7 +137,6 @@ def test_calc_errors():
     true_lbls = ['Reactor', 'NumLabel']
     pred_lbls = ['pred_Reactor', 'pred_NumLabel']
     exp = pred_df.copy()
-    exp['Reactor_Score'] = [True, False]
-    exp['NumLabel_Error'] = [1, 2.5]
+    exp['Reactor_Score'], exp['NumLabel_Error'] = [[True, False], [1, 2.5]]
     obs = calc_errors(pred_df, true_lbls, pred_lbls)
     assert obs.equals(exp)
