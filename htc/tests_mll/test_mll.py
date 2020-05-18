@@ -104,22 +104,22 @@ def test_mll_testset_XY(dfXY):
     assert obs_1.equals(exp_1)
     assert obs_2 == exp_2
 
-#def test_mll_testset_ext(dfXY):
-#    XY, unc, lbls, ll_name = dfXY
-#    test = pd.DataFrame({'feature' : [1, 2, 3], 
-#                       'label' : ['X', 'Y', 'Z']},
-#                       index = [0, 1, 2])
-#    ll_exp = [ll_calc(1, 2), ll_calc(1, 1), ll_calc(1, 2)]
-#    exp_1 = pd.DataFrame({'sim_idx' : [0, 1, 2],
-#                          'label' : ['X', 'Y', 'Z'],
-#                          'pred_idx' : [1, 0, 1],
-#                          'pred_label' : ['Y', 'X', 'Y'],
-#                          ll_name : ll_exp}, 
-#                          index = [0, 1, 2])
-#    exp_2 = ['pred_label', ll_name]
-#    obs_1, obs_2 = mll_testset(XY, test, unc, lbls)
-#    assert obs_1.equals(exp_1)
-#    assert obs_2 == exp_2
+def test_mll_testset_ext(dfXY):
+    XY, unc, lbls, ll_name = dfXY
+    test = pd.DataFrame({'feature' : [4], 
+                       'label' : ['W']},
+                       index = ['A'])
+    ll_exp = [ll_calc(1, 3)]
+    exp_1 = pd.DataFrame({'sim_idx' : ['A'],
+                          'label' : ['W'],
+                          'pred_idx' : [2],
+                          'pred_label' : ['Z'],
+                          ll_name : ll_exp}, 
+                          index = [0])
+    exp_2 = ['pred_label', ll_name]
+    obs_1, obs_2 = mll_testset(XY, test, unc, lbls)
+    assert obs_1.equals(exp_1)
+    assert obs_2 == exp_2
 
 # def test_mll_testset_drop_replace():
 # need to test that the db is in fact stating the same (not slowly getting deleted)
