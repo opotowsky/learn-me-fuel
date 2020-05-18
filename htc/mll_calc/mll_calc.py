@@ -226,6 +226,29 @@ def mll_testset(XY, test, unc, lbls):
     
     return pred_df, pred_lbls
 
+def parse_args(args):
+    parser = argparse.ArgumentParser(description='Performs maximum likelihood calculations for reactor parameter prediction.')
+    
+    # hard-coded filepaths
+    dbfile = '~/prep-pkls/nucmoles_opusupdate_aug2019/not-scaled_15nuc.pkl'
+    sfcompofile = '~/sfcompo/format_clean/sfcompo_formatted.pkl'
+    
+    parser.add_argument('train', metavar='training-set', 
+                        nargs='?', default=dbfile, 
+                        help='specify file path to a training set to override default path in script')
+    parser.add_argument('test', metavar='testing-set', 
+                        nargs='?', default=sfcompofile,
+                        help='specify file path to a testing set to override default path in script')
+    parser.add_argument('unc', metavar='simulation-uncertainty', 
+                        nargs='?', default=0.05, type=float,
+                        help='value of simulation uncertainty (in fraction) to apply to likelihood calculations')
+    parser.add_argument('-e', '--ext_test', action='store_true', default=False, 
+                        help='execute script with external testing set instead of training set evaluation (default)')
+    parser.add_argument('-r', '--ratios', action='store_true', default=False, 
+                        help='compute isotopic ratios instead of using concentrations (default)')
+    
+    return parser.parse_args(args)
+
 def main():
     """
     Given a database of spent fuel entries (containing nuclide measurements and
@@ -237,21 +260,10 @@ def main():
     
     """
     
-    parser = argparse.ArgumentParser(description='Performs maximum likelihood calculations for reactor parameter prediction.')
-    parser.add_argument('unc', metavar='simulation-uncertainty', 
-                        help='value of simulation uncertainty (in fraction) to apply to likelihood calculations')
-    parser.add_argument('-e', '--ext_test', action='store_true', default=False, 
-                        help='execute script with external testing set instead of training set evaluation (default)')
-    parser.add_argument('-r', '--ratios', action='store_true', default=False, 
-                        help='compute isotopic ratios instead of using concentrations (default)')
-    args = parser.parse_args()
-    
-    # hard-coded filepaths
-    dbfile = '~/prep-pkls/nucmoles_opusupdate_aug2019/not-scaled_15nuc.pkl'
-    sfcompofile = '~/sfcompo/format_clean/sfcompo_formatted.pkl'
+    args = parse_args(sys.argv[1:])
 
     # training set
-    XY = pd.read_pickle(dbfile)
+    XY = pd.read_pickle(args.train)
     XY.reset_index(inplace=True, drop=True)
     if 'total' in XY.columns:
         XY.drop('total', axis=1, inplace=True)
@@ -265,7 +277,7 @@ def main():
 
     # testing set
     if args.ext_test == True:
-        test = pd.read_pickle(sfcompofile)
+        test = pd.read_pickle(args.test)
         # order of columns must match
         if XY.columns.tolist() != test.columns.tolist():
             if sorted(XY.columns.tolist()) == sorted(test.columns.tolist()):
