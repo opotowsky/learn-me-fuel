@@ -20,20 +20,11 @@ def dfXY():
                        index = [0, 1, 2])
     return XY, unc, lbls, ll_name
 
-def ll_calc(x, std):
+def calc_ll_exp(x, std):
     # where x = y_sim - y_mes
     # where std = unc * y_sim
     ll = -0.5 * ((x / std)**2 + np.log(2 * np.pi) + 2 * np.log(std))
     return ll
-
-# dummy test (don't need to test single line scipy func, I think)
-def test_like_calc():
-    y_sim = pd.Series([1, 1, 1, 1])
-    y_mes = pd.Series([1, 1, 1, 1])
-    std = pd.Series([1, 1, 1, 1])
-    exp = (1 / np.sqrt(2 * np.pi)) ** len(y_sim)
-    obs = like_calc(y_sim, y_mes, std)
-    assert obs == exp
 
 def test_ratios():
     ratio_list = ['A/B', 'B/A']
@@ -52,7 +43,7 @@ def test_get_pred_idx0(dfXY):
     XY, unc, lbls, ll_name = dfXY
     test_sample = XY.loc[sim_idx].drop(lbls)
     XY.drop(sim_idx, inplace=True)
-    ll_exp = [ll_calc(1, 2)]
+    ll_exp = [calc_ll_exp(1, 2)]
     exp_1 = pd.DataFrame({'pred_label' : ['Y'],
                           ll_name : ll_exp},
                           index = [1])
@@ -66,7 +57,7 @@ def test_get_pred_idx1(dfXY):
     XY, unc, lbls, ll_name = dfXY
     test_sample = XY.loc[sim_idx].drop(lbls)
     XY.drop(sim_idx, inplace=True)
-    ll_exp = [ll_calc(1, 1)]
+    ll_exp = [calc_ll_exp(1, 1)]
     exp_1 = pd.DataFrame({'pred_label' : ['X'],
                           ll_name : ll_exp},
                           index = [0])
@@ -80,7 +71,7 @@ def test_get_pred_idx2(dfXY):
     XY, unc, lbls, ll_name = dfXY
     test_sample = XY.loc[sim_idx].drop(lbls)
     XY.drop(sim_idx, inplace=True)
-    ll_exp = [ll_calc(1, 2)]
+    ll_exp = [calc_ll_exp(1, 2)]
     exp_1 = pd.DataFrame({'pred_label' : ['Y'],
                           ll_name : ll_exp},
                           index = [1])
@@ -92,7 +83,7 @@ def test_get_pred_idx2(dfXY):
 def test_mll_testset_XY(dfXY):
     XY, unc, lbls, ll_name = dfXY
     test = XY.copy()
-    ll_exp = [ll_calc(1, 2), ll_calc(1, 1), ll_calc(1, 2)]
+    ll_exp = [calc_ll_exp(1, 2), calc_ll_exp(1, 1), calc_ll_exp(1, 2)]
     exp_1 = pd.DataFrame({'sim_idx' : [0, 1, 2],
                           'label' : ['X', 'Y', 'Z'],
                           'pred_idx' : [1, 0, 1],
@@ -109,7 +100,7 @@ def test_mll_testset_ext(dfXY):
     test = pd.DataFrame({'feature' : [4], 
                        'label' : ['W']},
                        index = ['A'])
-    ll_exp = [ll_calc(1, 3)]
+    ll_exp = [calc_ll_exp(1, 3)]
     exp_1 = pd.DataFrame({'sim_idx' : ['A'],
                           'label' : ['W'],
                           'pred_idx' : [2],
