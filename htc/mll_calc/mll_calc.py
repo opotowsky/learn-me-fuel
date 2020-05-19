@@ -233,8 +233,8 @@ def parse_args(args):
     dbfile = '~/prep-pkls/nucmoles_opusupdate_aug2019/not-scaled_15nuc.pkl'
     sfcompofile = '~/sfcompo/format_clean/sfcompo_formatted.pkl'
     
-    parser.add_argument('unc', metavar='simulation-uncertainty', 
-                        nargs='?', default=0.05, type=float,
+    parser.add_argument('-unc', '--sim_unc', 
+                        default=0.05, type=float,
                         help='value of simulation uncertainty (in fraction) to apply to likelihood calculations, default is 0.05')
     parser.add_argument('-train', '--train_db', default=dbfile,
                         help='file path to a training set to override default path')
@@ -299,7 +299,7 @@ def main():
         XY = ratios(XY, ratio_list, lbls)
         test = ratios(test, ratio_list, lbls)
     
-    unc = float(args.unc)
+    unc = float(args.sim_unc)
     pred_df, pred_lbls = mll_testset(XY, test, unc, lbls)
     pred_df = calc_errors(pred_df, lbls, pred_lbls)
 

@@ -132,10 +132,15 @@ def test_calc_errors():
     obs = calc_errors(pred_df, true_lbls, pred_lbls)
     assert obs.equals(exp)
 
-#def test_parse_args():
-#    arglist = [args.unc, args.train_db, args.test_db, args.ext_test, args.ratios]
-#    argv1 = ['']
-#    args = parse_args(argv1)
-#    assert ()
-#    argv2 = 
+def test_parse_args():
+    argv1 = []
+    args = parse_args(argv1)
+    obs = [args.sim_unc, args.ext_test, args.ratios]
+    exp = [0.05, False, False]
+    assert obs == exp
+    argv2 = ['-e', '-unc', '0.1', '-r', '-test', 'yy', '-train', 'xx']
+    args = parse_args(argv2)
+    obs = [args.sim_unc, args.train_db, args.test_db, args.ext_test, args.ratios]
+    exp = [0.1, 'xx', 'yy', True, True]
+    assert obs == exp
     
