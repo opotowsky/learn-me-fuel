@@ -118,26 +118,16 @@ def get_pred(XY, test_sample, unc, lbls):
     -------
     pred_ll : dataframe with single row of prediction (predicted labels only) 
               and its log-likelihood
-    pred_lbls : list of predicted label titles
 
     """
     ll_name = 'LogLikelihood_' + str(unc)
     unc_name = 'LLUncertainty_' + str(unc)
     X = XY.drop(lbls, axis=1).copy()
     
-    ##### need to test that the rows are matching isos properly, have test columns set sorted for now ####
-    #### might need to do in in the function that calls this one
-
     XY[ll_name] = X.apply(lambda row: ll_calc(row, test_sample, unc*row), axis=1)
     #XY[unc_name] = X.apply(lambda row: unc_calc(row, test_sample, (unc*row)**2, (unc*test_sample)**2), axis=1)
     
-    #max_ll = XY[ll_name].max()
-    #### TO DO ####
-    # will there ever be more than one max? unlikely but maybe should see about 
-    # handling this just in case there are somehow duplicate entries. script 
-    # will likely fail
     max_idx = XY[ll_name].idxmax()
-    #### END TO DO ####
     pred_ll = XY.loc[XY.index == max_idx].copy()
     # need to delete likelihood column so next test sample can be calculated
     XY.drop(ll_name, axis=1, inplace=True)
@@ -147,9 +137,9 @@ def get_pred(XY, test_sample, unc, lbls):
     pred_lbls.append(ll_name)
     pred_ll = pred_ll.loc[:, pred_lbls]
 
-    return pred_ll, pred_lbls
+    return pred_ll
 
-def calc_errors(pred_df, true_lbls, pred_lbls):
+def calc_errors(pred_df, true_lbls):
     """
     Given a dataframe containing predictions and log-likelihood value,
     calculates absolute error between predictions and ground truth (or boolean
@@ -159,7 +149,6 @@ def calc_errors(pred_df, true_lbls, pred_lbls):
     ----------
     pred_df : dataframe with ground truth and predicted labels
     true_lbls : list of ground truth column labels 
-    pred_lbls : list of prediction column labels
     
     Returns
     -------
@@ -167,12 +156,9 @@ def calc_errors(pred_df, true_lbls, pred_lbls):
               two
     
     """
-    #### TO DO ####
-    # can I separate true from pred here so pred_lbls doesn't need to be 
-    # passed around a bunch?
-    # This also assumes two lists match feature ordering, should check for 
-    # that somewhere in-script
-    #### END TO DO ####
+    # this line is a repeat from get_pred 
+    # (otherwise it needs to get passed around a bunch)
+    pred_lbls = ["pred_" + s for s in true_lbls] 
     for true, pred in zip(true_lbls, pred_lbls):
         if 'Reactor' in true:
             col_name = true + '_Score'
@@ -180,7 +166,6 @@ def calc_errors(pred_df, true_lbls, pred_lbls):
         else: 
             col_name = true + '_Error'
             pred_df[col_name] = np.abs(pred_df.loc[:, true]  - pred_df.loc[:, pred])
-
     return pred_df
 
 def mll_testset(XY, test, unc, lbls):
@@ -201,7 +186,6 @@ def mll_testset(XY, test, unc, lbls):
     Returns
     -------
     pred_df : dataframe with ground truth and predictions
-    pred_lbls : list of predicted label titles
     
     """
     pred_df = pd.DataFrame()
@@ -210,21 +194,16 @@ def mll_testset(XY, test, unc, lbls):
         test_sample = row.drop(lbls)
         test_answer = row[lbls]
         if loov:
-            pred_ll, pred_lbls = get_pred(XY.drop(sim_idx), test_sample, unc, lbls)
-            #XY.loc[sim_idx] = row # don't need since drop is now not saving df inplace
+            pred_ll = get_pred(XY.drop(sim_idx), test_sample, unc, lbls)
         else:
-            pred_ll, pred_lbls = get_pred(XY, test_sample, unc, lbls)
+            pred_ll = get_pred(XY, test_sample, unc, lbls)
         if pred_df.empty:
-            #### TO DO ####
-            # If pred_lbls stays, can make this columns = line shorter
             pred_df = pd.DataFrame(columns = pred_ll.columns.to_list())
-            #### END TO DO ####
         pred_df = pred_df.append(pred_ll)
     pred_df = pd.concat([test.loc[:, lbls].rename_axis('sim_idx').reset_index(), 
                          pred_df.rename_axis('pred_idx').reset_index()
                          ], axis=1)
-    
-    return pred_df, pred_lbls
+    return pred_df
 
 def parse_args(args):
     parser = argparse.ArgumentParser(description='Performs maximum likelihood calculations for reactor parameter prediction.')
@@ -279,12 +258,12 @@ def main():
     # testing set
     if args.ext_test == True:
         test = pd.read_pickle(args.test_db)
-        # order of columns must match
+        # order of columns must match, in-script test:
         if XY.columns.tolist() != test.columns.tolist():
             if sorted(XY.columns.tolist()) == sorted(test.columns.tolist()):
                 test = test[XY.columns]
             else:
-                sys.exit("Feature sets are different")
+                sys.exit('Feature sets are different')
         #### TO REMOVE ####
         # small db for testing code
         test = test.sample(2)
@@ -303,9 +282,9 @@ def main():
         test = ratios(test, ratio_list, lbls)
     
     unc = float(args.sim_unc)
-    pred_df, pred_lbls = mll_testset(XY, test, unc, lbls)
-    pred_df = calc_errors(pred_df, lbls, pred_lbls)
-
+    pred_df = mll_testset(XY, test, unc, lbls)
+    pred_df = calc_errors(pred_df, lbls)
+    
     fname_csv = args.outfile
     pred_df.to_csv(fname_csv)
     # testing multiple formats in case the DBs get big enough for this to matter
