@@ -38,43 +38,18 @@ def test_ratios():
     obs = ratios(XY, ratio_list, labels)
     assert obs.equals(exp)
 
-def test_get_pred_idx0(dfXY):
-    sim_idx = 0
+@pytest.mark.parametrize('sim_idx, exp_1',
+                         [(0, pd.DataFrame({'pred_label' : ['Y'], 'LL' : [calc_ll_exp(1, 2)]}, index = [1])),
+                          (1, pd.DataFrame({'pred_label' : ['X'], 'LL' : [calc_ll_exp(1, 1)]}, index = [0])),
+                          (2, pd.DataFrame({'pred_label' : ['Y'], 'LL' : [calc_ll_exp(1, 2)]}, index = [1]))
+                          ]
+                         )
+def test_get_pred(dfXY, sim_idx, exp_1):
     XY, unc, lbls, ll_name = dfXY
     test_sample = XY.loc[sim_idx].drop(lbls)
     XY.drop(sim_idx, inplace=True)
-    ll_exp = [calc_ll_exp(1, 2)]
-    exp_1 = pd.DataFrame({'pred_label' : ['Y'],
-                          ll_name : ll_exp},
-                          index = [1])
-    exp_2 = ['pred_label', ll_name]
-    obs_1, obs_2 = get_pred(XY, test_sample, unc, lbls)
-    assert obs_1.equals(exp_1)
-    assert obs_2 == exp_2
-
-def test_get_pred_idx1(dfXY):
-    sim_idx = 1
-    XY, unc, lbls, ll_name = dfXY
-    test_sample = XY.loc[sim_idx].drop(lbls)
-    XY.drop(sim_idx, inplace=True)
-    ll_exp = [calc_ll_exp(1, 1)]
-    exp_1 = pd.DataFrame({'pred_label' : ['X'],
-                          ll_name : ll_exp},
-                          index = [0])
-    exp_2 = ['pred_label', ll_name]
-    obs_1, obs_2 = get_pred(XY, test_sample, unc, lbls)
-    assert obs_1.equals(exp_1)
-    assert obs_2 == exp_2
-
-def test_get_pred_idx2(dfXY):
-    sim_idx = 2
-    XY, unc, lbls, ll_name = dfXY
-    test_sample = XY.loc[sim_idx].drop(lbls)
-    XY.drop(sim_idx, inplace=True)
-    ll_exp = [calc_ll_exp(1, 2)]
-    exp_1 = pd.DataFrame({'pred_label' : ['Y'],
-                          ll_name : ll_exp},
-                          index = [1])
+    #renaming LL col for now, until I understand parametrization with fixures
+    exp_1.rename(columns={'LL': ll_name}, inplace=True)
     exp_2 = ['pred_label', ll_name]
     obs_1, obs_2 = get_pred(XY, test_sample, unc, lbls)
     assert obs_1.equals(exp_1)
