@@ -113,9 +113,9 @@ def test_parse_args():
     obs = [args.sim_unc, args.ext_test, args.ratios]
     exp = [0.05, False, False]
     assert obs == exp
-    argv2 = ['-e', '-unc', '0.1', '-r', '-test', 'yy', '-train', 'xx']
+    argv2 = ['-e', '-unc', '0.1', '-r', '-test', 'yy', '-train', 'xx', '-o', 'zz']
     args = parse_args(argv2)
-    obs = [args.sim_unc, args.train_db, args.test_db, args.ext_test, args.ratios]
-    exp = [0.1, 'xx', 'yy', True, True]
+    obs = [args.sim_unc, args.train_db, args.test_db, args.ext_test, args.ratios, args.outfile]
+    exp = [0.1, 'xx', 'yy', True, True, 'zz']
     assert obs == exp
     

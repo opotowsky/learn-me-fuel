@@ -232,6 +232,7 @@ def parse_args(args):
     # hard-coded filepaths
     dbfile = '~/prep-pkls/nucmoles_opusupdate_aug2019/not-scaled_15nuc.pkl'
     sfcompofile = '~/sfcompo/format_clean/sfcompo_formatted.pkl'
+    outfile = 'test_mll.csv'
     
     parser.add_argument('-unc', '--sim_unc', 
                         default=0.05, type=float,
@@ -244,6 +245,8 @@ def parse_args(args):
                         help='execute script with external testing set instead of training set evaluation (default)')
     parser.add_argument('-r', '--ratios', action='store_true', default=False, 
                         help='compute isotopic ratios instead of using concentrations (default)')
+    parser.add_argument('-o', '--outfile', default=outfile,
+                        help='file path to output to override default (test_mll.csv)')
     
     return parser.parse_args(args)
 
@@ -303,6 +306,7 @@ def main():
     pred_df, pred_lbls = mll_testset(XY, test, unc, lbls)
     pred_df = calc_errors(pred_df, lbls, pred_lbls)
 
+    fname = args.outfile
     fname = 'test_mll'
     pred_df.to_csv(fname + '.csv')
     # testing multiple formats in case the DBs get big enough for this to matter
