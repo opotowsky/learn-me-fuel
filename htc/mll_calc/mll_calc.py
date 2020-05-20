@@ -287,7 +287,7 @@ def main():
                 sys.exit("Feature sets are different")
         #### TO REMOVE ####
         # small db for testing code
-        test = test.sample(1)
+        test = test.sample(2)
         #### END REMOVE ####
     else: 
         test = XY.copy()
@@ -306,9 +306,8 @@ def main():
     pred_df, pred_lbls = mll_testset(XY, test, unc, lbls)
     pred_df = calc_errors(pred_df, lbls, pred_lbls)
 
-    fname = args.outfile
-    fname = 'test_mll'
-    pred_df.to_csv(fname + '.csv')
+    fname_csv = args.outfile
+    pred_df.to_csv(fname_csv)
     # testing multiple formats in case the DBs get big enough for this to matter
     #pred_pkl = fname + '.pkl'
     #pickle.dump(pred_df, open(pred_pkl, 'wb'))
