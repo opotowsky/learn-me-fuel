@@ -205,7 +205,55 @@ def mll_testset(XY, test, unc, lbls):
                          ], axis=1)
     return pred_df
 
+def check_traindb_equal(final, db_path):
+    """
+    Checks at end of script that the database was not altered
+    
+    Parameters
+    ----------
+    final : training database dataframe at end of script
+    db_path : path to pkl file containing training database
+    
+    """
+    initial = format_XY(db_path)
+    if not initial.equals(final):
+        sys.exit('Final training database does not equal initial database')
+    return
+
+def format_XY(db_path):
+    """
+    Fetches training database given a filepath
+
+    Parameters
+    ----------
+    db_path : path to pkl file containing training database
+
+    Returns
+    -------
+    XY : cleaned and formatted training database
+    
+    """
+    XY = pd.read_pickle(db_path)
+    XY.reset_index(inplace=True, drop=True)
+    if 'total' in XY.columns:
+        XY.drop('total', axis=1, inplace=True)
+    XY = XY.loc[XY['Burnup'] > 0]
+    return XY
+
 def parse_args(args):
+    """
+    Command-line argument parsing
+
+    Parameters
+    ----------
+    args : 
+
+    Returns
+    -------
+    XY : cleaned and formatted training database
+
+    """
+
     parser = argparse.ArgumentParser(description='Performs maximum likelihood calculations for reactor parameter prediction.')
     
     # hard-coded filepaths
@@ -225,7 +273,7 @@ def parse_args(args):
     parser.add_argument('-r', '--ratios', action='store_true', default=False, 
                         help='compute isotopic ratios instead of using concentrations (default)')
     parser.add_argument('-o', '--outfile', default=outfile,
-                        help='file path to output to override default (test_mll.csv)')
+                        help='file path to output to override default')
     
     return parser.parse_args(args)
 
@@ -243,31 +291,17 @@ def main():
     args = parse_args(sys.argv[1:])
 
     # training set
-    XY = pd.read_pickle(args.train_db)
-    XY.reset_index(inplace=True, drop=True)
-    if 'total' in XY.columns:
-        XY.drop('total', axis=1, inplace=True)
-    XY = XY.loc[XY['Burnup'] > 0]
-
-    #### TO REMOVE ####
-    # small db for testing code
-    #XY = XY.sample(50)
-    XY = XY.head(25)
-    #### END REMOVE ####
+    XY = format_XY(args.train_db)
 
     # testing set
     if args.ext_test == True:
         test = pd.read_pickle(args.test_db)
-        # order of columns must match, in-script test:
+        # In-script test: order of columns must match:
         if XY.columns.tolist() != test.columns.tolist():
             if sorted(XY.columns.tolist()) == sorted(test.columns.tolist()):
                 test = test[XY.columns]
             else:
                 sys.exit('Feature sets are different')
-        #### TO REMOVE ####
-        # small db for testing code
-        test = test.sample(2)
-        #### END REMOVE ####
     else: 
         test = XY.copy()
         
@@ -284,14 +318,12 @@ def main():
     unc = float(args.sim_unc)
     pred_df = mll_testset(XY, test, unc, lbls)
     pred_df = calc_errors(pred_df, lbls)
-    
-    fname_csv = args.outfile
-    pred_df.to_csv(fname_csv)
-    # testing multiple formats in case the DBs get big enough for this to matter
-    #pred_pkl = fname + '.pkl'
-    #pickle.dump(pred_df, open(pred_pkl, 'wb'))
-    #compression_opts = dict(method='zip', archive_name='fname' + '_comp.csv')
-    #pred_df.to_csv(fname + '.zip', compression=compression_opts)
+
+    # In-script test: final training db should equal intro training db:
+    check_traindb_equal(XY, args.train_db)
+
+    fname = args.outfile
+    pred_df.to_csv(fname)
 
     return
 

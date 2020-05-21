@@ -26,6 +26,22 @@ def calc_ll_exp(x, std):
     ll = -0.5 * ((x / std)**2 + np.log(2 * np.pi) + 2 * np.log(std))
     return ll
 
+def test_format_XY(tmpdir, dfXY):
+    #XY, _, _, _ = dfXY
+    #XY['Burnup'] = [1, 1, 0]
+    #XY['total'] = [1, 1, 1]
+    XY = pd.DataFrame({'feature' : [1, 2, 3],
+                       'total' : [1, 2, 3],
+                       'Burnup' : [1, 1, 0]},
+                       index = [0, 1, 2])
+    pkl_db = tmpdir.join('db.pkl')
+    pickle.dump(XY, open(pkl_db, 'wb'))
+    exp = pd.DataFrame({'feature' : [1, 2], 
+                        'Burnup' : [1, 1]},
+                        index = [0, 1])
+    obs = format_XY(pkl_db)
+    assert obs.equals(exp)
+
 def test_ratios():
     ratio_list = ['A/B', 'B/A']
     labels = ['label']
@@ -80,10 +96,6 @@ def test_mll_testset_ext(dfXY):
                           index = [0])
     obs_1 = mll_testset(XY, test, unc, lbls)
     assert obs_1.equals(exp_1)
-
-# def test_mll_testset_drop_replace():
-# need to test that the db is in fact stating the same (not slowly getting deleted)
-# want to also test the drop is working, that a test sample can't predict itself from the train db
 
 def test_calc_errors():
     pred_df = pd.DataFrame({'sim_idx' : ['A', 'B'],
