@@ -262,7 +262,7 @@ def parse_args(args):
     # hard-coded filepaths
     dbfile = '~/prep-pkls/nucmoles_opusupdate_aug2019/not-scaled_15nuc.pkl'
     sfcompofile = '~/sfcompo/format_clean/sfcompo_formatted.pkl'
-    outfile = 'test_mll.csv'
+    outfile = 'test_mll'
     
     parser.add_argument('-unc', '--sim_unc', 
                         default=0.05, type=float,
@@ -324,7 +324,7 @@ def main():
     # In-script test: final training db should equal intro training db:
     check_traindb_equal(XY, args.train_db, args.ratios, ratio_list, lbls)
 
-    fname = args.outfile
+    fname = args.outfile + '.csv'
     pred_df.to_csv(fname)
 
     return

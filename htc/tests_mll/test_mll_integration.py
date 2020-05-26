@@ -16,11 +16,11 @@ import pandas as pd
                           ]
                          )
 def test_integration(tmpdir, exp, argv):
-    outfile = tmpdir.join('output.csv')
+    outfile = tmpdir.join('output')
     cmd_list = ['./mll_calc/mll_calc.py'] + argv + ['-o', outfile]
     subprocess.run(cmd_list)
     # Just testing # of lines in final output for now
-    with open(outfile, 'r') as f: 
+    with open(outfile + '.csv', 'r') as f: 
         reader = csv.reader(f)
         obs_lines = len(list(reader))
     assert obs_lines == exp
