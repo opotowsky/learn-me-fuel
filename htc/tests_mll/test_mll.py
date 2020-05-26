@@ -10,11 +10,6 @@ def dfXY():
     unc = 1
     lbls = ['label']
     ll_name = 'LogLikelihood_' + str(unc)
-    # Don't need 2nd feature for testing, yet?
-    #XY = pd.DataFrame({'feature1' : [0, 1, 3], 
-    #                   'feature2' : [1, 1, 1],
-    #                   'label' : ['X', 'Y', 'Z']},
-    #                   index = [0, 1, 2])
     XY = pd.DataFrame({'feature' : [1, 2, 3], 
                        'label' : ['X', 'Y', 'Z']},
                        index = [0, 1, 2])
@@ -27,9 +22,6 @@ def calc_ll_exp(x, std):
     return ll
 
 def test_format_XY(tmpdir, dfXY):
-    #XY, _, _, _ = dfXY
-    #XY['Burnup'] = [1, 1, 0]
-    #XY['total'] = [1, 1, 1]
     XY = pd.DataFrame({'feature' : [1, 2, 3],
                        'total' : [1, 2, 3],
                        'Burnup' : [1, 1, 0]},
