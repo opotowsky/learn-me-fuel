@@ -269,10 +269,8 @@ def parse_args(args):
                         help='value of simulation uncertainty (in fraction) to apply to likelihood calculations, default is 0.05')
     parser.add_argument('-train', '--train_db', default=dbfile,
                         help='file path to a training set to override default path')
-    parser.add_argument('-test', '--test_db', default=sfcompofile,
-                        help='file path to a testing set to override default path (Note: -e flag required to utilize ext test set)')
-    parser.add_argument('-e', '--ext_test', action='store_true', default=False, 
-                        help='execute script with external testing set instead of training set evaluation (default)')
+    parser.add_argument('-test', '--test_db', default=None,
+                        help='execute script with external testing set by providing file path to a testing set')
     parser.add_argument('-r', '--ratios', action='store_true', default=False, 
                         help='compute isotopic ratios instead of using concentrations (default)')
     parser.add_argument('-o', '--outfile', default=outfile,
@@ -297,7 +295,7 @@ def main():
     XY = format_XY(args.train_db)
 
     # testing set
-    if args.ext_test == True:
+    if args.test_db is not None:
         test = pd.read_pickle(args.test_db)
         # In-script test: order of columns must match:
         if XY.columns.tolist() != test.columns.tolist():

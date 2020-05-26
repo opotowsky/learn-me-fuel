@@ -107,12 +107,12 @@ def test_calc_errors():
 def test_parse_args():
     argv1 = []
     args = parse_args(argv1)
-    obs = [args.sim_unc, args.ext_test, args.ratios]
-    exp = [0.05, False, False]
+    obs = [args.sim_unc, args.ratios]
+    exp = [0.05, False]
     assert obs == exp
-    argv2 = ['-e', '-unc', '0.1', '-r', '-test', 'yy', '-train', 'xx', '-o', 'zz']
+    argv2 = ['-unc', '0.1', '-r', '-test', 'yy', '-train', 'xx', '-o', 'zz']
     args = parse_args(argv2)
-    obs = [args.sim_unc, args.train_db, args.test_db, args.ext_test, args.ratios, args.outfile]
-    exp = [0.1, 'xx', 'yy', True, True, 'zz']
+    obs = [args.sim_unc, args.train_db, args.test_db, args.ratios, args.outfile]
+    exp = [0.1, 'xx', 'yy', True, 'zz']
     assert obs == exp
     
