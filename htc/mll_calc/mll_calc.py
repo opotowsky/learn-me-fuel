@@ -78,7 +78,7 @@ def ratios(XY, ratio_list, labels):
     ----------
     XY : dataframe of spent fuel entries containing nuclide measurements and 
          their labels
-    ratio_list : list of ratios desired
+    ratio_list : list of nuclide ratios
     labels : list of label titles in the dataframe
 
     Returns
@@ -205,7 +205,7 @@ def mll_testset(XY, test, unc, lbls):
                          ], axis=1)
     return pred_df
 
-def check_traindb_equal(final, db_path):
+def check_traindb_equal(final, db_path, arg_ratios, ratio_list, lbls):
     """
     Checks at end of script that the database was not altered
     
@@ -213,9 +213,12 @@ def check_traindb_equal(final, db_path):
     ----------
     final : training database dataframe at end of script
     db_path : path to pkl file containing training database
+    ratios : Boolean arg indicating whether or not nuclide ratios are being used
     
     """
     initial = format_XY(db_path)
+    if arg_ratios == True:
+        initial = ratios(initial, ratio_list, lbls)
     if not initial.equals(final):
         sys.exit('Final training database does not equal initial database')
     return
@@ -305,13 +308,14 @@ def main():
     else: 
         test = XY.copy()
         
+    lbls = ['ReactorType', 'CoolingTime', 'Enrichment', 'Burnup', 'OrigenReactor']
+    # TO DO: need some better way to handle varying ratio lists
     tamu_list = ['cs137/cs133', 'cs134/cs137', 'cs135/cs137', 'ba136/ba138', 
                  'sm150/sm149', 'sm152/sm149', 'eu154/eu153', 'pu240/pu239', 
                  'pu241/pu239', 'pu242/pu239'
                  ]
-    lbls = ['ReactorType', 'CoolingTime', 'Enrichment', 'Burnup', 'OrigenReactor']
+    ratio_list = tamu_list
     if args.ratios == True:
-        ratio_list = tamu_list
         XY = ratios(XY, ratio_list, lbls)
         test = ratios(test, ratio_list, lbls)
     
@@ -320,7 +324,7 @@ def main():
     pred_df = calc_errors(pred_df, lbls)
 
     # In-script test: final training db should equal intro training db:
-    check_traindb_equal(XY, args.train_db)
+    check_traindb_equal(XY, args.train_db, args.ratios, ratio_list, lbls)
 
     fname = args.outfile
     pred_df.to_csv(fname)

@@ -9,9 +9,10 @@ import pandas as pd
 @pytest.mark.parametrize('exp, argv',
                          [(11, ['-train', './tests_mll/sample10sim.pkl']), 
                           (3, ['-train', './tests_mll/sample10sim.pkl', 
-                               '-e', '-test', './tests_mll/sfcompo2.pkl'
-                               ]
-                           )
+                               '-e', '-test', './tests_mll/sfcompo2.pkl']),
+                          (11, ['-train', './tests_mll/sample10sim.pkl', '-r']), 
+                          (3, ['-train', './tests_mll/sample10sim.pkl', 
+                               '-e', '-test', './tests_mll/sfcompo2.pkl', '-r'])
                           ]
                          )
 def test_integration(tmpdir, exp, argv):
