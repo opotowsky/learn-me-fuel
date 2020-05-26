@@ -16,7 +16,7 @@ import pandas as pd
                           ]
                          )
 def test_integration(tmpdir, exp, argv):
-    outfile = tmpdir.join('output')
+    outfile = tmpdir.join('output.csv')
     cmd_list = ['./mll_calc/mll_calc.py'] + argv + ['-o', outfile]
     subprocess.run(cmd_list)
     # Just testing # of lines in final output for now
