@@ -259,22 +259,22 @@ def parse_args(args):
 
     parser = argparse.ArgumentParser(description='Performs maximum likelihood calculations for reactor parameter prediction.')
     
-    # hard-coded filepaths
-    dbfile = '~/prep-pkls/nucmoles_opusupdate_aug2019/not-scaled_15nuc.pkl'
-    sfcompofile = '~/sfcompo/format_clean/sfcompo_formatted.pkl'
-    outfile = 'test_mll'
+    # local filepaths, FYI:
+    # train_db = '~/prep-pkls/nucmoles_opusupdate_aug2019/not-scaled_15nuc.pkl'
+    # test_db = '~/sfcompo/format_clean/sfcompo_formatted.pkl'
     
-    parser.add_argument('-unc', '--sim_unc', 
-                        default=0.05, type=float,
-                        help='value of simulation uncertainty (in fraction) to apply to likelihood calculations, default is 0.05')
-    parser.add_argument('-train', '--train_db', default=dbfile,
-                        help='file path to a training set to override default path')
-    parser.add_argument('-test', '--test_db', default=None,
+    parser.add_argument('sim_unc', metavar='sim-uncertainty', type=float,
+                        help='value of simulation uncertainty (in fraction) to apply to likelihood calculations')
+    parser.add_argument('outfile', metavar='csv-output',  help='name for csv output file')
+    parser.add_argument('train_db', metavar='reactor-db', help='file path to a training set')
+    parser.add_argument('--ext-test', dest='test_db', 
                         help='execute script with external testing set by providing file path to a testing set')
-    parser.add_argument('-r', '--ratios', action='store_true', default=False, 
-                        help='compute isotopic ratios instead of using concentrations (default)')
-    parser.add_argument('-o', '--outfile', default=outfile,
-                        help='file path to output to override default')
+    parser.add_argument('--no-ext-test', dest='test_db', default=None,
+                        help='do not execute script with external testing set')
+    parser.add_argument('--ratios', dest='ratios', action='store_true',
+                        help='compute isotopic ratios instead of using concentrations')
+    parser.add_argument('--no-ratios', dest='ratios', action='store_false', 
+                        help='compute using concentrations instead of isotopic ratios')
     
     return parser.parse_args(args)
 
