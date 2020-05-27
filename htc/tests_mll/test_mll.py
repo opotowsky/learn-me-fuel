@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 
-from mll_calc.mll_calc import *
+from mll_calc.mll_calc import format_XY, ratios, get_pred, mll_testset, calc_errors, parse_args
+import pickle
 import pytest
 import numpy as np
 import pandas as pd
@@ -46,33 +47,33 @@ def test_ratios():
     obs = ratios(XY, ratio_list, labels)
     assert obs.equals(exp)
 
-@pytest.mark.parametrize('sim_idx, exp_1',
+@pytest.mark.parametrize('sim_idx, exp',
                          [(0, pd.DataFrame({'pred_label' : ['Y'], 'LL' : [calc_ll_exp(1, 2)]}, index = [1])),
                           (1, pd.DataFrame({'pred_label' : ['X'], 'LL' : [calc_ll_exp(1, 1)]}, index = [0])),
                           (2, pd.DataFrame({'pred_label' : ['Y'], 'LL' : [calc_ll_exp(1, 2)]}, index = [1]))
                           ]
                          )
-def test_get_pred(dfXY, sim_idx, exp_1):
+def test_get_pred(dfXY, sim_idx, exp):
     XY, unc, lbls, ll_name = dfXY
     test_sample = XY.loc[sim_idx].drop(lbls)
     XY.drop(sim_idx, inplace=True)
     #renaming LL col for now, until I understand parametrization with fixures
-    exp_1.rename(columns={'LL': ll_name}, inplace=True)
-    obs_1 = get_pred(XY, test_sample, unc, lbls)
-    assert obs_1.equals(exp_1)
+    exp.rename(columns={'LL': ll_name}, inplace=True)
+    obs = get_pred(XY, test_sample, unc, lbls)
+    assert obs.equals(exp)
 
 def test_mll_testset_XY(dfXY):
     XY, unc, lbls, ll_name = dfXY
     test = XY.copy()
     ll_exp = [calc_ll_exp(1, 2), calc_ll_exp(1, 1), calc_ll_exp(1, 2)]
-    exp_1 = pd.DataFrame({'sim_idx' : [0, 1, 2],
+    exp = pd.DataFrame({'sim_idx' : [0, 1, 2],
                           'label' : ['X', 'Y', 'Z'],
                           'pred_idx' : [1, 0, 1],
                           'pred_label' : ['Y', 'X', 'Y'],
                           ll_name : ll_exp}, 
                           index = [0, 1, 2])
-    obs_1 = mll_testset(XY, test, unc, lbls)
-    assert obs_1.equals(exp_1)
+    obs = mll_testset(XY, test, unc, lbls)
+    assert obs.equals(exp)
 
 def test_mll_testset_ext(dfXY):
     XY, unc, lbls, ll_name = dfXY
@@ -80,14 +81,14 @@ def test_mll_testset_ext(dfXY):
                        'label' : ['W']},
                        index = ['A'])
     ll_exp = [calc_ll_exp(1, 3)]
-    exp_1 = pd.DataFrame({'sim_idx' : ['A'],
+    exp = pd.DataFrame({'sim_idx' : ['A'],
                           'label' : ['W'],
                           'pred_idx' : [2],
                           'pred_label' : ['Z'],
                           ll_name : ll_exp}, 
                           index = [0])
-    obs_1 = mll_testset(XY, test, unc, lbls)
-    assert obs_1.equals(exp_1)
+    obs = mll_testset(XY, test, unc, lbls)
+    assert obs.equals(exp)
 
 def test_calc_errors():
     pred_df = pd.DataFrame({'sim_idx' : ['A', 'B'],
