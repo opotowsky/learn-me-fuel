@@ -1,3 +1,3 @@
---sim_unc, 0.05
---sim_unc, 0.05, --test_db, sfcompo.pkl
---sim_unc, 0.05, --test_db, sfcompo.pkl,  --ratios
+0.05, sample10sim.pkl, sfcompo2.pkl, 05_notest_noratios, --no-ext-test, --no-ratios
+0.05, sample10sim.pkl, sfcompo2.pkl, 05_notest_ratios, --no-ext-test, --ratios
+0.05, sample10sim.pkl, sfcompo2.pkl, 05_test_ratios, --ext-test, --ratios

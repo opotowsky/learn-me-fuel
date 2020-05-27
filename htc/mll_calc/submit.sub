@@ -1,11 +1,11 @@
 universe = vanilla
-log = submit_$(unc)_$(ratio).log
-error = submit_$(unc)_$(ratio).err
-output = submit_$(unc)_$(ratio).out
+log = submit_$(outcsv).log
+error = submit_$(outcsv).err
+output = submit_$(outcsv).out
 
 requirements = (OpSysMajorVer == 7)
 executable = run_python.sh
-arguments = $(unc) $(ratio)
+arguments = $(unc) $(train) $(test) $(outcsv) $(ext_test) $(ratio)
 
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
@@ -15,4 +15,4 @@ request_cpus = 1
 request_memory = 4GB
 request_disk = 2GB
 
-queue unc,ratio from params_mll_calc.txt
+queue unc, train, test, outcsv, ext_test, ratio from params_mll_calc.txt
