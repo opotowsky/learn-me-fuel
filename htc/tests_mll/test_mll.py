@@ -105,15 +105,16 @@ def test_calc_errors():
     obs = calc_errors(pred_df, true_lbls)
     assert obs.equals(exp)
 
-def test_parse_args():
-    argv1 = []
-    args = parse_args(argv1)
-    obs = [args.sim_unc, args.ratios]
-    exp = [0.05, False]
+@pytest.mark.parametrize('argv, exp',
+                         [(['0.05', 'xx', 'yy', 'zz', '--ext-test', '--ratios'], 
+                           [0.05, 'xx', 'yy', 'zz', True, True]
+                           ),
+                          (['0.05', 'xx', 'yy', 'zz', '--no-ext-test', '--no-ratios'], 
+                           [0.05, 'xx', 'yy', 'zz', False, False]
+                           )
+                          ]
+                         )
+def test_parse_args(argv, exp):
+    args = parse_args(argv)
+    obs = [args.sim_unc, args.train_db, args.test_db, args.outfile, args.ext_test, args.ratios]
     assert obs == exp
-    argv2 = ['-unc', '0.1', '-r', '-test', 'yy', '-train', 'xx', '-o', 'zz']
-    args = parse_args(argv2)
-    obs = [args.sim_unc, args.train_db, args.test_db, args.ratios, args.outfile]
-    exp = [0.1, 'xx', 'yy', True, 'zz']
-    assert obs == exp
-    

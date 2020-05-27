@@ -265,11 +265,12 @@ def parse_args(args):
     
     parser.add_argument('sim_unc', metavar='sim-uncertainty', type=float,
                         help='value of simulation uncertainty (in fraction) to apply to likelihood calculations')
-    parser.add_argument('outfile', metavar='csv-output',  help='name for csv output file')
     parser.add_argument('train_db', metavar='reactor-db', help='file path to a training set')
-    parser.add_argument('--ext-test', dest='test_db', 
+    parser.add_argument('test_db', metavar='testing-set', help='file path to an external testing set')
+    parser.add_argument('outfile', metavar='csv-output',  help='name for csv output file')
+    parser.add_argument('--ext-test', dest='ext_test', action='store_true',
                         help='execute script with external testing set by providing file path to a testing set')
-    parser.add_argument('--no-ext-test', dest='test_db', default=None,
+    parser.add_argument('--no-ext-test', dest='ext_test', action='store_false',
                         help='do not execute script with external testing set')
     parser.add_argument('--ratios', dest='ratios', action='store_true',
                         help='compute isotopic ratios instead of using concentrations')
@@ -295,7 +296,7 @@ def main():
     XY = format_XY(args.train_db)
 
     # testing set
-    if args.test_db is not None:
+    if args.ext_test == True:
         test = pd.read_pickle(args.test_db)
         # In-script test: order of columns must match:
         if XY.columns.tolist() != test.columns.tolist():
