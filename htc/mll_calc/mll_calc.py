@@ -6,7 +6,6 @@ import argparse
 import numpy as np
 import pandas as pd
 import scipy.stats as stats
-from sklearn.metrics import accuracy_score, explained_variance_score, mean_absolute_error
 
 def like_calc(y_sim, y_mes, std):
     """
@@ -139,36 +138,7 @@ def get_pred(XY, test_sample, unc, lbls):
 
     return pred_ll
 
-def calc_errors(pred_df, true_lbls):
-    """
-    Given a dataframe containing predictions and log-likelihood value,
-    calculates absolute error between predictions and ground truth (or boolean
-    where applicable)
-
-    Parameters
-    ----------
-    pred_df : dataframe with ground truth and predicted labels
-    true_lbls : list of ground truth column labels 
-    
-    Returns
-    -------
-    pred_df : dataframe with ground truth, predictions, and errors between the 
-              two
-    
-    """
-    # this line is a repeat from get_pred 
-    # (otherwise it needs to get passed around a bunch)
-    pred_lbls = ["pred_" + s for s in true_lbls] 
-    for true, pred in zip(true_lbls, pred_lbls):
-        if 'Reactor' in true:
-            col_name = true + '_Score'
-            pred_df[col_name] = np.where(pred_df.loc[:, true] == pred_df.loc[:, pred], True, False)
-        else: 
-            col_name = true + '_Error'
-            pred_df[col_name] = np.abs(pred_df.loc[:, true]  - pred_df.loc[:, pred])
-    return pred_df
-
-def mll_testset(XY, test, unc, lbls):
+def mll_testset(XY, test, loov, unc, lbls):
     """
     Given a database of spent fuel entries containing a nuclide vector and the
     reactor operation parameters, and an equally formatted database of test
@@ -180,6 +150,7 @@ def mll_testset(XY, test, unc, lbls):
     ----------
     XY : dataframe with nuclide measurements and reactor parameters
     test : dataframe with test cases to predict in same format as train
+    loov : boolean indicating which of external test set or LOOV is being performed
     unc : float that represents the simulation uncertainty in nuclide measurements
     lbls : list of reactor parameters to be predicted
 
@@ -189,7 +160,6 @@ def mll_testset(XY, test, unc, lbls):
     
     """
     pred_df = pd.DataFrame()
-    loov = XY.equals(test)
     for sim_idx, row in test.iterrows():
         test_sample = row.drop(lbls)
         test_answer = row[lbls]
@@ -265,9 +235,14 @@ def parse_args(args):
     
     parser.add_argument('sim_unc', metavar='sim-uncertainty', type=float,
                         help='value of simulation uncertainty (in fraction) to apply to likelihood calculations')
-    parser.add_argument('train_db', metavar='reactor-db', help='file path to a training set')
-    parser.add_argument('test_db', metavar='testing-set', help='file path to an external testing set')
-    parser.add_argument('outfile', metavar='csv-output',  help='name for csv output file')
+    parser.add_argument('train_db', metavar='reactor-db', 
+                        help='file path to a training set')
+    parser.add_argument('test_db', metavar='testing-set', 
+                        help='file path to an external testing set')
+    parser.add_argument('outfile', metavar='csv-output',  
+                        help='name for csv output file')
+    parser.add_argument('db_rows', metavar='db-interval', nargs=2, type=int,
+                        help='indices of the database interval for the job')
     parser.add_argument('--ext-test', dest='ext_test', action='store_true',
                         help='execute script with external testing set by providing file path to a testing set')
     parser.add_argument('--no-ext-test', dest='ext_test', action='store_false',
@@ -305,7 +280,7 @@ def main():
             else:
                 sys.exit('Feature sets are different')
     else: 
-        test = XY.copy()
+        test = XY.iloc[args.db_rows[0]:args.db_rows[1]]
         
     lbls = ['ReactorType', 'CoolingTime', 'Enrichment', 'Burnup', 'OrigenReactor']
     # TO DO: need some better way to handle varying ratio lists
@@ -319,8 +294,7 @@ def main():
         test = ratios(test, ratio_list, lbls)
     
     unc = float(args.sim_unc)
-    pred_df = mll_testset(XY, test, unc, lbls)
-    pred_df = calc_errors(pred_df, lbls)
+    pred_df = mll_testset(XY, test, args.ext_test, unc, lbls)
 
     # In-script test: final training db should equal intro training db:
     check_traindb_equal(XY, args.train_db, args.ratios, ratio_list, lbls)
