@@ -138,7 +138,7 @@ def get_pred(XY, test_sample, unc, lbls):
 
     return pred_ll
 
-def mll_testset(XY, test, loov, unc, lbls):
+def mll_testset(XY, test, ext_test, unc, lbls):
     """
     Given a database of spent fuel entries containing a nuclide vector and the
     reactor operation parameters, and an equally formatted database of test
@@ -150,7 +150,7 @@ def mll_testset(XY, test, loov, unc, lbls):
     ----------
     XY : dataframe with nuclide measurements and reactor parameters
     test : dataframe with test cases to predict in same format as train
-    loov : boolean indicating which of external test set or LOOV is being performed
+    ext_test : boolean indicating which of external test set or LOOV is being performed
     unc : float that represents the simulation uncertainty in nuclide measurements
     lbls : list of reactor parameters to be predicted
 
@@ -163,10 +163,10 @@ def mll_testset(XY, test, loov, unc, lbls):
     for sim_idx, row in test.iterrows():
         test_sample = row.drop(lbls)
         test_answer = row[lbls]
-        if loov:
-            pred_ll = get_pred(XY.drop(sim_idx), test_sample, unc, lbls)
-        else:
+        if ext_test:
             pred_ll = get_pred(XY, test_sample, unc, lbls)
+        else:
+            pred_ll = get_pred(XY.drop(sim_idx), test_sample, unc, lbls)
         if pred_df.empty:
             pred_df = pd.DataFrame(columns = pred_ll.columns.to_list())
         pred_df = pred_df.append(pred_ll)
