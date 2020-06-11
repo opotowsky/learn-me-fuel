@@ -5,7 +5,7 @@ output = job_$(outcsv).out
 
 requirements = (OpSysMajorVer == 7)
 executable = run_python.sh
-arguments = $(unc) $(train) $(test) $(outcsv) $(ext_test) $(ratio)
+arguments = $(unc) $(train) $(test) $(outcsv) $(row0) $(row1) $(ext_test) $(ratio)
 
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
