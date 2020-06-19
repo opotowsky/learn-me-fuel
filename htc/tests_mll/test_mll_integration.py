@@ -14,9 +14,10 @@ import pandas as pd
                           ]
                          )
 def test_integration(tmpdir, exp, bool_argv):
-    const_argv = ['0.05', './tests_mll/sample10sim.pkl', './tests_mll/sfcompo2.pkl']
+    const_argv = ['0.05', './tests_mll/sample10sim.pkl', './tests_mll/sfcompo2.pkl'] 
+    htc_argv = ['JobDir', '0', '10']
     outfile = tmpdir.join('output')
-    cmd_list = ['./mll_calc/mll_calc.py'] + const_argv + [outfile] + bool_argv
+    cmd_list = ['./mll_calc/mll_calc.py'] + const_argv + [outfile] + htc_argv + bool_argv
     subprocess.run(cmd_list)
     # Just testing # of lines in final output for now
     with open(outfile + '.csv', 'r') as f: 

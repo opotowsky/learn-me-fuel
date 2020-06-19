@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 
-from mll_calc.mll_calc import format_XY, ratios, get_pred, mll_testset, calc_errors, parse_args
+from mll_calc.mll_calc import format_XY, ratios, get_pred, mll_testset, parse_args
 import pickle
 import pytest
 import numpy as np
@@ -64,6 +64,7 @@ def test_get_pred(dfXY, sim_idx, exp):
 
 def test_mll_testset_XY(dfXY):
     XY, unc, lbls, ll_name = dfXY
+    ext_test = False
     test = XY.copy()
     ll_exp = [calc_ll_exp(1, 2), calc_ll_exp(1, 1), calc_ll_exp(1, 2)]
     exp = pd.DataFrame({'sim_idx' : [0, 1, 2],
@@ -72,11 +73,12 @@ def test_mll_testset_XY(dfXY):
                           'pred_label' : ['Y', 'X', 'Y'],
                           ll_name : ll_exp}, 
                           index = [0, 1, 2])
-    obs = mll_testset(XY, test, unc, lbls)
+    obs = mll_testset(XY, test, ext_test, unc, lbls)
     assert obs.equals(exp)
 
 def test_mll_testset_ext(dfXY):
     XY, unc, lbls, ll_name = dfXY
+    ext_test = True
     test = pd.DataFrame({'feature' : [4], 
                        'label' : ['W']},
                        index = ['A'])
@@ -87,34 +89,19 @@ def test_mll_testset_ext(dfXY):
                           'pred_label' : ['Z'],
                           ll_name : ll_exp}, 
                           index = [0])
-    obs = mll_testset(XY, test, unc, lbls)
-    assert obs.equals(exp)
-
-def test_calc_errors():
-    pred_df = pd.DataFrame({'sim_idx' : ['A', 'B'],
-                            'NumLabel' : [1.2, 7.5],
-                            'Reactor' : ['X', 'Y'],
-                            'pred_idx' : [0, 1],
-                            'pred_NumLabel' : [0.2, 10],
-                            'pred_Reactor' : ['X', 'Z'],
-                            'LogLikelihood_xx' : [1, 2]}, 
-                            index = [0, 1])
-    true_lbls = ['Reactor', 'NumLabel']
-    exp = pred_df.copy()
-    exp['Reactor_Score'], exp['NumLabel_Error'] = [[True, False], [1, 2.5]]
-    obs = calc_errors(pred_df, true_lbls)
+    obs = mll_testset(XY, test, ext_test, unc, lbls)
     assert obs.equals(exp)
 
 @pytest.mark.parametrize('argv, exp',
-                         [(['0.05', 'xx', 'yy', 'zz', '--ext-test', '--ratios'], 
-                           [0.05, 'xx', 'yy', 'zz', True, True]
+                         [(['0.05', 'xx', 'yy', 'zz', 'dir', '0', '1', '--ext-test', '--ratios'], 
+                           [0.05, 'xx', 'yy', 'zz', 'dir', [0, 1], True, True]
                            ),
-                          (['0.05', 'xx', 'yy', 'zz', '--no-ext-test', '--no-ratios'], 
-                           [0.05, 'xx', 'yy', 'zz', False, False]
+                          (['0.05', 'xx', 'yy', 'zz', 'dir', '0', '1', '--no-ext-test', '--no-ratios'], 
+                           [0.05, 'xx', 'yy', 'zz', 'dir', [0, 1], False, False]
                            )
                           ]
                          )
 def test_parse_args(argv, exp):
     args = parse_args(argv)
-    obs = [args.sim_unc, args.train_db, args.test_db, args.outfile, args.ext_test, args.ratios]
+    obs = [args.sim_unc, args.train_db, args.test_db, args.outfile, args.outdir, args.db_rows, args.ext_test, args.ratios]
     assert obs == exp
