@@ -10,4 +10,4 @@ export PYTHONPATH=$PWD/packages
 export HOME=$PWD
 
 # run your script
-python3 mll_calc.py $1 $2 $3 $4 $5 $6 $7 $8
+python3 mll_calc.py $1 $2 $3 $4 $5 $6 $7 $8 $9
