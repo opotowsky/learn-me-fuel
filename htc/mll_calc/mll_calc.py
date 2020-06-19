@@ -241,6 +241,8 @@ def parse_args(args):
                         help='file path to an external testing set')
     parser.add_argument('outfile', metavar='csv-output',  
                         help='name for csv output file')
+    parser.add_argument('outdir', metavar='output-directory',  
+                        help='directory in which to organize output csv')
     parser.add_argument('db_rows', metavar='db-interval', nargs=2, type=int,
                         help='indices of the database interval for the job')
     parser.add_argument('--ext-test', dest='ext_test', action='store_true',
