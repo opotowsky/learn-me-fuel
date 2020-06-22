@@ -65,7 +65,7 @@ def unc_calc(y_sim, y_mes, sim_unc_sq, mes_unc_sq):
     unc = ((y_sim - y_mes) / sim_unc_sq)**2 * (sim_unc_sq + mes_unc_sq)
     unc.replace([np.inf, -np.inf], 0, inplace=True)
     unc.fillna(0, inplace=True)
-    ll_unc = np.sqrt(unc.sum(axis=1))
+    ll_unc = np.sqrt(unc.sum())
     return ll_unc
 
 def ratios(XY, ratio_list, labels):
