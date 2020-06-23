@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 
+import csv
 import sys
 import pickle
 import argparse
@@ -98,44 +99,119 @@ def ratios(XY, ratio_list, labels):
     XY_ratios = XY_ratios[cols]
     return XY_ratios
 
+def format_pred(pred_row, ll_list, unc_list, lbls, ll_name, unc_name):
+    """
+    This separates off the formatting from the get_pred function for
+    cleanliness. It adds new columns (for the CDF lists) and removes the
+    nuclide measurements from the returned single-row dataframe
+
+    Parameters
+    ----------
+    pred_row : single-row dataframe including nuclide measurements, the 
+               prediction (i.e., the predicted labels), LLmax, LLUnc
+    ll_list : list of 7 log-likelihoods for CDF
+    unc_list : list of corresponding uncertainties to the above
+    lbls : list of labels that are predicted
+    ll_name : string representing column name for LLmax
+    unc_name : string representing column name for LLUnc
+
+
+    Returns
+    -------
+    pred_row : single-row dataframe including the prediction (i.e., predicted 
+               labels), LLmax, LLUnc, and a list of LLs and their Uncs to 
+               populate a CDF
+    
+    """
+    ll_list_name = 'CDF_' + ll_name
+    unc_list_name = 'CDF_' + unc_name
+   
+    # hacky workaround to get list into DF element
+    pred_row[ll_list_name] = np.nan
+    pred_row[unc_list_name] = np.nan
+    pred_row[ll_list_name] = pred_row[ll_list_name].astype(object)
+    pred_row[unc_list_name] = pred_row[unc_list_name].astype(object)
+    pred_row.iat[0, pred_row.columns.get_loc(ll_list_name)] = ll_list
+    pred_row.iat[0, pred_row.columns.get_loc(unc_list_name)] = unc_list
+    
+    pred_lbls = ["pred_" + s for s in lbls] 
+    pred_row.rename(columns=dict(zip(lbls, pred_lbls)), inplace=True)
+    
+    pred_lbls.extend([ll_name, unc_name, ll_list_name, unc_list_name])
+    pred_row = pred_row.loc[:, pred_lbls]
+
+    return pred_row
+
+def ll_cdf(ll_df, ll_name, unc_name):
+    """
+    Sorts the calculated log-likelihoods to return a list of log-likelihoods
+    that can populate a CDF. The list includes: largest, 2nd largest, and the
+    following percentiles: 10th, 25th, 50th, 75th, 90th
+
+    Parameters
+    ----------
+    ll_df : two-column dataframe including only log-likelihood calculations 
+            and their uncertainties
+    ll_name : string representing column name for LLmax
+    unc_name : string representing column name for LLUnc
+
+    Returns
+    -------
+    ll_list : list of 7 log-likelihoods to populate a CDF
+    unc_list : list of corresponding uncertainties to the above
+
+    """
+    
+    maxs = ll_df.nlargest(2, ll_name)
+    ll_list = maxs[ll_name].tolist()
+    unc_list = maxs[unc_name].tolist()
+    
+    quants = [0.9998, 0.9996, 0.9988, 0.9, 0.5, 0.1, 0.01]
+    quant_df = ll_df.quantile(quants)
+    ll_list.extend(quant_df[ll_name].tolist())
+    unc_list.extend(quant_df[unc_name].tolist())
+
+    return ll_list, unc_list
+
 def get_pred(XY, test_sample, unc, lbls):
     """
     Given a database of spent fuel entries and a test sample (nuclide
     measurements only), calculates the log-likelihood (and LL-uncertainty) of
     that sample against every database entry.  Determines the max LL, and
-    therefore the corresponding prediction in the database.  Returns that
-    prediction as a single row dataframe.
+    therefore the corresponding prediction in the database.  Also determines a
+    list of LL measurements that populate a CDF. Returns that prediction and LL
+    information as a single row dataframe.
 
     Parameters
     ----------
     XY : dataframe with nuclide measurements and reactor parameters
-    test_sample : series of a sample to be predicted (nuclide measurements only)
-    unc : float that represents the simulation uncertainty in nuclide measurements
+    test_sample : series of a sample to be predicted (nuclide measurements 
+                  only)
+    unc : float that represents the simulation uncertainty in nuclide 
+          measurements
     lbls : list of reactor parameters to be predicted
 
     Returns
     -------
-    pred_ll : dataframe with single row of prediction (predicted labels only) 
-              and its log-likelihood
+    pred_ll : single-row dataframe including the prediction (i.e., predicted 
+              labels), its max log-likelihood/uncertainty, and a list of 
+              log-likelihoods and their uncertainties to populate a CDF
 
     """
-    ll_name = 'LogLikelihood_' + str(unc)
-    unc_name = 'LLUncertainty_' + str(unc)
+    ll_name = 'LogLL_' + str(unc)
+    unc_name = 'LLUnc_' + str(unc)
     X = XY.drop(lbls, axis=1).copy()
     
     XY[ll_name] = X.apply(lambda row: ll_calc(row, test_sample, unc*row), axis=1)
-    #XY[unc_name] = X.apply(lambda row: unc_calc(row, test_sample, (unc*row)**2, (unc*test_sample)**2), axis=1)
+    XY[unc_name] = X.apply(lambda row: unc_calc(row, test_sample, (unc*row)**2, (unc*test_sample)**2), axis=1)
     
-    max_idx = XY[ll_name].idxmax()
-    pred_ll = XY.loc[XY.index == max_idx].copy()
-    # need to delete likelihood column so next test sample can be calculated
-    XY.drop(ll_name, axis=1, inplace=True)
+    pred_row = XY.loc[XY.index == XY[ll_name].idxmax()].copy()
+    ll_list, unc_list = ll_cdf(XY[[ll_name, unc_name]], ll_name, unc_name) 
+    pred_ll = format_pred(pred_row, ll_list, unc_list, lbls, ll_name, unc_name)
     
-    pred_lbls = ["pred_" + s for s in lbls] 
-    pred_ll.rename(columns=dict(zip(lbls, pred_lbls)), inplace=True)
-    pred_lbls.append(ll_name)
-    pred_ll = pred_ll.loc[:, pred_lbls]
-
+    # need to delete calculated columns so next test sample can be calculated
+    XY.drop(columns=[ll_name, unc_name], inplace=True)
+    
     return pred_ll
 
 def mll_testset(XY, test, ext_test, unc, lbls):
@@ -150,8 +226,10 @@ def mll_testset(XY, test, ext_test, unc, lbls):
     ----------
     XY : dataframe with nuclide measurements and reactor parameters
     test : dataframe with test cases to predict in same format as train
-    ext_test : boolean indicating which of external test set or LOOV is being performed
-    unc : float that represents the simulation uncertainty in nuclide measurements
+    ext_test : boolean indicating which of external test set or LOOV is being 
+               performed
+    unc : float that represents the simulation uncertainty in nuclide 
+          measurements
     lbls : list of reactor parameters to be predicted
 
     Returns
@@ -302,6 +380,7 @@ def main():
     check_traindb_equal(XY, args.train_db, args.ratios, ratio_list, lbls)
 
     fname = args.outfile + '.csv'
+    #pred_df.to_csv(fname, quoting=csv.QUOTE_NONE, escapechar=' ')
     pred_df.to_csv(fname)
 
     return
