@@ -359,6 +359,7 @@ def main():
                 test = test[XY.columns]
             else:
                 sys.exit('Feature sets are different')
+        test = test.iloc[args.db_rows[0]:args.db_rows[1]]
     else: 
         test = XY.iloc[args.db_rows[0]:args.db_rows[1]]
         
