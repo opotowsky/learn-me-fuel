@@ -1,6 +1,5 @@
 #! /usr/bin/env python3
 
-import csv
 import sys
 import pickle
 import argparse
@@ -381,7 +380,6 @@ def main():
     check_traindb_equal(XY, args.train_db, args.ratios, ratio_list, lbls)
 
     fname = args.outfile + '.csv'
-    #pred_df.to_csv(fname, quoting=csv.QUOTE_NONE, escapechar=' ')
     pred_df.to_csv(fname)
 
     return
