@@ -1,0 +1,2 @@
+Job1, 0.05, sim_tamu_nucmols.pkl, sfcompo.pkl, --no-ext-test, --no-ratios
+Job2, 0.05, sim_tamu_nucmols.pkl, sfcompo.pkl, --no-ext-test, --ratios

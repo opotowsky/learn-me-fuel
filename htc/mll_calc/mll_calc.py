@@ -284,10 +284,10 @@ def format_XY(db_path):
     
     """
     XY = pd.read_pickle(db_path)
-    XY.reset_index(inplace=True, drop=True)
     if 'total' in XY.columns:
         XY.drop('total', axis=1, inplace=True)
     XY = XY.loc[XY['Burnup'] > 0]
+    XY.reset_index(inplace=True, drop=True)
     return XY
 
 def parse_args(args):
@@ -310,6 +310,8 @@ def parse_args(args):
     # train_db = '~/prep-pkls/nucmoles_opusupdate_aug2019/not-scaled_15nuc.pkl'
     # test_db = '~/sfcompo/format_clean/sfcompo_formatted.pkl'
     
+    parser.add_argument('outdir', metavar='output-directory',  
+                        help='directory in which to organize output csv')
     parser.add_argument('sim_unc', metavar='sim-uncertainty', type=float,
                         help='value of simulation uncertainty (in fraction) to apply to likelihood calculations')
     parser.add_argument('train_db', metavar='reactor-db', 
@@ -318,10 +320,8 @@ def parse_args(args):
                         help='file path to an external testing set')
     parser.add_argument('outfile', metavar='csv-output',  
                         help='name for csv output file')
-    parser.add_argument('outdir', metavar='output-directory',  
-                        help='directory in which to organize output csv')
-    parser.add_argument('db_rows', metavar='db-interval', nargs=2, type=int,
-                        help='indices of the database interval for the job')
+    parser.add_argument('db_row', metavar='database-row', type=int,
+                        help='index of the database row to act as test sample for the job')
     parser.add_argument('--ext-test', dest='ext_test', action='store_true',
                         help='execute script with external testing set by providing file path to a testing set')
     parser.add_argument('--no-ext-test', dest='ext_test', action='store_false',
@@ -348,7 +348,7 @@ def main():
 
     # training set
     XY = format_XY(args.train_db)
-
+    
     # testing set
     if args.ext_test == True:
         test = pd.read_pickle(args.test_db)
@@ -358,9 +358,9 @@ def main():
                 test = test[XY.columns]
             else:
                 sys.exit('Feature sets are different')
-        test = test.iloc[args.db_rows[0]:args.db_rows[1]]
+        test = test.iloc[[args.db_row]]
     else: 
-        test = XY.iloc[args.db_rows[0]:args.db_rows[1]]
+        test = XY.iloc[[args.db_row]]
         
     lbls = ['ReactorType', 'CoolingTime', 'Enrichment', 'Burnup', 'OrigenReactor']
     # TO DO: need some better way to handle varying ratio lists
@@ -377,7 +377,8 @@ def main():
     pred_df = mll_testset(XY, test, args.ext_test, unc, lbls)
 
     # In-script test: final training db should equal intro training db:
-    check_traindb_equal(XY, args.train_db, args.ratios, ratio_list, lbls)
+    if args.ext_test == False:
+        check_traindb_equal(XY, args.train_db, args.ratios, ratio_list, lbls)
 
     fname = args.outfile + '.csv'
     pred_df.to_csv(fname)

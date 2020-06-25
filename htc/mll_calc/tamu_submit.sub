@@ -1,19 +1,20 @@
 universe = vanilla
-log = job$(outcsv).log
-error = job$(outcsv).err
-output = job$(outcsv).out
+log = job$(Step).log
+error = job$(Step).err
+output = job$(Step).out
 
 requirements = (OpSysMajorVer == 7)
 executable = run_python.sh
-arguments = $(unc) $(train) $(test) $(outcsv) $(outdir) $(row0) $(row1) $(ext_test) $(ratio)
+arguments = $(Jobdir) $(unc) $(train) $(test) $(Step) $(Step) $(ext_test) $(ratio)
 
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
-initialdir = $(outdir)
+initialdir = $(Jobdir)
 transfer_input_files = http://proxy.chtc.wisc.edu/SQUID/chtc/python36.tar.gz, ../shared/packages.tar.gz, ../shared/mll_calc.py, ../shared/sim_tamu_nucmols.pkl, ../shared/sfcompo.pkl
 
 request_cpus = 1
 request_memory = 1GB
 request_disk = 1GB
 
-queue unc, train, test, outcsv, outdir, row0, row1, ext_test, ratio from params_mll_calc.txt
+# tamu db has 24678 rows
+queue 2 Jobdir, unc, train, test, ext_test, ratio from tamu_params_mll_calc.txt
