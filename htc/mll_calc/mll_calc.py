@@ -98,22 +98,18 @@ def ratios(XY, ratio_list, labels):
     XY_ratios = XY_ratios[cols]
     return XY_ratios
 
-def format_pred(pred_row, ll_list, unc_list, lbls, ll_name, unc_name):
+def format_pred(pred_row, lbls, cdf_cols):
     """
-    This separates off the formatting from the get_pred function for
-    cleanliness. It adds new columns (for the CDF lists) and removes the
-    nuclide measurements from the returned single-row dataframe
+    This separates off the formatting of the pred_ll dataframe from the 
+    get_pred function for cleanliness. 
 
     Parameters
     ----------
     pred_row : single-row dataframe including nuclide measurements, the 
-               prediction (i.e., the predicted labels), LLmax, LLUnc
-    ll_list : list of 7 log-likelihoods for CDF
-    unc_list : list of corresponding uncertainties to the above
+               prediction (i.e., the predicted labels), and all saved log-
+               likelihoods
     lbls : list of labels that are predicted
-    ll_name : string representing column name for LLmax
-    unc_name : string representing column name for LLUnc
-
+    cdf_cols : list of new LogLL columns added to prediction for CDF plot
 
     Returns
     -------
@@ -122,55 +118,56 @@ def format_pred(pred_row, ll_list, unc_list, lbls, ll_name, unc_name):
                populate a CDF
     
     """
-    ll_list_name = 'CDF_' + ll_name
-    unc_list_name = 'CDF_' + unc_name
-   
-    # hacky workaround to get list into DF element
-    pred_row[ll_list_name] = np.nan
-    pred_row[unc_list_name] = np.nan
-    pred_row[ll_list_name] = pred_row[ll_list_name].astype(object)
-    pred_row[unc_list_name] = pred_row[unc_list_name].astype(object)
-    pred_row.iat[0, pred_row.columns.get_loc(ll_list_name)] = ll_list
-    pred_row.iat[0, pred_row.columns.get_loc(unc_list_name)] = unc_list
-    
     pred_lbls = ["pred_" + s for s in lbls] 
     pred_row.rename(columns=dict(zip(lbls, pred_lbls)), inplace=True)
-    
-    pred_lbls.extend([ll_name, unc_name, ll_list_name, unc_list_name])
+    pred_lbls.extend(cdf_cols)
     pred_row = pred_row.loc[:, pred_lbls]
 
     return pred_row
 
-def ll_cdf(ll_df, ll_name, unc_name):
+def ll_cdf(pred_ll, ll_df):
     """
-    Sorts the calculated log-likelihoods to return a list of log-likelihoods
-    that can populate a CDF. The list includes: largest, 2nd largest, and the
-    following percentiles: 10th, 25th, 50th, 75th, 90th
+    Returns a single-row dataframe with the prediction/MaxLogLL with 8 new
+    columns of log-likelihoods that can populate a CDF, which includes the 2nd
+    largest LogLL, and 7 percentiles that should give a decent picture of the
+    CDF curve. (and all corresponding uncertainties)
 
     Parameters
     ----------
-    ll_df : two-column dataframe including only log-likelihood calculations 
-            and their uncertainties
-    ll_name : string representing column name for LLmax
-    unc_name : string representing column name for LLUnc
+    pred_ll : single-row dataframe including nuclide measurements, the 
+              prediction (i.e., the predicted labels), and maxLL/LLUnc
+    ll_df : two-column dataframe including log-likelihood calculations and 
+            their uncertainties for a given test sample calculation against 
+            entire training db
 
     Returns
     -------
-    ll_list : list of 7 log-likelihoods to populate a CDF
-    unc_list : list of corresponding uncertainties to the above
+    pred_ll : single-row dataframe including nuclide measurements, the 
+              prediction (i.e., the predicted labels), and all saved log-
+              likelihoods (Max and CDF-relevant)
+    cdf_cols : list of column names that are the new LogLL columns added for 
+               CDF
 
     """
-    
-    maxs = ll_df.nlargest(2, ll_name)
-    ll_list = maxs[ll_name].tolist()
-    unc_list = maxs[unc_name].tolist()
-    
-    quants = [0.9998, 0.9996, 0.9988, 0.9, 0.5, 0.1, 0.01]
-    quant_df = ll_df.quantile(quants)
-    ll_list.extend(quant_df[ll_name].tolist())
-    unc_list.extend(quant_df[unc_name].tolist())
+    old_cols = pred_ll.columns.values.tolist()
 
-    return ll_list, unc_list
+    # First, grab adjacent LL value to MaxLL
+    cols = ll_df.columns.values.tolist()
+    maxs = ll_df.nlargest(2, cols[0])
+    pred_ll['2ndMaxLogLL'] = maxs[cols[0]].iloc[1]
+    pred_ll['2ndMaxLLUnc'] = maxs[cols[1]].iloc[1]
+    
+    # Second, add columns with percentiles in the col name 
+    quants = [0.9998, 0.9988, 0.95, 0.9, 0.5, 0.1, 0.01]
+    for quant in quants:
+        quant_df = ll_df.quantile(quant)
+        pred_ll['CDF_LogLL_' + str(quant)] = quant_df.loc[cols[0]]
+        pred_ll['CDF_LLUnc_' + str(quant)] = quant_df.loc[cols[1]]
+    
+    new_cols = pred_ll.columns.values.tolist()
+    cdf_cols = [col for col in new_cols if col not in old_cols]
+
+    return pred_ll, cdf_cols
 
 def get_pred(XY, test_sample, unc, lbls):
     """
@@ -197,16 +194,17 @@ def get_pred(XY, test_sample, unc, lbls):
               log-likelihoods and their uncertainties to populate a CDF
 
     """
-    ll_name = 'LogLL_' + str(unc)
-    unc_name = 'LLUnc_' + str(unc)
+    ll_name = 'MaxLogLL_' + str(unc)
+    unc_name = 'MaxLLUnc_' + str(unc)
     X = XY.drop(lbls, axis=1).copy()
     
     XY[ll_name] = X.apply(lambda row: ll_calc(row, test_sample, unc*row), axis=1)
     XY[unc_name] = X.apply(lambda row: unc_calc(row, test_sample, (unc*row)**2, (unc*test_sample)**2), axis=1)
     
     pred_row = XY.loc[XY.index == XY[ll_name].idxmax()].copy()
-    ll_list, unc_list = ll_cdf(XY[[ll_name, unc_name]], ll_name, unc_name) 
-    pred_ll = format_pred(pred_row, ll_list, unc_list, lbls, ll_name, unc_name)
+    pred_ll, cdf_cols = ll_cdf(pred_row, XY[[ll_name, unc_name]]) 
+    cdf_cols = [ll_name, unc_name] + cdf_cols
+    pred_ll = format_pred(pred_ll, lbls, cdf_cols)
     
     # need to delete calculated columns so next test sample can be calculated
     XY.drop(columns=[ll_name, unc_name], inplace=True)
@@ -236,6 +234,8 @@ def mll_testset(XY, test, ext_test, unc, lbls):
     pred_df : dataframe with ground truth and predictions
     
     """
+    # TODO: Now that script takes a single row arg, no need to loop through
+    # test DB here or perform the concat
     pred_df = pd.DataFrame()
     for sim_idx, row in test.iterrows():
         test_sample = row.drop(lbls)
@@ -303,7 +303,6 @@ def parse_args(args):
     XY : cleaned and formatted training database
 
     """
-
     parser = argparse.ArgumentParser(description='Performs maximum likelihood calculations for reactor parameter prediction.')
     
     # local filepaths, FYI:
@@ -363,7 +362,7 @@ def main():
         test = XY.iloc[[args.db_row]]
         
     lbls = ['ReactorType', 'CoolingTime', 'Enrichment', 'Burnup', 'OrigenReactor']
-    # TO DO: need some better way to handle varying ratio lists
+    # TODO: need some better way to handle varying ratio lists
     tamu_list = ['cs137/cs133', 'cs134/cs137', 'cs135/cs137', 'ba136/ba138', 
                  'sm150/sm149', 'sm152/sm149', 'eu154/eu153', 'pu240/pu239', 
                  'pu241/pu239', 'pu242/pu239'
