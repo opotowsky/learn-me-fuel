@@ -374,7 +374,7 @@ def main():
     
     unc = float(args.sim_unc)
     pred_df = mll_testset(XY, test, args.ext_test, unc, lbls)
-
+    
     # In-script test: final training db should equal intro training db:
     if args.ext_test == False:
         check_traindb_equal(XY, args.train_db, args.ratios, ratio_list, lbls)
