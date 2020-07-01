@@ -16,6 +16,22 @@ def dfXY():
                        index = [0, 1, 2])
     return XY, unc, lbls, ll_name
 
+#@pytest.fixture
+#def dfMax():
+#    pred_max = pd.DataFrame({'feature' : 1, 'label' : 'X', 'MaxLogLL' : 1, 'MaxLLUnc' : 1})
+#    return pred_max 
+#
+#@pytest.fixture
+#def dfAll(dfMax):
+#    cols = ['MaxLogLL_1', 'MaxLLUnc_1', '2ndMaxLogLL', '2ndMaxLLUnc']
+#    quants = [0.9998, 0.9988, 0.95, 0.9, 0.5, 0.1, 0.01]
+#    for quant in quants:
+#        cols.append('CDF_LogLL_' + str(quant))
+#        cols.append('CDF_LLUnc_' + str(quant))
+#    
+#    pred_all = pred_max
+#    return 
+
 def calc_ll_exp(x, std):
     # where x = y_sim - y_mes
     # where std = unc * y_sim
