@@ -16,5 +16,5 @@ request_cpus = 1
 request_memory = 1GB
 request_disk = 1GB
 
-# tamu db has 24678 rows
-queue 2 Jobdir, unc, train, test, ext_test, ratio from tamu_params_mll_calc.txt
+# sfcompo is 544 rows
+queue 1 Jobdir, unc, train, test, ext_test, ratio from sfco_test_params.txt
