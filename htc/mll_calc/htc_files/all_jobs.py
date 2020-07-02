@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 
-uncs = [0.05] #[0.05, 0.1, 0.15, 0.2]
+uncs = [0.05, 0.1, 0.15, 0.2]
 job_dirs = ['Job' + str(i) + '_unc' + str(unc) for i, unc in enumerate(uncs)]
 pkls = ['sim_tamu_nucmols.pkl', 'sfcompo.pkl']
 
@@ -24,4 +24,4 @@ sfco = {'parent_dir' : 'sfco',
         'ratios' : '--ratios'
         }
 
-parent_jobs = [sfco]#[tamu_noratio, tamu_ratio, sfco]
+parent_jobs = [tamu_noratio, tamu_ratio, sfco]
