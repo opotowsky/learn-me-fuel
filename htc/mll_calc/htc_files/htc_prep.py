@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 
+import os
 import csv
 import subprocess
 from all_jobs import parent_jobs, kid_jobs
@@ -19,10 +20,12 @@ def make_paramstxt(parent_job, kid_jobs):
     return
 
 def make_dirs(parent_dir, kid_dirs):
-    subprocess.run(['mkdir', parent_dir])
+    if not os.path.isdir(parent_dir):
+        subprocess.run(['mkdir', parent_dir])
     for kid_dir in kid_dirs:
         job_dir = parent_dir + '/' + kid_dir
-        subprocess.run(['mkdir', job_dir])
+        if not os.path.isdir(job_dir):
+            subprocess.run(['mkdir', job_dir])
     return
 
 def main():
