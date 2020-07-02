@@ -306,7 +306,7 @@ def parse_args(args):
     parser = argparse.ArgumentParser(description='Performs maximum likelihood calculations for reactor parameter prediction.')
     
     # local filepaths, FYI:
-    # train_db = '~/prep-pkls/nucmoles_opusupdate_aug2019/not-scaled_15nuc.pkl'
+    # train_db = '~/sims_n_results/nucmoles_opusupdate_aug2019/not-scaled_15nuc.pkl'
     # test_db = '~/sfcompo/format_clean/sfcompo_formatted.pkl'
     
     parser.add_argument('outdir', metavar='output-directory',  
