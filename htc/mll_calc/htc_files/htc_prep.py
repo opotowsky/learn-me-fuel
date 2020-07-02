@@ -1,21 +1,28 @@
 #! /usr/bin/env python3
 
-import os
-import sys
+import csv
 import subprocess
-from all_jobs import tamu_jobs, scfo_jobs
+from all_jobs import parent_jobs, kid_jobs
 
-def make_paramstxt(jobs):
-    """
-    """
-    
+def make_paramstxt(parent_job, kid_jobs):
+    parent_dir = parent_job['parent_dir']
+    fname = parent_dir + '_params.txt'
+    with open(fname, 'w') as f:
+        w = csv.writer(f) 
+        for kid_dir, unc in zip(kid_jobs['job_dirs'], kid_jobs['uncs']):
+            job_dir = parent_dir + '/' + kid_dir
+            job = [job_dir, unc, 
+                   kid_jobs['pkls'][0], kid_jobs['pkls'][1], 
+                   parent_job['ext_test'], parent_job['ratios']
+                   ]
+            w.writerow(job)    
     return
 
-def make_dirs(jobs):
-    """
-    """
-    
-    subprocess.run(['mkdir', job_dir])
+def make_dirs(parent_dir, kid_dirs):
+    subprocess.run(['mkdir', parent_dir])
+    for kid_dir in kid_dirs:
+        job_dir = parent_dir + '/' + kid_dir
+        subprocess.run(['mkdir', job_dir])
     return
 
 def main():
@@ -27,9 +34,9 @@ def main():
     2. Populates the necessary params_mll_calc.txt files
     
     """
-    for jobs in [tamu_jobs, sfco_jobs]:
-        make_dirs(jobs)
-        make_paramstxt(jobs)
+    for parent_job in parent_jobs:
+        make_dirs(parent_job['parent_dir'], kid_jobs['job_dirs'])
+        make_paramstxt(parent_job, kid_jobs)
     return
     
 if __name__ == "__main__":
