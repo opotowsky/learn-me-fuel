@@ -194,8 +194,8 @@ def get_pred(XY, test_sample, unc, lbls):
               log-likelihoods and their uncertainties to populate a CDF
 
     """
-    ll_name = 'MaxLogLL_' + str(unc)
-    unc_name = 'MaxLLUnc_' + str(unc)
+    ll_name = 'MaxLogLL'
+    unc_name = 'MaxLLUnc'
     X = XY.drop(lbls, axis=1).copy()
     
     XY[ll_name] = X.apply(lambda row: ll_calc(row, test_sample, unc*row), axis=1)
@@ -234,8 +234,6 @@ def mll_testset(XY, test, ext_test, unc, lbls):
     pred_df : dataframe with ground truth and predictions
     
     """
-    # TODO: Now that script takes a single row arg, no need to loop through
-    # test DB here or perform the concat
     pred_df = pd.DataFrame()
     for sim_idx, row in test.iterrows():
         test_sample = row.drop(lbls)
@@ -319,8 +317,8 @@ def parse_args(args):
                         help='file path to an external testing set')
     parser.add_argument('outfile', metavar='csv-output',  
                         help='name for csv output file')
-    parser.add_argument('db_row', metavar='database-row', type=int,
-                        help='index of the database row to act as test sample for the job')
+    parser.add_argument('db_rows', metavar='db-interval', nargs=2, type=int, 
+                        help='indices of the database interval for the job')
     parser.add_argument('--ext-test', dest='ext_test', action='store_true',
                         help='execute script with external testing set by providing file path to a testing set')
     parser.add_argument('--no-ext-test', dest='ext_test', action='store_false',
@@ -357,9 +355,9 @@ def main():
                 test = test[XY.columns]
             else:
                 sys.exit('Feature sets are different')
-        test = test.iloc[[args.db_row]]
+        test = test.iloc[args.db_rows[0]:args.db_rows[1]]
     else: 
-        test = XY.iloc[[args.db_row]]
+        test = XY.iloc[args.db_rows[0]:args.db_rows[1]]
         
     lbls = ['ReactorType', 'CoolingTime', 'Enrichment', 'Burnup', 'OrigenReactor']
     # TODO: need some better way to handle varying ratio lists
