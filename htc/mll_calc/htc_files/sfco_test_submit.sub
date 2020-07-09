@@ -1,11 +1,11 @@
 universe = vanilla
-log = job$(Step).log
-error = job$(Step).err
-output = job$(Step).out
+log = job$(Process).log
+error = job$(Process).err
+output = job$(Process).out
 
 requirements = (OpSysMajorVer == 7)
 executable = run_python.sh
-arguments = $(Jobdir) $(unc) $(train) $(test) $(Step) $(Step) $(ext_test) $(ratio)
+arguments = $(Jobdir) $(unc) $(train) $(test) $(Process) $(row0) $(row1) $(ext_test) $(ratio)
 
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
@@ -16,5 +16,4 @@ request_cpus = 1
 request_memory = 1GB
 request_disk = 1GB
 
-# sfcompo is 544 rows
-queue 1 Jobdir, unc, train, test, ext_test, ratio from sfco_test_params.txt
+queue Jobdir, unc, train, test, row0, row1, ext_test, ratio from sfco_test_params.txt

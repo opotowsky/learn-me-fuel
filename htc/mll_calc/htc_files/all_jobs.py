@@ -6,7 +6,8 @@ pkls = ['sim_tamu_nucmols.pkl', 'sfcompo.pkl']
 
 kid_jobs = {'job_dirs' : job_dirs,
             'uncs' : uncs,
-            'pkls' : pkls
+            'pkls' : pkls,
+            'rows_per_job' : 10
             }
 
 tamu_noratio = {'parent_dir' : 'tamuNoRatio',
