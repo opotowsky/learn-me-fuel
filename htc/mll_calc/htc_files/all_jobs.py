@@ -2,12 +2,11 @@
 
 uncs = [0.05, 0.1, 0.15, 0.2]
 job_dirs = ['Job' + str(i) + '_unc' + str(unc) for i, unc in enumerate(uncs)]
-pkls = ['sim_tamu_nucmols.pkl', 'sfcompo.pkl']
+train_test_pkls = ['sim_tamu_nucmols.pkl', 'sfcompo.pkl']
 
 kid_jobs = {'job_dirs' : job_dirs,
             'uncs' : uncs,
-            'pkls' : pkls,
-            'rows_per_job' : 10
+            'rows_per_job' : 30
             }
 
 tamu_noratio = {'parent_dir' : 'tamuNoRatio',

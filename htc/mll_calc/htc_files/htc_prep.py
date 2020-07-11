@@ -4,7 +4,7 @@ import sys
 import csv
 import numpy as np
 import pandas as pd
-from all_jobs import parent_jobs, kid_jobs
+from all_jobs import parent_jobs, kid_jobs, train_test_pkls
 
 def format_db(db_path):
     # TODO copied from mll_calc.py to save time
@@ -31,13 +31,13 @@ def row_calcs(ext_test, n_rows):
     end_rows = init_rows[1:]
     end_rows.append(db_rows+1)
     
-    ########################
-    #### In-script test ####
-    ########################
+    ################################################
+    ################ In-script test ################
+    ################################################
     total_jobs = db_rows // n_rows + 1
     if len(init_rows) != total_jobs or len(end_rows) != total_jobs:
         sys.exit('total expected jobs does not equal one of db_row lists')
-    ########################
+    ################################################
 
     return init_rows, end_rows
 
@@ -50,11 +50,9 @@ def make_paramstxt(parent_job, kid_jobs):
         for kid_dir, unc in zip(kid_jobs['job_dirs'], kid_jobs['uncs']):
             job_dir = parent_dir + '/' + kid_dir
             for i in range(0, len(init_rows)):
-                init_row = init_rows[i]
-                end_row = end_rows[i]
                 job = [job_dir, unc, 
-                       kid_jobs['pkls'][0], kid_jobs['pkls'][1], 
-                       init_row, end_row,
+                       train_test_pkls[0], train_test_pkls[1], 
+                       i, init_rows[i], end_rows[i],
                        parent_job['ext_test'], parent_job['ratios']
                        ]
                 w.writerow(job)    

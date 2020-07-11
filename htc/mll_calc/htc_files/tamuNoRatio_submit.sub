@@ -1,0 +1,19 @@
+universe = vanilla
+log = job$(outcsv).log
+error = job$(outcsv).err
+output = job$(outcsv).out
+
+requirements = (OpSysMajorVer == 7)
+executable = run_python.sh
+arguments = $(Jobdir) $(unc) $(train) $(test) $(outcsv) $(row0) $(row1) $(ext_test) $(ratio)
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+initialdir = $(Jobdir)
+transfer_input_files = http://proxy.chtc.wisc.edu/SQUID/chtc/python36.tar.gz, ../../shared/packages.tar.gz, ../../shared/mll_calc.py, ../../shared/sim_tamu_nucmols.pkl, ../../shared/sfcompo.pkl
+
+request_cpus = 1
+request_memory = 1GB
+request_disk = 1GB
+
+queue Jobdir, unc, train, test, outcsv, row0, row1, ext_test, ratio from tamuNoRatio_params.txt
