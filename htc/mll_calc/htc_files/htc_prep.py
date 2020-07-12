@@ -52,7 +52,7 @@ def make_paramstxt(parent_job, kid_jobs):
             for i in range(0, len(init_rows)):
                 job = [job_dir, unc, 
                        train_test_pkls[0], train_test_pkls[1], 
-                       i, init_rows[i], end_rows[i],
+                       str(i).zfill(3), init_rows[i], end_rows[i],
                        parent_job['ext_test'], parent_job['ratios']
                        ]
                 w.writerow(job)    
