@@ -1,8 +1,11 @@
 #! /usr/bin/env python3
 
+import sys
 import glob
+import argparse
 import numpy as np
 import pandas as pd
+from htc_files.all_jobs import job_dirs
 
 def calc_errors(pred_df, true_lbls):
     """
@@ -37,20 +40,22 @@ def main():
     
     """
 
-    out_dir = './results/'
-    df_csvs = glob.glob(out_dir + '*.csv')
-    df_csvs.sort()
-    pred_df = pd.DataFrame()
-    for csv in df_csvs:
-        chunk = pd.read_csv(csv)
-        pred_df = pred_df.append(chunk)
+    parser = argparse.ArgumentParser(description='Concatenates the contents of all CSVs in a directory')
+    parser.add_argument('results_dir', metavar='results-directory',
+                        help='name of directory with results')
+    args = parser.parse_args(sys.argv[1:])
     
-    # copied from mll_calc.py for now
-    lbls = ['ReactorType', 'CoolingTime', 'Enrichment', 'Burnup', 'OrigenReactor']
-    pred_df = calc_errors(pred_df, lbls)
-    
-    fname = args.outfile + '.csv'
-    pred_df.to_csv(fname)
+    for unc_dir in job_dirs:
+        results_path = '/home/opotowsky/sims_n_results/nucmoles_opusupdate_aug2019/' \
+                       + args.results_dir + '/' + unc_dir + '/'
+        csvs = sorted(glob.glob(results_path + '*.csv'))
+        pred_df = pd.concat((pd.read_csv(csv, header = 0) for csv in csvs))
+        
+        # copied lbls from mll_calc.py for now
+        lbls = ['ReactorType', 'CoolingTime', 'Enrichment', 'Burnup', 'OrigenReactor']
+        pred_df = calc_errors(pred_df, lbls)
+        
+        pred_df.to_csv(results_path + unc_dir + '.csv')
 
     return
 
