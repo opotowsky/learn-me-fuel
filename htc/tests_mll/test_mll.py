@@ -132,15 +132,15 @@ def test_format_pred():
 #    assert obs.equals(exp)
 
 @pytest.mark.parametrize('argv, exp',
-                         [(['dir', '0.05', 'xx', 'yy', 'zz', '0', '--ext-test', '--ratios'], 
-                           ['dir', 0.05, 'xx', 'yy', 'zz', 0, True, True]
+                         [(['dir', '0.05', 'xx', 'yy', 'zz', '0', '10', '--ext-test', '--ratios'], 
+                           ['dir', 0.05, 'xx', 'yy', 'zz', [0, 10], True, True]
                            ),
-                          (['dir', '0.05', 'xx', 'yy', 'zz', '0', '--no-ext-test', '--no-ratios'], 
-                           ['dir', 0.05, 'xx', 'yy', 'zz', 0, False, False]
+                          (['dir', '0.05', 'xx', 'yy', 'zz', '0', '10', '--no-ext-test', '--no-ratios'], 
+                           ['dir', 0.05, 'xx', 'yy', 'zz', [0, 10], False, False]
                            )
                           ]
                          )
 def test_parse_args(argv, exp):
     args = parse_args(argv)
-    obs = [args.outdir, args.sim_unc, args.train_db, args.test_db, args.outfile, args.db_row, args.ext_test, args.ratios]
+    obs = [args.outdir, args.sim_unc, args.train_db, args.test_db, args.outfile, args.db_rows, args.ext_test, args.ratios]
     assert obs == exp
