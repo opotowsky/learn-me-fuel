@@ -1,1 +1,0 @@
-Job3, 0.05, sim_tamu_nucmols.pkl, sfcompo.pkl, 20, 30, --ext-test, --ratios
