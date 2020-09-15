@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
+from learn.tools import splitXY
+
 from string import Template
-from tools import splitXY
 from sklearn.preprocessing import scale
 from sklearn.neighbors import KNeighborsRegressor, KNeighborsClassifier
 from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
@@ -12,27 +13,60 @@ from sklearn.model_selection import KFold, StratifiedKFold, GridSearchCV, Random
 import pandas as pd
 import numpy as np
 import argparse
+import sys
+
+def parse_args(args):
+    """
+    Command-line argument parsing
+
+    Parameters
+    ----------
+    args : 
+
+    Returns
+    -------
+    args : 
+
+    """
+
+    parser = argparse.ArgumentParser(description='Performs hyperparameter optimization for various machine learning algorithms.')
+    
+    parser.add_argument('rxtr_param', choices=['reactor', 'cooling', 'enrichment', 'burnup'], 
+                        metavar='prediction-param', 
+                        help='which reactor parameter is to be predicted [reactor, cooling, enrichment, burnup]')
+    parser.add_argument('opt_type', choices=['grid', 'random'], 
+                        metavar='optimization-type', 
+                        help='which type of hyperparameter optimization strategy to pursue [grid, random]')
+    parser.add_argument('tset_frac', metavar='trainset-fraction', type=float,
+                        help='fraction of training set to use in algorithms')
+    parser.add_argument('cv', metavar='cv-folds', type=int,
+                        help='number of cross validation folds')
+    parser.add_argument('train_db', metavar='reactor-db', 
+                        help='file path to a training set')
+
+    return parser.parse_args(args)
+
 
 def main():
 
-    CV = 5
-    tset_frac = 0.6
-    iters = 40
+    args = parse_args(sys.argv[1:])
+    
+    CV = args.cv
+    tset_frac = args.tset_frac
+    csv_name =  args.rxtr_param
+    
+    iters = 2
     jobs = 4
     c = 10000
-    parser = argparse.ArgumentParser(description='Performs hyperparameter optimization for various machine learning algorithms.')
-    parser.add_argument('rxtr_param', choices=['reactor', 'cooling', 'enrichment', 'burnup'], 
-                        metavar='prediction-param', help='which reactor parameter is to be predicted [reactor, cooling, enrichment, burnup]')
-    parser.add_argument('opt_type', choices=['grid', 'random'], metavar='optimization-type', help='which type of hyperparameter optimization strategy to pursue [grid, random]')
-    args = parser.parse_args()
     
     # get data set
-    trainset = 'trainset.pkl'
+    trainset = args.train_db
     trainXY = pd.read_pickle(trainset)
     trainXY.reset_index(inplace=True, drop=True) 
     trainXY = trainXY.sample(frac=tset_frac)
     trainX, rY, cY, eY, bY = splitXY(trainXY)
     trainX = scale(trainX)
+    
     # define search breadth
     knn_grid = {'n_neighbors': np.linspace(1, 41, iters).astype(int)}
     dtr_grid = {"max_depth": np.linspace(3, 100, iters).astype(int),
@@ -44,8 +78,9 @@ def main():
     knn_init = KNeighborsRegressor(weights='distance')
     dtr_init = DecisionTreeRegressor()
     svr_init = SVR(C=c)
+
     # save results
-    param_file = args.rxtr_param + '_' + args.opt_type + '_hyperparameters.txt'
+    param_file = args.rxtr_param + '_' + args.opt_type + '_tfrac' + str(args.tset_frac) + '_hyperparameters.txt'
     with open(param_file, 'a') as pf:
         pf.write(args.opt_type + ' hyperparameter optimization for ' + args.rxtr_param + ':')
     

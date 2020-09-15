@@ -10,29 +10,28 @@ from sklearn.model_selection import KFold, StratifiedKFold
 
 import pandas as pd
 import argparse
+import sys
 
-def main():
+def parse_args(args):
     """
-    Given training data, this script performs a user-defined number of ML 
-    tasks for three algorithms (kNN, decision trees, SVR), saving the results
-    as .csv files:
-    1. track_predictions provides the prediction of each training instance
-    2. errors_and_scores provides the prediction accuracy for each algorithm
-    for each CV fold
-    3. learning_curves provides the prediction accuracy with respect to
-    training set size
-    4. validation_curves provides the prediction accuracy with respect to
-    algorithm hyperparameter variations
-    5. ext_test_compare provides the predictions of each algorithm of an 
-    external test set
+    Command-line argument parsing
+
+    Parameters
+    ----------
+    args : 
+
+    Returns
+    -------
+    args : 
 
     """
+
     parser = argparse.ArgumentParser(description='Performs machine learning-based predictions or model selection techniques.')
     parser.add_argument('rxtr_param', choices=['reactor', 'cooling', 'enrichment', 'burnup'], 
                         metavar='prediction-param', help='which reactor parameter is to be predicted [reactor, cooling, enrichment, burnup]')
     parser.add_argument('tset_frac', metavar='trainset-fraction', type=float,
                         help='fraction of training set to use in algorithms')
-    parser.add_argument('cv', metavar='cv-folds', type=float,
+    parser.add_argument('cv', metavar='cv-folds', type=int,
                         help='number of cross validation folds')
     parser.add_argument('train_db', metavar='reactor-db', 
                         help='file path to a training set')
@@ -50,8 +49,32 @@ def main():
                         default=False, help='run the ext_test_compare function')
     parser.add_argument('-testset', metavar='--testing_set', 
                         help='file path to an external testing set')
-    args = parser.parse_args()
+    parser.add_argument('-re', '--random_error', action='store_true', 
+                        default=False, help='run the random_error function')
 
+    return parser.parse_args(args)
+
+def main():
+    """
+    Given training data, this script performs a user-defined number of ML 
+    tasks for three algorithms (kNN, decision trees, SVR), saving the results
+    as .csv files:
+    1. track_predictions provides the prediction of each training instance
+    2. errors_and_scores provides the prediction accuracy for each algorithm
+    for each CV fold
+    3. learning_curves provides the prediction accuracy with respect to
+    training set size
+    4. validation_curves provides the prediction accuracy with respect to
+    algorithm hyperparameter variations
+    5. ext_test_compare provides the predictions of each algorithm of an 
+    external test set
+    6. random_error calculates prediction performance with respect to 
+    increasing error
+
+    """
+    
+    args = parse_args(sys.argv[1:])
+    
     CV = args.cv
     tset_frac = args.tset_frac
     csv_name =  args.rxtr_param
