@@ -348,10 +348,12 @@ def errors_and_scores(X, Y, alg1, alg2, alg3, scores, CV, csv_name):
     
     return
 
-def ext_test_compare(X, Y, alg1, alg2, alg3, csv_name):
+def ext_test_compare(X, Y, testX, testY, alg1, alg2, alg3, csv_name):
     """
     X : dataframe that includes all training data
     Y : series with labels for training data
+    testX : dataframe that includes all testing data measurements
+    testY : series with labels for testing data (ground truth)
     alg1 : optimized learner 1
     alg2 : optimized learner 2
     alg3 : optimized learner 3
@@ -363,19 +365,6 @@ def ext_test_compare(X, Y, alg1, alg2, alg3, csv_name):
     *.csv : csv file with each alg's predictions compared to ground truth
     
     """
-    testpath = 'learn/pkl_trainsets/2jul2018/2jul2018_testset1_'
-    test_pkl = testpath + 'nucs_fissact_not-scaled.pkl'
-    testXY = pd.read_pickle(test_pkl)
-    testXY.reset_index(inplace=True, drop=True) 
-    testX, rY, cY, eY, bY = splitXY(testXY)
-    if 'reactor' in str(csv_name):
-        testY = rY
-    elif 'cooling' in str(csv_name):
-        testY = cY
-    elif 'enrichment' in str(csv_name):
-        testY = eY
-    else:
-        testY = bY
     # fit w data
     alg1.fit(X, Y)
     alg2.fit(X, Y)

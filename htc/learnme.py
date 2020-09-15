@@ -27,12 +27,17 @@ def main():
     external test set
 
     """
-    CV = 5
-    tset_frac = 0.6
-    
     parser = argparse.ArgumentParser(description='Performs machine learning-based predictions or model selection techniques.')
     parser.add_argument('rxtr_param', choices=['reactor', 'cooling', 'enrichment', 'burnup'], 
                         metavar='prediction-param', help='which reactor parameter is to be predicted [reactor, cooling, enrichment, burnup]')
+    parser.add_argument('tset_frac', metavar='trainset-fraction', type=float,
+                        help='fraction of training set to use in algorithms')
+    parser.add_argument('cv', metavar='cv-folds', type=float,
+                        help='number of cross validation folds')
+    parser.add_argument('train_db', metavar='reactor-db', 
+                        help='file path to a training set')
+    parser.add_argument('outfile', metavar='csv-output',  
+                        help='name for csv output file')
     parser.add_argument('-tp', '--track_preds', action='store_true', 
                         default=False, help='run the track_predictions function')
     parser.add_argument('-es', '--err_n_scores', action='store_true', 
@@ -41,22 +46,25 @@ def main():
                         default=False, help='run the learning_curves function')
     parser.add_argument('-vc', '--valid_curves', action='store_true', 
                         default=False, help='run the validation_curves function')
-    #parser.add_argument('-tc', '--test_compare', action='store_true', 
-    #                    default=False, help='run the ext_test_compare function')
+    parser.add_argument('-tc', '--test_compare', action='store_true', 
+                        default=False, help='run the ext_test_compare function')
+    parser.add_argument('-testset', metavar='--testing_set', 
+                        help='file path to an external testing set')
     args = parser.parse_args()
 
-    pkl = 'trainset.pkl'
+    CV = args.cv
+    tset_frac = args.tset_frac
+    csv_name =  args.rxtr_param
+    
+    #
+    pkl = args.train_db  
     trainXY = pd.read_pickle(pkl)
     trainXY.reset_index(inplace=True, drop=True) 
-    # hyperparam optimization was done on 60% of training set
+    # ensure hyperparam optimization was done on correct tset_frac
     trainXY = trainXY.sample(frac=tset_frac)
     trainX_unscaled, rY, cY, eY, bY = splitXY(trainXY)
     trainX = scale(trainX_unscaled)
     
-    csv_name = 'trainset_m60_' + args.rxtr_param
-    
-    # loops through each reactor parameter to do separate predictions
-    # burnup is last since its the only tset I'm altering
     trainY = pd.Series()
     # get param names and set ground truth
     if args.rxtr_param == 'cooling':
@@ -74,7 +82,6 @@ def main():
         g = 0.8
         c = 25000
     elif args.rxtr_param == 'burnup':
-        csv_name = 'trainset_m24_' + args.rxtr_param
         # burnup needs much less training data...this is 24% of data set
         trainXY = trainXY.sample(frac=0.4)
         trainX, rY, cY, eY, bY = splitXY(trainXY)
@@ -133,12 +140,23 @@ def main():
             svr_init = SVC(C=c, class_weight='balanced')
         validation_curves(trainX, trainY, knn_init, dtr_init, svr_init, kfold, score, csv_name)
     
-    # compare against external test set (right now the only one is 
-    # Dayman test set)
-    ##### 21 Jun 2019: this is untested and may not work without some of the 
-    ##### algorithm imports added to tools.py
-    #if args.test_compare == True:
-    #    ext_test_compare(trainX, trainY, knn_init, dtr_init, svr_init, csv_name)
+    # compare against external test set
+    if args.test_compare == True:
+        testpath = args.test_db
+        testXY = pd.read_pickle(testpath)
+        testXY.reset_index(inplace=True, drop=True) 
+        testX, rY, cY, eY, bY = splitXY(testXY)
+        testX = scale(testX)
+        testY = pd.Series()
+        if args.rxtr_param == 'cooling':
+            testY = cY
+        elif args.rxtr_param == 'enrichment':
+            testY = eY
+        elif args.rxtr_param == 'burnup':
+            testY = bY
+        else:
+            testY = rY
+        ext_test_compare(trainX, trainY, testX, testY, knn_init, dtr_init, svr_init, csv_name)
 
     return
 
