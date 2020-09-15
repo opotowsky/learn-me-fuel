@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 
-from learn.tools import splitXY, track_predictions, errors_and_scores, validation_curves, learning_curves, ext_test_compare
+from learn.tools import splitXY, get_testsetXY, convert_g_to_mgUi
+from learn.tools import track_predictions, errors_and_scores, validation_curves, learning_curves, ext_test_compare, random_error
 
 from sklearn.preprocessing import scale
 from sklearn.neighbors import KNeighborsRegressor, KNeighborsClassifier
@@ -47,7 +48,7 @@ def parse_args(args):
                         default=False, help='run the validation_curves function')
     parser.add_argument('-tc', '--test_compare', action='store_true', 
                         default=False, help='run the ext_test_compare function')
-    parser.add_argument('-testset', metavar='--testing_set', 
+    parser.add_argument('-testset', '--testing_set', 
                         help='file path to an external testing set')
     parser.add_argument('-re', '--random_error', action='store_true', 
                         default=False, help='run the random_error function')
@@ -78,6 +79,8 @@ def main():
     CV = args.cv
     tset_frac = args.tset_frac
     csv_name =  args.rxtr_param
+    lbls = ['ReactorType', 'CoolingTime', 'Enrichment', 'Burnup', 'OrigenReactor']
+    nonlbls = ['AvgPowerDensity', 'ModDensity', 'UiWeight']
     
     # locally, pkl file location should be: '../../prep-pkls/pkl_dir/file.pkl'
     pkl = args.train_db  
@@ -93,35 +96,35 @@ def main():
     if args.rxtr_param == 'cooling':
         trainY = cY
         k = 3
-        depth = 50
-        feats = 25
+        depth = 20
+        feats = 15
         g = 0.06
         c = 50000
     elif args.rxtr_param == 'enrichment': 
         trainY = eY
-        k = 7
-        depth = 50
-        feats = 25
+        k = 3
+        depth = 20
+        feats = 15
         g = 0.8
         c = 25000
     elif args.rxtr_param == 'burnup':
         # burnup needs much less training data...this is 24% of data set
-        trainXY = trainXY.sample(frac=0.4)
-        trainX, rY, cY, eY, bY = splitXY(trainXY)
-        trainX = scale(trainX)
+        #trainXY = trainXY.sample(frac=0.4)
+        #trainX, rY, cY, eY, bY = splitXY(trainXY)
+        #trainX = scale(trainX)
         trainY = bY
-        k = 7 #3
-        depth = 50 #20
-        feats = 25 #15
-        g = 0.25 #0.1
-        c = 42000 #1500
+        k = 3
+        depth = 20
+        feats = 15
+        g = 0.25
+        c = 42000
     else:
         trainY = rY
         k = 3
-        depth = 50 #20
-        feats = 25 #15
-        g = 0.07 #0.1
-        c = 1000 #1500
+        depth = 20
+        feats = 15
+        g = 0.07
+        c = 1000
         
     ## initialize learners
     score = 'explained_variance'
@@ -156,31 +159,25 @@ def main():
         # VC needs different inits
         knn_init = KNeighborsRegressor(weights='distance')
         dtr_init = DecisionTreeRegressor()
-        svr_init = SVR(C=c)
+        svr_init = SVR(gamma='scale', C=c)
         if args.rxtr_param == 'reactor':
             knn_init = KNeighborsClassifier(weights='distance')
             dtr_init = DecisionTreeClassifier(class_weight='balanced')
-            svr_init = SVC(C=c, class_weight='balanced')
+            svr_init = SVC(gamma='scale', C=c, class_weight='balanced')
         validation_curves(trainX, trainY, knn_init, dtr_init, svr_init, kfold, score, csv_name)
     
     # compare against external test set
     if args.test_compare == True:
-        testpath = args.test_db
-        testXY = pd.read_pickle(testpath)
-        testXY.reset_index(inplace=True, drop=True) 
-        testX, rY, cY, eY, bY = splitXY(testXY)
-        testX = scale(testX)
-        testY = pd.Series()
-        if args.rxtr_param == 'cooling':
-            testY = cY
-        elif args.rxtr_param == 'enrichment':
-            testY = eY
-        elif args.rxtr_param == 'burnup':
-            testY = bY
-        else:
-            testY = rY
+        trainX_unscaled = convert_g_to_mgUi(trainX_unscaled)
+        trainX = scale(trainX_unscaled)
+        xy_cols = trainXY.columns.tolist()
+        for col in nonlbls+['total']: xy_cols.remove(col)
+        testX, testY = get_testsetXY(args.testing_set, xy_cols, args.rxtr_param)
         ext_test_compare(trainX, trainY, testX, testY, knn_init, dtr_init, svr_init, csv_name)
 
+    # pred results wrt random error
+    if args.random_error == True:
+        random_error(trainX, trainY, knn_init, dtr_init, svr_init, kfold, score, csv_name)
     print("The {} predictions are complete\n".format(args.rxtr_param), flush=True)
 
     return

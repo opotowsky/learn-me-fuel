@@ -1,9 +1,11 @@
 #! /usr/bin/env python3
 
-from sklearn.model_selection import cross_val_predict, cross_validate, learning_curve, validation_curve
+from sklearn.preprocessing import scale
+from sklearn.model_selection import cross_val_score, cross_val_predict, cross_validate, learning_curve, validation_curve
 
 import pandas as pd
 import numpy as np
+import sys
 
 def splitXY(dfXY):
     """
@@ -28,15 +30,66 @@ def splitXY(dfXY):
     """
 
     lbls = ['ReactorType', 'CoolingTime', 'Enrichment', 'Burnup', 'OrigenReactor']
+    nonlbls = ['AvgPowerDensity', 'ModDensity', 'UiWeight']
     dfX = dfXY.drop(lbls, axis=1)
-    if 'total' in dfX.columns:
-        dfX.drop('total', axis=1, inplace=True)
+    for nonlbl in nonlbls+['total']:
+        if nonlbl in dfX.columns: 
+            dfX.drop(nonlbl, axis=1, inplace=True)
     r_dfY = dfXY.loc[:, lbls[0]]
     c_dfY = dfXY.loc[:, lbls[1]]
     e_dfY = dfXY.loc[:, lbls[2]]
     b_dfY = dfXY.loc[:, lbls[3]]
     #o_dfY = dfXY.loc[:, lbls[4]]
     return dfX, r_dfY, c_dfY, e_dfY, b_dfY
+
+def convert_g_to_mgUi(X):
+    """
+    Converts nuclides from ORIGEN simulations measured in grams to 
+    concentrations measured in mg / gUi
+
+    Parameters
+    ----------
+    X : dataframe of origen sims with nuclides measured in grams
+
+    Returns
+    -------
+    X : dataframe of origen sims with nuclides measured in mg / gUi
+    
+    """
+    
+    nucs = X.columns.tolist()
+    # [x (g) / 1e6 (gUi)] * [1000 (mg) / 1 (g)] = x / 1000
+    X[nucs] = X[nucs].div(1000, axis=0)
+    return X
+
+def get_testsetXY(pklfile, xy_cols, rxtr_param):
+    """
+    
+    """
+    
+    testXY = pd.read_pickle(pklfile)
+    
+    # In-script test: order of columns must match:
+    if xy_cols != testXY.columns.tolist():
+        if sorted(xy_cols) == sorted(testXY.columns.tolist()):
+            testXY = testXY[xy_cols]
+        else:
+            sys.exit('Feature sets are different')
+    
+    testXY.reset_index(inplace=True, drop=True) 
+    testX, rY, cY, eY, bY = splitXY(testXY)
+    testX = scale(testX)
+    testY = pd.Series()
+    if rxtr_param == 'cooling':
+        testY = cY
+    elif rxtr_param == 'enrichment':
+        testY = eY
+    elif rxtr_param == 'burnup':
+        testY = bY
+    else:
+        testY = rY
+
+    return testX, testY
 
 def top_nucs(df, top_n):
     """
@@ -120,10 +173,9 @@ def add_error(percent_err, df):
 
     return df_err
 
-def random_error(X, Y, alg1, alg2, alg3, scores, CV, csv_name):
+def random_error(X, Y, alg1, alg2, alg3, CV, score, csv_name):
     """
     """
-
     err_percent = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.1, 
                    1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.25, 2.5, 
                    2.75, 3, 3.25, 3.5, 3.75, 4, 4.25, 4.5, 4.75, 5, 5.5, 6, 
@@ -140,15 +192,15 @@ def random_error(X, Y, alg1, alg2, alg3, scores, CV, csv_name):
         # X is already scaled before random error is applied
         #X = scale(X)
     
-        knn_scr = cross_val_score(alg1, X, Y, scoring=scores, cv=CV, n_jobs=-1)
+        knn_scr = cross_val_score(alg1, X, Y, scoring=score, cv=CV, n_jobs=4)
         knn_mean.append(knn_scr.mean()) #train_mean = np.mean(train, axis=1)
         knn_std.append(knn_scr.std())
     
-        dtr_scr = cross_val_score(alg2, X, Y, scoring=scores, cv=CV, n_jobs=-1)
+        dtr_scr = cross_val_score(alg2, X, Y, scoring=score, cv=CV, n_jobs=4)
         dtr_mean.append(dtr_scr.mean())
         dtr_std.append(dtr_scr.std())
         
-        svr_scr = cross_val_score(alg3, X, Y, scoring=scores, cv=CV, n_jobs=-1)
+        svr_scr = cross_val_score(alg3, X, Y, scoring=score, cv=CV, n_jobs=4)
         svr_mean.append(svr_scr.mean())
         svr_std.append(svr_scr.std())
     
@@ -190,21 +242,16 @@ def validation_curves(X, Y, alg1, alg2, alg3, CV, score, csv_name):
     # Note: I'm trying to avoid loops here so the code is inelegant
 
     # TODO settle on lists!
-    # Varied alg params for validation curves
-    k_list = np.linspace(1, 25, 10).astype(int)
-    depth_list = np.linspace(3, 25, 10).astype(int)
-    feat_list = np.linspace(5, 47, 10).astype(int)
-    gamma_list = np.logspace(-4, -1, 10)
-    c_list = np.logspace(0, 5, 10)
-    # from htc
-    k_list = np.linspace(1, 30, 15).astype(int)
-    depth_list = np.linspace(3, 30, 15).astype(int)
-    feat_list = np.linspace(1, 15, 15).astype(int)
-    gamma_list = np.logspace(-4, 0, 15)
-    c_list = np.logspace(0, 5, 15)
+    steps = 15
+    k_list = np.linspace(1, 30, steps).astype(int)
+    depth_list = np.linspace(3, 30, steps).astype(int)
+    feat_list = np.linspace(1, 15, steps).astype(int)
+    gamma_list = np.logspace(-4, 0, steps)
+    c_list = np.logspace(0, 5, steps)
 
     # knn
-    train, cv = validation_curve(alg1, X, Y, 'n_neighbors', k_list, cv=CV, 
+    train, cv = validation_curve(alg1, X, Y, param_name='n_neighbors', 
+                                 param_range=k_list, cv=CV, 
                                  scoring=score, n_jobs=4)
     train_mean = np.mean(train, axis=1)
     train_std = np.std(train, axis=1)
@@ -216,7 +263,8 @@ def validation_curves(X, Y, alg1, alg2, alg3, CV, score, csv_name):
     df1['Algorithm'] = 'knn'
 
     # dtree
-    train, cv = validation_curve(alg2, X, Y, 'max_depth', depth_list, cv=CV, 
+    train, cv = validation_curve(alg2, X, Y, param_name='max_depth', 
+                                 param_range=depth_list, cv=CV, 
                                  scoring=score, n_jobs=4)
     train_mean = np.mean(train, axis=1)
     train_std = np.std(train, axis=1)
@@ -227,7 +275,8 @@ def validation_curves(X, Y, alg1, alg2, alg3, CV, score, csv_name):
                         'CV-Std' : cv_std})
     df2['Algorithm'] = 'dtree'
     
-    train, cv = validation_curve(alg2, X, Y, 'max_features', feat_list, cv=CV, 
+    train, cv = validation_curve(alg2, X, Y, param_name='max_features', 
+                                 param_range=feat_list, cv=CV, 
                                  scoring=score, n_jobs=4)
     train_mean = np.mean(train, axis=1)
     train_std = np.std(train, axis=1)
@@ -239,7 +288,8 @@ def validation_curves(X, Y, alg1, alg2, alg3, CV, score, csv_name):
     df3['Algorithm'] = 'dtree'
     
     # svr
-    train, cv = validation_curve(alg3, X, Y, 'gamma', gamma_list, cv=CV, 
+    train, cv = validation_curve(alg3, X, Y, param_name='gamma', 
+                                 param_range=gamma_list, cv=CV, 
                                  scoring=score, n_jobs=4)
     train_mean = np.mean(train, axis=1)
     train_std = np.std(train, axis=1)
@@ -250,7 +300,8 @@ def validation_curves(X, Y, alg1, alg2, alg3, CV, score, csv_name):
                         'CV-Std' : cv_std})
     df4['Algorithm'] = 'svr'
 
-    train, cv = validation_curve(alg3, X, Y, 'C', c_list, cv=CV, 
+    train, cv = validation_curve(alg3, X, Y, param_name='C', 
+                                 param_range=c_list, cv=CV, 
                                  scoring=score, n_jobs=4)
     train_mean = np.mean(train, axis=1)
     train_std = np.std(train, axis=1)
@@ -292,8 +343,6 @@ def learning_curves(X, Y, alg1, alg2, alg3, CV, score, csv_name):
 
     """    
     
-    # Note: I'm trying to avoid loops here so the code is inelegant
-
     trainset_frac = np.array( [0.1, 0.2, 0.3, 0.4, 0.5, 0.55, 0.6, 0.65, 
                                0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0] )
     col_names = ['AbsTrainSize', 'TrainScore', 'CV-Score']

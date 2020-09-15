@@ -55,7 +55,7 @@ def main():
     tset_frac = args.tset_frac
     csv_name =  args.rxtr_param
     
-    iters = 2
+    iters = 40
     jobs = 4
     c = 10000
     
