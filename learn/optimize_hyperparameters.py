@@ -56,7 +56,7 @@ def main():
     csv_name =  args.rxtr_param
     
     iters = 40
-    jobs = 4
+    jobs = 2
     c = 10000
     
     # get data set
