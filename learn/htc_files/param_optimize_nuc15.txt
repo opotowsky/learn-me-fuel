@@ -1,0 +1,4 @@
+reactor,random,0.1,5,sim_grams_nuc15.pkl
+cooling,random,0.1,5,sim_grams_nuc15.pkl
+enrichment,random,0.1,5,sim_grams_nuc15.pkl
+burnup,random,0.1,5,sim_grams_nuc15.pkl

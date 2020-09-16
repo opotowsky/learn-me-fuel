@@ -1,12 +1,13 @@
 #!/bin/bash
 
-# untar Python installation
-tar -xzf python.tar.gz
+# un-tar python and packages
+tar -xzf python36.tar.gz
+tar -xzf packages.tar.gz
 
-# make sure the script will use Python installation
-# and the working directory as it's home location
-export PATH=$(pwd)/python/bin:$PATH
-mkdir home
-export HOME=$(pwd)/home
+# set path, pythonpath, and working directory as home
+export PATH=$PWD/python/bin:$PATH
+export PYTHONPATH=$PWD/packages
+export HOME=$PWD
+
 # run your script
-python optimize_hyperparameters.py $1 $2
+python3 optimize_hyperparameters.py $1 $2 $3 $4 $5
