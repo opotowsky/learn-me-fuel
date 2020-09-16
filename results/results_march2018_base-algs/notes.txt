@@ -1,2 +1,0 @@
-these results were obtained with:
-pkl_name = './sfcompo_pickles/not-scaled_trainset_nucs_fissact_8dec.pkl'

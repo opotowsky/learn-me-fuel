@@ -1,9 +1,0 @@
-without scaling
-
-The reactor scores are knn=0.71, rr=0.85, and svr=0.97
-
-The burnup scores are knn=0.9919038725237824, rr=0.9985980485091919, and svr=0.999480656297587
-
-The cooling scores are knn=0.6683540811651878, rr=0.736215588852533, and svr=0.8508167973071743
-
-The enrichment scores are knn=0.6670482693234943, rr=0.7953683553671357, and svr=0.8322638461382159

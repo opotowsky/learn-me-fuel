@@ -1,5 +1,0 @@
-this follows the same stuff in the 19 jul results except it's different algs:
-
-bayesian ridge / gaussian nb
-decision tree
-extra-rando decision tree
