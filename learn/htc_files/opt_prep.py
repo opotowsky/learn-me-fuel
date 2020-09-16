@@ -1,8 +1,6 @@
 #! /usr/bin/env python3
 
-import sys
 import csv
-import numpy as np
 
 def make_paramstxt(train, txtfile):
     

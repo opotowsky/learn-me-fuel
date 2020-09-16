@@ -1,4 +1,0 @@
-cooling, --learn_curves
-cooling, --valid_curves
-enrichment, --learn_curves
-enrichment, --valid_curves

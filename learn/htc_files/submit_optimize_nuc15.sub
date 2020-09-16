@@ -10,7 +10,7 @@ arguments = $(param) $(opt_type) $(tset_frac) $(cv) $(train_db)
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
 initialdir = optimize/nuc15
-transfer_input_files = http://proxy.chtc.wisc.edu/SQUID/chtc/python36.tar.gz, ../shared/packages.tar.gz, ../shared/optimize_hyperparameters.py, ../shared/tools.py, ../../mll_calc/shared/sim_grams_nuc15.pkl
+transfer_input_files = http://proxy.chtc.wisc.edu/SQUID/chtc/python36.tar.gz, ../../shared/packages.tar.gz, ../../shared/optimize_hyperparameters.py, ../../shared/tools.py, ../../../mll_calc/shared/sim_grams_nuc15.pkl
 
 request_cpus = 2
 request_memory = 8GB
