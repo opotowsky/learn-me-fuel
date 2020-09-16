@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 
-from learn.tools import splitXY, get_testsetXY, convert_g_to_mgUi
-from learn.tools import track_predictions, errors_and_scores, validation_curves, learning_curves, ext_test_compare, random_error
+from tools import splitXY, get_testsetXY, convert_g_to_mgUi
+from tools import track_predictions, errors_and_scores, validation_curves, learning_curves, ext_test_compare, random_error
 
 from sklearn.preprocessing import scale
 from sklearn.neighbors import KNeighborsRegressor, KNeighborsClassifier
@@ -12,6 +12,38 @@ from sklearn.model_selection import KFold, StratifiedKFold
 import pandas as pd
 import argparse
 import sys
+
+def get_hyperparam(param, train_name):
+    """
+    
+    
+    """
+
+    if param == 'cooling':
+        k = 3
+        depth = 20
+        feats = 15
+        g = 0.5
+        c = 50000
+    elif param == 'enrichment': 
+        k = 3
+        depth = 20
+        feats = 15
+        g = 0.5
+        c = 50000
+    elif param == 'burnup':
+        k = 3
+        depth = 20
+        feats = 15
+        g = 0.1
+        c = 50000
+    else:
+        k = 3
+        depth = 20
+        feats = 15
+        g = 0.1
+        c = 10000
+    return k, depth, feats, g, c
 
 def parse_args(args):
     """
@@ -28,16 +60,17 @@ def parse_args(args):
     """
 
     parser = argparse.ArgumentParser(description='Performs machine learning-based predictions or model selection techniques.')
+    parser.add_argument('outfile', metavar='csv-output',  
+                        help='name for csv output file')
     parser.add_argument('rxtr_param', choices=['reactor', 'cooling', 'enrichment', 'burnup'], 
-                        metavar='prediction-param', help='which reactor parameter is to be predicted [reactor, cooling, enrichment, burnup]')
+                        metavar='prediction-param', 
+                        help='which reactor parameter is to be predicted [reactor, cooling, enrichment, burnup]')
     parser.add_argument('tset_frac', metavar='trainset-fraction', type=float,
                         help='fraction of training set to use in algorithms')
     parser.add_argument('cv', metavar='cv-folds', type=int,
                         help='number of cross validation folds')
     parser.add_argument('train_db', metavar='reactor-db', 
                         help='file path to a training set')
-    parser.add_argument('outfile', metavar='csv-output',  
-                        help='name for csv output file')
     parser.add_argument('-tp', '--track_preds', action='store_true', 
                         default=False, help='run the track_predictions function')
     parser.add_argument('-es', '--err_n_scores', action='store_true', 
@@ -78,7 +111,7 @@ def main():
     
     CV = args.cv
     tset_frac = args.tset_frac
-    csv_name =  args.rxtr_param
+    csv_name =  args.outfile
     lbls = ['ReactorType', 'CoolingTime', 'Enrichment', 'Burnup', 'OrigenReactor']
     nonlbls = ['AvgPowerDensity', 'ModDensity', 'UiWeight']
     
@@ -91,40 +124,23 @@ def main():
     trainX_unscaled, rY, cY, eY, bY = splitXY(trainXY)
     trainX = scale(trainX_unscaled)
     
+    # set ground truth 
     trainY = pd.Series()
-    # get param names and set ground truth
     if args.rxtr_param == 'cooling':
         trainY = cY
-        k = 3
-        depth = 20
-        feats = 15
-        g = 0.06
-        c = 50000
     elif args.rxtr_param == 'enrichment': 
         trainY = eY
-        k = 3
-        depth = 20
-        feats = 15
-        g = 0.8
-        c = 25000
     elif args.rxtr_param == 'burnup':
-        # burnup needs much less training data...this is 24% of data set
+        # burnup needs much less training data
         #trainXY = trainXY.sample(frac=0.4)
         #trainX, rY, cY, eY, bY = splitXY(trainXY)
         #trainX = scale(trainX)
         trainY = bY
-        k = 3
-        depth = 20
-        feats = 15
-        g = 0.25
-        c = 42000
     else:
         trainY = rY
-        k = 3
-        depth = 20
-        feats = 15
-        g = 0.07
-        c = 1000
+
+    # get hyperparams
+    k, depth, feats, g, c = get_hyperparam(args.rxtr_param, pkl)
         
     ## initialize learners
     score = 'explained_variance'
@@ -141,7 +157,8 @@ def main():
 
     ## track predictions
     if args.track_preds == True:
-        track_predictions(trainX, trainY, knn_init, dtr_init, svr_init, kfold, csv_name, trainX_unscaled)
+        cols = X_unscaled.columns.values.tolist()
+        track_predictions(trainX, trainY, knn_init, dtr_init, svr_init, kfold, csv_name, cols)
 
     ## calculate errors and scores
     if args.err_n_scores == True:
@@ -177,8 +194,7 @@ def main():
 
     # pred results wrt random error
     if args.random_error == True:
-        random_error(trainX, trainY, knn_init, dtr_init, svr_init, kfold, score, csv_name)
-    print("The {} predictions are complete\n".format(args.rxtr_param), flush=True)
+        random_error(trainX_unscaled, trainY, knn_init, dtr_init, svr_init, kfold, score, csv_name)
 
     return
 
