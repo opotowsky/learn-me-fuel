@@ -18,31 +18,28 @@ def get_hyperparam(param, train_name):
     
     
     """
-
-    if param == 'cooling':
-        k = 3
-        depth = 20
-        feats = 15
-        g = 0.5
-        c = 50000
-    elif param == 'enrichment': 
-        k = 3
-        depth = 20
-        feats = 15
-        g = 0.5
-        c = 50000
-    elif param == 'burnup':
-        k = 3
-        depth = 20
-        feats = 15
-        g = 0.1
-        c = 50000
+    nuc15_hp = {'reactor' :    {'k' : 1, 'depth' : 20, 'feats' : 10, 'g' : 0.49, 'c' : 75000},
+                'burnup' :     {'k' : 3, 'depth' : 20, 'feats' : 10, 'g' : 0.49, 'c' : 75000},
+                'cooling' :    {'k' : 3, 'depth' : 20, 'feats' : 15, 'g' : 0.49, 'c' : 75000},
+                'enrichment' : {'k' : 3, 'depth' : 20, 'feats' : 15, 'g' : 0.49, 'c' : 75000},
+                }
+    nuc29_hp = {'reactor' :    {'k' : 1, 'depth' : 50, 'feats' : 10, 'g' : 0.10, 'c' : 12500},
+                'burnup' :     {'k' : 3, 'depth' : 50, 'feats' : 10, 'g' : 0.49, 'c' : 12500},
+                'cooling' :    {'k' : 3, 'depth' : 50, 'feats' : 29, 'g' : 0.49, 'c' : 40000},
+                'enrichment' : {'k' : 3, 'depth' : 50, 'feats' : 29, 'g' : 0.00005, 'c' : 40000},
+                }
+    
+    if '15' in train_name:
+        hp = nuc15_hp
     else:
-        k = 3
-        depth = 20
-        feats = 15
-        g = 0.1
-        c = 10000
+        hp = nuc29_hp
+
+    k = hp[param]['k']
+    depth = hp[param]['depth']
+    feats = hp[param]['feats']
+    g = hp[param]['g']
+    c = hp[param]['c']
+
     return k, depth, feats, g, c
 
 def parse_args(args):
