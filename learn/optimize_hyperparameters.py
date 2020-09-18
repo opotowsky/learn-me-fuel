@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from learn.tools import splitXY
+from tools import splitXY
 
 from string import Template
 from sklearn.preprocessing import scale
@@ -55,9 +55,9 @@ def main():
     tset_frac = args.tset_frac
     csv_name =  args.rxtr_param
     
-    iters = 40
-    jobs = 2
-    c = 10000
+    iters = 20
+    jobs = 4
+    c = 50000
     
     # get data set
     trainset = args.train_db
@@ -69,9 +69,9 @@ def main():
     
     # define search breadth
     knn_grid = {'n_neighbors': np.linspace(1, 41, iters).astype(int)}
-    dtr_grid = {"max_depth": np.linspace(3, 100, iters).astype(int),
-                "max_features": np.linspace(5, len(trainXY.columns)-6, iters).astype(int)}
-    svr_grid = {'C': np.logspace(0, 5, iters), 'gamma': np.logspace(-7, 2, iters)} 
+    dtr_grid = {"max_depth": np.linspace(5, 80, iters).astype(int),
+                "max_features": np.linspace(5, len(trainXY.columns)-8, iters).astype(int)}
+    svr_grid = {'C': np.logspace(0, 6, iters), 'gamma': np.logspace(-7, 1, iters)} 
     
     score = 'explained_variance'
     kfold = KFold(n_splits=CV, shuffle=True)
