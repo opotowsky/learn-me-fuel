@@ -1,9 +1,9 @@
 #! /usr/bin/env python3
 
-from tools import splitXY, get_testsetXY, convert_g_to_mgUi
+from tools import splitXY, get_testsetXY, convert_g_to_mgUi, get_hyperparam
 from tools import track_predictions, errors_and_scores, validation_curves, learning_curves, ext_test_compare, random_error
 
-from sklearn.preprocessing import scale
+from sklearn.preprocessing import scale, StandardScaler
 from sklearn.neighbors import KNeighborsRegressor, KNeighborsClassifier
 from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
 from sklearn.svm import SVR, SVC
@@ -12,35 +12,6 @@ from sklearn.model_selection import KFold, StratifiedKFold
 import pandas as pd
 import argparse
 import sys
-
-def get_hyperparam(param, train_name):
-    """
-    
-    
-    """
-    nuc15_hp = {'reactor' :    {'k' : 1, 'depth' : 20, 'feats' : 10, 'g' : 0.49, 'c' : 75000},
-                'burnup' :     {'k' : 3, 'depth' : 20, 'feats' : 10, 'g' : 0.49, 'c' : 75000},
-                'cooling' :    {'k' : 3, 'depth' : 20, 'feats' : 15, 'g' : 0.49, 'c' : 75000},
-                'enrichment' : {'k' : 3, 'depth' : 20, 'feats' : 15, 'g' : 0.49, 'c' : 75000},
-                }
-    nuc29_hp = {'reactor' :    {'k' : 1, 'depth' : 50, 'feats' : 10, 'g' : 0.10, 'c' : 12500},
-                'burnup' :     {'k' : 3, 'depth' : 50, 'feats' : 10, 'g' : 0.49, 'c' : 12500},
-                'cooling' :    {'k' : 3, 'depth' : 50, 'feats' : 29, 'g' : 0.49, 'c' : 40000},
-                'enrichment' : {'k' : 3, 'depth' : 50, 'feats' : 29, 'g' : 0.00005, 'c' : 40000},
-                }
-    
-    if '15' in train_name:
-        hp = nuc15_hp
-    else:
-        hp = nuc29_hp
-
-    k = hp[param]['k']
-    depth = hp[param]['depth']
-    feats = hp[param]['feats']
-    g = hp[param]['g']
-    c = hp[param]['c']
-
-    return k, depth, feats, g, c
 
 def parse_args(args):
     """
@@ -182,11 +153,15 @@ def main():
     
     # compare against external test set
     if args.test_compare == True:
+        # convert trainset to be same units as testset
         trainX_unscaled = convert_g_to_mgUi(trainX_unscaled)
-        trainX = scale(trainX_unscaled)
         xy_cols = trainXY.columns.tolist()
         for col in nonlbls+['total']: xy_cols.remove(col)
-        testX, testY = get_testsetXY(args.testing_set, xy_cols, args.rxtr_param)
+        testX_unscaled, testY = get_testsetXY(args.testing_set, xy_cols, args.rxtr_param)
+        # scale testset using scale fit from trainset
+        scaler = StandardScaler().fit(trainX_unscaled)
+        trainX = scaler.transform(trainX_unscaled)
+        testX = scaler.transform(testX_unscaled)
         ext_test_compare(trainX, trainY, testX, testY, knn_init, dtr_init, svr_init, csv_name)
 
     # pred results wrt random error

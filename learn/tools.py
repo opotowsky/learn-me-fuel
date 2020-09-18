@@ -44,6 +44,35 @@ def splitXY(dfXY):
     #o_dfY = dfXY.loc[:, lbls[4]]
     return dfX, r_dfY, c_dfY, e_dfY, b_dfY
 
+def get_hyperparam(param, train_name):
+    """
+    
+    
+    """
+    nuc15_hp = {'reactor' :    {'k' : 1, 'depth' : 20, 'feats' : 10, 'g' : 0.50, 'c' : 75000},
+                'burnup' :     {'k' : 3, 'depth' : 20, 'feats' : 10, 'g' : 0.50, 'c' : 75000},
+                'cooling' :    {'k' : 3, 'depth' : 20, 'feats' : 15, 'g' : 0.10, 'c' : 75000},
+                'enrichment' : {'k' : 3, 'depth' : 20, 'feats' : 15, 'g' : 0.10, 'c' : 75000},
+                }
+    nuc29_hp = {'reactor' :    {'k' : 1, 'depth' : 50, 'feats' : 10, 'g' : 0.10, 'c' : 12500},
+                'burnup' :     {'k' : 3, 'depth' : 50, 'feats' : 10, 'g' : 0.50, 'c' : 12500},
+                'cooling' :    {'k' : 3, 'depth' : 50, 'feats' : 29, 'g' : 0.01, 'c' : 40000},
+                'enrichment' : {'k' : 3, 'depth' : 50, 'feats' : 29, 'g' : 0.00005, 'c' : 40000},
+                }
+    
+    if '15' in train_name:
+        hp = nuc15_hp
+    else:
+        hp = nuc29_hp
+
+    k = hp[param]['k']
+    depth = hp[param]['depth']
+    feats = hp[param]['feats']
+    g = hp[param]['g']
+    c = hp[param]['c']
+
+    return k, depth, feats, g, c
+
 def convert_g_to_mgUi(X):
     """
     Converts nuclides from ORIGEN simulations measured in grams to 
@@ -80,7 +109,6 @@ def get_testsetXY(pklfile, xy_cols, rxtr_param):
     
     testXY.reset_index(inplace=True, drop=True) 
     testX, rY, cY, eY, bY = splitXY(testXY)
-    testX = scale(testX)
     testY = pd.Series()
     if rxtr_param == 'cooling':
         testY = cY
