@@ -111,13 +111,13 @@ def main():
                                return_train_score=True)
     else:
         knn_opt = RandomizedSearchCV(estimator=knn_init, param_distributions=knn_grid, 
-                                     n_iter=iters, scoring=score, n_jobs=jobs, cv=kfold, 
+                                     n_iter=iters/2, scoring=score, n_jobs=jobs, cv=kfold, 
                                      return_train_score=True)
         dtr_opt = RandomizedSearchCV(estimator=dtr_init, param_distributions=dtr_grid,
-                                     n_iter=iters, scoring=score, n_jobs=jobs, cv=kfold, 
+                                     n_iter=iters/2, scoring=score, n_jobs=jobs, cv=kfold, 
                                      return_train_score=True)
         svr_opt = RandomizedSearchCV(estimator=svr_init, param_distributions=svr_grid,
-                                     n_iter=iters, scoring=score, n_jobs=jobs, cv=kfold, 
+                                     n_iter=iters/2, scoring=score, n_jobs=jobs, cv=kfold, 
                                      return_train_score=True)
     knn_opt.fit(trainX, trainY)
     dtr_opt.fit(trainX, trainY)
