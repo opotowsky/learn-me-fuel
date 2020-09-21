@@ -13,7 +13,7 @@ initialdir = optimize/nuc29
 transfer_input_files = http://proxy.chtc.wisc.edu/SQUID/chtc/python36.tar.gz, ../../shared/packages.tar.gz, ../../shared/optimize_hyperparameters.py, ../../shared/tools.py, http://proxy.chtc.wisc.edu/SQUID/opotowsky/sim_grams_nuc29.pkl
 
 request_cpus = 2
-request_memory = 8GB
+request_memory = 3GB
 request_disk = 2GB
 
 queue param, opt_type, tset_frac, cv, train_db from param_optimize_nuc29.txt
