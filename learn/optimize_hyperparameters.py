@@ -8,12 +8,111 @@ from sklearn.neighbors import KNeighborsRegressor, KNeighborsClassifier
 from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
 from sklearn.linear_model import Ridge, RidgeClassifier
 from sklearn.svm import SVR, SVC
-from sklearn.model_selection import KFold, StratifiedKFold, GridSearchCV, RandomizedSearchCV
+from sklearn.model_selection import KFold, StratifiedKFold, GridSearchCV
 
 import pandas as pd
 import numpy as np
 import argparse
 import sys
+
+def opt_knn(grid, trainX, trainY, arg):
+    """
+    Optimizes the k nearest neighbor algorithm, prints the top score and 
+    hyperparameter in a text file.
+
+    Parameters
+    ----------
+    grid : a dict of hyperparameters and range of them to optimize over
+    trainX : feature set of nuclide measurements
+    trainY : parameter being predicted (e.g., burnup, cooling time)
+    arg : a dict of various parameters needed for GridSearchCV and output file
+
+    """
+    knn_init = KNeighborsRegressor(weights='distance')
+    if arg['pred'] == 'reactor': 
+        knn_init = KNeighborsClassifier(weights='distance')
+    knn_opt = GridSearchCV(estimator=knn_init, param_grid=grid, 
+                           scoring=arg['score'], n_jobs=arg['jobs'], 
+                           cv=arg['kfold'], return_train_score=True)
+    knn_opt.fit(trainX, trainY) 
+    
+    tmpl = Template(
+'''
+score: $score
+n_neighbors: $k
+''')
+    txt = tmpl.substitute(score = knn_opt.best_score_,
+                          k = knn_opt.best_params_['n_neighbors'])                  
+    with open(arg['file'], 'a') as f:
+        f.write(txt)
+    return
+
+def opt_dtr(grid, trainX, trainY, arg):
+    """
+    Optimizes the decision tree algorithm, prints the top score and 
+    hyperparameters in a text file.
+
+    Parameters
+    ----------
+    grid : a dict of hyperparameters and range of them to optimize over
+    trainX : feature set of nuclide measurements
+    trainY : parameter being predicted (e.g., burnup, cooling time)
+    arg : a dict of various parameters needed for GridSearchCV and output file
+
+    """
+    dtr_init = DecisionTreeRegressor()
+    if arg['pred'] == 'reactor': 
+        dtr_init = DecisionTreeClassifier(class_weight='balanced')
+    dtr_opt = GridSearchCV(estimator=dtr_init, param_grid=grid,
+                           scoring=arg['score'], n_jobs=arg['jobs'], 
+                           cv=arg['kfold'], return_train_score=True)
+    dtr_opt.fit(trainX, trainY)
+
+    tmpl = Template(
+'''
+score: $score
+max_depth: $d
+max_features: $f
+''')
+    txt = tmpl.substitute(score = dtr_opt.best_score_,
+                          d = dtr_opt.best_params_['max_depth'],
+                          f = dtr_opt.best_params_['max_features'])
+    with open(arg['file'], 'a') as f:
+        f.write(txt)
+    return
+
+def opt_svm(grid, trainX, trainY, arg):
+    """
+    Optimizes the support vector machine algorithm, prints the top score and
+    hyperparameters in a text file.
+
+    Parameters
+    ----------
+    grid : a dict of hyperparameters and range of them to optimize over
+    trainX : feature set of nuclide measurements
+    trainY : parameter being predicted (e.g., burnup, cooling time)
+    arg : a dict of various parameters needed for GridSearchCV and output file
+
+    """
+    svr_init = SVR(C=arg['c'])
+    if arg['pred'] == 'reactor': 
+        svr_init = SVC(C=arg['c'], class_weight='balanced')
+    svr_opt = GridSearchCV(estimator=svr_init, param_grid=grid,
+                           scoring=arg['score'], n_jobs=arg['jobs'], 
+                           cv=arg['kfold'], return_train_score=True)
+    svr_opt.fit(trainX, trainY)
+    tmpl = Template(
+'''
+score: $score
+gamma: $g
+C: $c
+''')
+    txt = tmpl.substitute(score = svr_opt.best_score_,
+                          g = svr_opt.best_params_['gamma'],
+                          c = svr_opt.best_params_['C'])
+    with open(arg['file'], 'a') as f:
+        f.write(txt)
+    return
 
 def parse_args(args):
     """
@@ -21,11 +120,11 @@ def parse_args(args):
 
     Parameters
     ----------
-    args : 
+    args : system arguments entered on command line
 
     Returns
     -------
-    args : 
+    args : parsed arguments
 
     """
 
@@ -34,9 +133,9 @@ def parse_args(args):
     parser.add_argument('rxtr_param', choices=['reactor', 'cooling', 'enrichment', 'burnup'], 
                         metavar='prediction-param', 
                         help='which reactor parameter is to be predicted [reactor, cooling, enrichment, burnup]')
-    parser.add_argument('opt_type', choices=['grid', 'random'], 
-                        metavar='optimization-type', 
-                        help='which type of hyperparameter optimization strategy to pursue [grid, random]')
+    parser.add_argument('alg', choices=['knn', 'dtree', 'svm'], 
+                        metavar='aglortithm', 
+                        help='which algorithm to optimize [knn, dtree, svm]')
     parser.add_argument('tset_frac', metavar='trainset-fraction', type=float,
                         help='fraction of training set to use in algorithms')
     parser.add_argument('cv', metavar='cv-folds', type=int,
@@ -48,14 +147,20 @@ def parse_args(args):
 
 
 def main():
+    """
+    For a training set of nuclide measurements (features) and reactor
+    parameters (labels), this script optimizes the hyperparameters of three
+    chosen algorithms given a training set fraction and number of
+    cross-validation folds. The results are printed to text files. 
+    
+    """
 
     args = parse_args(sys.argv[1:])
     
     CV = args.cv
     tset_frac = args.tset_frac
-    csv_name =  args.rxtr_param
     
-    iters = 20
+    iters = 12
     jobs = 4
     c = 50000
     
@@ -75,15 +180,6 @@ def main():
     
     score = 'explained_variance'
     kfold = KFold(n_splits=CV, shuffle=True)
-    knn_init = KNeighborsRegressor(weights='distance')
-    dtr_init = DecisionTreeRegressor()
-    svr_init = SVR(C=c)
-
-    # save results
-    param_file = args.rxtr_param + '_' + args.opt_type + '_tfrac' + str(args.tset_frac) + '_hyperparameters.txt'
-    with open(param_file, 'a') as pf:
-        pf.write(args.opt_type + ' hyperparameter optimization for ' + args.rxtr_param + ':')
-    
     trainY = pd.Series()
     if args.rxtr_param == 'cooling':
         trainY = cY
@@ -95,59 +191,23 @@ def main():
         trainY = rY
         score = 'accuracy'
         kfold = StratifiedKFold(n_splits=CV, shuffle=True)
-        knn_init = KNeighborsClassifier(weights='distance')
-        dtr_init = DecisionTreeClassifier(class_weight='balanced')
-        svr_init = SVC(C=c, class_weight='balanced')
     
-    if args.opt_type == 'grid':
-        knn_opt = GridSearchCV(estimator=knn_init, param_grid=knn_grid, 
-                               scoring=score, n_jobs=jobs, cv=kfold, 
-                               return_train_score=True)
-        dtr_opt = GridSearchCV(estimator=dtr_init, param_grid=dtr_grid,
-                               scoring=score, n_jobs=jobs, cv=kfold, 
-                               return_train_score=True)
-        svr_opt = GridSearchCV(estimator=svr_init, param_grid=svr_grid,
-                               scoring=score, n_jobs=jobs, cv=kfold, 
-                               return_train_score=True)
+    # save results
+    outfile = args.rxtr_param + '_' + args.alg + '_tfrac' + str(args.tset_frac) + '_hyperparameters.txt'
+    with open(outfile, 'a') as of:
+        of.write(args.alg + ' hyperparameter optimization for ' + args.rxtr_param + ':')
+    
+    arg_dict = {'score' : score, 'jobs' : jobs, 'kfold' : kfold,
+                'pred' : args.rxtr_param, 'file' : outfile, 'c' : c}
+
+    if args.alg == 'knn':
+        opt_knn(knn_grid, trainX, trainY, arg_dict)
+    elif args.alg == 'dtree':
+        opt_dtr(dtr_grid, trainX, trainY, arg_dict)
     else:
-        knn_opt = RandomizedSearchCV(estimator=knn_init, param_distributions=knn_grid, 
-                                     n_iter=iters/2, scoring=score, n_jobs=jobs, cv=kfold, 
-                                     return_train_score=True)
-        dtr_opt = RandomizedSearchCV(estimator=dtr_init, param_distributions=dtr_grid,
-                                     n_iter=iters/2, scoring=score, n_jobs=jobs, cv=kfold, 
-                                     return_train_score=True)
-        svr_opt = RandomizedSearchCV(estimator=svr_init, param_distributions=svr_grid,
-                                     n_iter=iters/2, scoring=score, n_jobs=jobs, cv=kfold, 
-                                     return_train_score=True)
-    knn_opt.fit(trainX, trainY)
-    dtr_opt.fit(trainX, trainY)
-    svr_opt.fit(trainX, trainY)
+        opt_svm(svr_grid, trainX, trainY, arg_dict)
     
-    # save info
-    tmpl = Template(
-'''
-knn
-    score: $s1
-    n_neighbors: $k
-dtree
-    score: $s2
-    max_depth: $d
-    max_features: $f
-svr
-    score: $s3
-    gamma: $g
-    C: $c
-''')
-    txt = tmpl.substitute(s1=knn_opt.best_score_,
-                          k=knn_opt.best_params_['n_neighbors'],
-                          s2=dtr_opt.best_score_,
-                          d=dtr_opt.best_params_['max_depth'],
-                          f=dtr_opt.best_params_['max_features'],
-                          s3=svr_opt.best_score_,
-                          g=svr_opt.best_params_['gamma'],
-                          c=svr_opt.best_params_['C'])
-    with open(param_file, 'a') as pf:
-        pf.write(txt)
-    
+    return
+
 if __name__ == "__main__":
     main()
