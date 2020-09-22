@@ -1,8 +1,0 @@
-reactor_nuc15,reactor,0.1,5,sim_grams_nuc15.pkl,--random_error, , 
-reactor_nuc15,reactor,0.1,5,sim_grams_nuc15.pkl,--test_compare,--testing_set,sfcompo_nuc15.pkl
-cooling_nuc15,cooling,0.1,5,sim_grams_nuc15.pkl,--random_error, , 
-cooling_nuc15,cooling,0.1,5,sim_grams_nuc15.pkl,--test_compare,--testing_set,sfcompo_nuc15.pkl
-enrichment_nuc15,enrichment,0.1,5,sim_grams_nuc15.pkl,--random_error, , 
-enrichment_nuc15,enrichment,0.1,5,sim_grams_nuc15.pkl,--test_compare,--testing_set,sfcompo_nuc15.pkl
-burnup_nuc15,burnup,0.1,5,sim_grams_nuc15.pkl,--random_error, , 
-burnup_nuc15,burnup,0.1,5,sim_grams_nuc15.pkl,--test_compare,--testing_set,sfcompo_nuc15.pkl

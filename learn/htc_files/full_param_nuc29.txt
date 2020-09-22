@@ -1,8 +1,0 @@
-reactor_nuc29,reactor,0.1,5,sim_grams_nuc29.pkl,--random_error, , 
-reactor_nuc29,reactor,0.1,5,sim_grams_nuc29.pkl,--test_compare,--testing_set,sfcompo_nuc29.pkl
-cooling_nuc29,cooling,0.1,5,sim_grams_nuc29.pkl,--random_error, , 
-cooling_nuc29,cooling,0.1,5,sim_grams_nuc29.pkl,--test_compare,--testing_set,sfcompo_nuc29.pkl
-enrichment_nuc29,enrichment,0.1,5,sim_grams_nuc29.pkl,--random_error, , 
-enrichment_nuc29,enrichment,0.1,5,sim_grams_nuc29.pkl,--test_compare,--testing_set,sfcompo_nuc29.pkl
-burnup_nuc29,burnup,0.1,5,sim_grams_nuc29.pkl,--random_error, , 
-burnup_nuc29,burnup,0.1,5,sim_grams_nuc29.pkl,--test_compare,--testing_set,sfcompo_nuc29.pkl
