@@ -12,7 +12,7 @@ when_to_transfer_output = ON_EXIT
 initialdir = learn_results/sfcompo_nuc29
 transfer_input_files = http://proxy.chtc.wisc.edu/SQUID/chtc/python36.tar.gz, ../../shared/packages.tar.gz, ../../shared/learnme.py, ../../shared/tools.py, http://proxy.chtc.wisc.edu/SQUID/opotowsky/sim_grams_nuc29.pkl, ../../../mll_calc/shared/sfcompo_nuc29.pkl
 
-request_cpus = 4
+request_cpus = 2
 request_memory = 3GB
 request_disk = 3GB
 
