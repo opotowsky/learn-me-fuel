@@ -33,6 +33,9 @@ def parse_args(args):
     parser.add_argument('rxtr_param', choices=['reactor', 'cooling', 'enrichment', 'burnup'], 
                         metavar='prediction-param', 
                         help='which reactor parameter is to be predicted [reactor, cooling, enrichment, burnup]')
+    parser.add_argument('alg', choices=['knn', 'dtree', 'svm'], 
+                        metavar='aglortithm', 
+                        help='which algorithm to optimize [knn, dtree, svm]')
     parser.add_argument('tset_frac', metavar='trainset-fraction', type=float,
                         help='fraction of training set to use in algorithms')
     parser.add_argument('cv', metavar='cv-folds', type=int,
@@ -78,6 +81,7 @@ def main():
     args = parse_args(sys.argv[1:])
     
     CV = args.cv
+    alg = args.alg
     tset_frac = args.tset_frac
     csv_name =  args.outfile
     lbls = ['ReactorType', 'CoolingTime', 'Enrichment', 'Burnup', 'OrigenReactor']
@@ -122,34 +126,29 @@ def main():
         knn_init = KNeighborsClassifier(n_neighbors=k, weights='distance')
         dtr_init = DecisionTreeClassifier(max_depth=depth, max_features=feats, class_weight='balanced')
         svr_init = SVC(gamma=g, C=c, class_weight='balanced')
+    
+    if alg == 'knn':
+        init = knn_init
+    elif alg == 'dtree':
+        init = dtr_init
+    else:
+        init = svr_init
 
     ## track predictions
     if args.track_preds == True:
-        cols = X_unscaled.columns.values.tolist()
-        track_predictions(trainX, trainY, knn_init, dtr_init, svr_init, kfold, csv_name, cols)
+        cols = trainX_unscaled.columns.values.tolist()
+        track_predictions(trainX, trainY, alg, init, kfold, csv_name, cols)
 
     ## calculate errors and scores
     if args.err_n_scores == True:
         scores = ['r2', 'explained_variance', 'neg_mean_absolute_error']
         if args.rxtr_param == 'reactor':
             scores = ['accuracy', ]
-        errors_and_scores(trainX, trainY, knn_init, dtr_init, svr_init, scores, kfold, csv_name)
+        errors_and_scores(trainX, trainY, alg, init, scores, kfold, csv_name)
 
     # learning curves
     if args.learn_curves == True:
-        learning_curves(trainX, trainY, knn_init, dtr_init, svr_init, kfold, score, csv_name)
-    
-    # validation curves 
-    if args.valid_curves == True:
-        # VC needs different inits
-        knn_init = KNeighborsRegressor(weights='distance')
-        dtr_init = DecisionTreeRegressor()
-        svr_init = SVR(gamma='scale', C=c)
-        if args.rxtr_param == 'reactor':
-            knn_init = KNeighborsClassifier(weights='distance')
-            dtr_init = DecisionTreeClassifier(class_weight='balanced')
-            svr_init = SVC(gamma='scale', C=c, class_weight='balanced')
-        validation_curves(trainX, trainY, knn_init, dtr_init, svr_init, kfold, score, csv_name)
+        learning_curves(trainX, trainY, alg, init, kfold, score, csv_name)
     
     # compare against external test set
     if args.test_compare == True:
@@ -162,12 +161,30 @@ def main():
         scaler = StandardScaler().fit(trainX_unscaled)
         trainX = scaler.transform(trainX_unscaled)
         testX = scaler.transform(testX_unscaled)
-        ext_test_compare(trainX, trainY, testX, testY, knn_init, dtr_init, svr_init, csv_name)
+        ext_test_compare(trainX, trainY, testX, testY, alg, init, csv_name)
 
     # pred results wrt random error
     if args.random_error == True:
-        random_error(trainX_unscaled, trainY, knn_init, dtr_init, svr_init, kfold, score, csv_name)
+        random_error(trainX_unscaled, trainY, alg, init, kfold, score, csv_name)
 
+    # validation curves 
+    if args.valid_curves == True:
+        # VC needs different inits
+        knn_init = KNeighborsRegressor(weights='distance')
+        dtr_init = DecisionTreeRegressor()
+        svr_init = SVR(gamma='scale', C=c)
+        if args.rxtr_param == 'reactor':
+            knn_init = KNeighborsClassifier(weights='distance')
+            dtr_init = DecisionTreeClassifier(class_weight='balanced')
+            svr_init = SVC(gamma='scale', C=c, class_weight='balanced')
+        if alg == 'knn':
+            init = knn_init
+        elif alg == 'dtree':
+            init = dtr_init
+        else:
+            init = svr_init
+        validation_curves(trainX, trainY, alg, init, kfold, score, csv_name)
+    
     return
 
 if __name__ == "__main__":
