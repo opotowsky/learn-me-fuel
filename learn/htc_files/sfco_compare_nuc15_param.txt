@@ -10,3 +10,15 @@ enrichment_svm_nuc15,enrichment,svm,0.1,5,sim_grams_nuc15.pkl,--test_compare,--t
 burnup_knn_nuc15,burnup,knn,0.1,5,sim_grams_nuc15.pkl,--test_compare,--testing_set,sfcompo_nuc15.pkl
 burnup_dtree_nuc15,burnup,dtree,0.1,5,sim_grams_nuc15.pkl,--test_compare,--testing_set,sfcompo_nuc15.pkl
 burnup_svm_nuc15,burnup,svm,0.1,5,sim_grams_nuc15.pkl,--test_compare,--testing_set,sfcompo_nuc15.pkl
+reactor_knn_nuc15,reactor,knn,0.3,5,sim_grams_nuc15.pkl,--test_compare,--testing_set,sfcompo_nuc15.pkl
+reactor_dtree_nuc15,reactor,dtree,0.3,5,sim_grams_nuc15.pkl,--test_compare,--testing_set,sfcompo_nuc15.pkl
+reactor_svm_nuc15,reactor,svm,0.3,5,sim_grams_nuc15.pkl,--test_compare,--testing_set,sfcompo_nuc15.pkl
+cooling_knn_nuc15,cooling,knn,0.3,5,sim_grams_nuc15.pkl,--test_compare,--testing_set,sfcompo_nuc15.pkl
+cooling_dtree_nuc15,cooling,dtree,0.3,5,sim_grams_nuc15.pkl,--test_compare,--testing_set,sfcompo_nuc15.pkl
+cooling_svm_nuc15,cooling,svm,0.3,5,sim_grams_nuc15.pkl,--test_compare,--testing_set,sfcompo_nuc15.pkl
+enrichment_knn_nuc15,enrichment,knn,0.3,5,sim_grams_nuc15.pkl,--test_compare,--testing_set,sfcompo_nuc15.pkl
+enrichment_dtree_nuc15,enrichment,dtree,0.3,5,sim_grams_nuc15.pkl,--test_compare,--testing_set,sfcompo_nuc15.pkl
+enrichment_svm_nuc15,enrichment,svm,0.3,5,sim_grams_nuc15.pkl,--test_compare,--testing_set,sfcompo_nuc15.pkl
+burnup_knn_nuc15,burnup,knn,0.3,5,sim_grams_nuc15.pkl,--test_compare,--testing_set,sfcompo_nuc15.pkl
+burnup_dtree_nuc15,burnup,dtree,0.3,5,sim_grams_nuc15.pkl,--test_compare,--testing_set,sfcompo_nuc15.pkl
+burnup_svm_nuc15,burnup,svm,0.3,5,sim_grams_nuc15.pkl,--test_compare,--testing_set,sfcompo_nuc15.pkl
