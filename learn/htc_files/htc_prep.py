@@ -5,11 +5,11 @@ import csv
 def make_paramstxt(train, txtfile):
     
     rxtr_param = ['reactor', 'cooling', 'enrichment', 'burnup']
-    algs = ['knn', 'dtree', 'svm']
+    algs = ['knn', 'dtree']
     #func_type = ['--track_preds', '--err_n_scores', '--learn_curves', 
     #             '--valid_curves', '--test_compare', '--random_error']
-    func_type = ['--random_error', '--test_compare']
-    tset_frac = 0.1
+    func_type = ['--random_error',]# '--test_compare']
+    tset_frac = [0.1, 0.3, 1.0]
     cv = 5
 
     for param in rxtr_param:
@@ -27,16 +27,17 @@ def make_paramstxt(train, txtfile):
                 ts_flag = ' '
                 testset = ' '
             for alg in algs:
-                # outfile naming
-                if '15' in train:
-                    outfile = param + '_' + alg + '_' + str(tset) + 'tset_nuc15'
-                else:
-                    outfile = param + '_' + alg + '_' + str(tset) + 'tset_nuc29'
-                with open(filename, 'a') as f:
-                    w = csv.writer(f)
-                    job = [outfile, param, alg, str(tset_frac), str(cv),
-                           train, func, ts_flag, testset]
-                    w.writerow(job)
+                for frac in tset_frac:
+                    # outfile naming
+                    if '15' in train:
+                        outfile = param + '_' + alg + '_' + str(frac) + 'tset_nuc15'
+                    else:
+                        outfile = param + '_' + alg + '_' + str(frac) + 'tset_nuc29'
+                    with open(filename, 'a') as f:
+                        w = csv.writer(f)
+                        job = [outfile, param, alg, str(frac), str(cv),
+                               train, func, ts_flag, testset]
+                        w.writerow(job)
     return
 
 def main():
