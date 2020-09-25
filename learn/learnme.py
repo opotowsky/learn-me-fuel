@@ -87,7 +87,7 @@ def main():
     lbls = ['ReactorType', 'CoolingTime', 'Enrichment', 'Burnup', 'OrigenReactor']
     nonlbls = ['AvgPowerDensity', 'ModDensity', 'UiWeight']
     
-    # locally, pkl file location should be: '../../prep-pkls/pkl_dir/file.pkl'
+    # locally, pkl file location should be: '../../sims_n_results/desc_dir/file.pkl'
     pkl = args.train_db  
     trainXY = pd.read_pickle(pkl)
     trainXY.reset_index(inplace=True, drop=True) 
@@ -115,13 +115,13 @@ def main():
     k, depth, feats, g, c = get_hyperparam(args.rxtr_param, pkl)
         
     ## initialize learners
-    score = 'explained_variance'
+    scores = ['explained_variance', 'neg_mean_absolute_error', 'neg_root_mean_squared_error']
     kfold = KFold(n_splits=CV, shuffle=True)
     knn_init = KNeighborsRegressor(n_neighbors=k, weights='distance')
     dtr_init = DecisionTreeRegressor(max_depth=depth, max_features=feats)
     svr_init = SVR(gamma=g, C=c)
     if args.rxtr_param == 'reactor':
-        score = 'accuracy'
+        scores = 'accuracy'
         kfold = StratifiedKFold(n_splits=CV, shuffle=True)
         knn_init = KNeighborsClassifier(n_neighbors=k, weights='distance')
         dtr_init = DecisionTreeClassifier(max_depth=depth, max_features=feats, class_weight='balanced')
@@ -141,14 +141,11 @@ def main():
 
     ## calculate errors and scores
     if args.err_n_scores == True:
-        scores = ['r2', 'explained_variance', 'neg_mean_absolute_error']
-        if args.rxtr_param == 'reactor':
-            scores = ['accuracy', ]
         errors_and_scores(trainX, trainY, alg, init, scores, kfold, csv_name)
 
     # learning curves
     if args.learn_curves == True:
-        learning_curves(trainX, trainY, alg, init, kfold, score, csv_name)
+        learning_curves(trainX, trainY, alg, init, kfold, scores, csv_name)
     
     # compare against external test set
     if args.test_compare == True:
@@ -165,7 +162,7 @@ def main():
 
     # pred results wrt random error
     if args.random_error == True:
-        random_error(trainX_unscaled, trainY, alg, init, kfold, score, csv_name)
+        random_error(trainX_unscaled, trainY, alg, init, kfold, scores, csv_name)
 
     # validation curves 
     if args.valid_curves == True:
@@ -183,7 +180,7 @@ def main():
             init = dtr_init
         else:
             init = svr_init
-        validation_curves(trainX, trainY, alg, init, kfold, score, csv_name)
+        validation_curves(trainX, trainY, alg, init, kfold, scores, csv_name)
     
     return
 

@@ -7,7 +7,8 @@ import pandas as pd
 import numpy as np
 import sys
 
-njobs = 4
+njobs = -1
+
 algs = {'knn' : 'kNN', 'dtree' : 'DTree', 'svm' : 'SVM'}
 
 def splitXY(dfXY):
@@ -204,7 +205,7 @@ def add_error(percent_err, df):
 
     return df_err
 
-def random_error(X_unscaled, Y, alg, alg_init, CV, score, csv_name):
+def random_error(X_unscaled, Y, alg, alg_init, CV, scores, csv_name):
     """
     """
     err_percent = [0, 0.1, 0.3, 0.6, 0.9, 
@@ -212,37 +213,47 @@ def random_error(X_unscaled, Y, alg, alg_init, CV, score, csv_name):
                    2.5, 3, 3.5, 4, 4.5, 5,
                    6, 7, 8, 9, 10, 13, 17, 
                    20]
-    scr_mean = []
-    scr_std = []
+    exv = []
+    exv_std = []
+    mae = []
+    mae_std = []
+    rms = []
+    rms_std = []
     for err in err_percent:
         
         X = add_error(err, X_unscaled)
         X = scale(X)
     
         if alg == 'knn':
-            knn_scr = cross_val_score(alg_init, X, Y, scoring=score, cv=CV, n_jobs=njobs)
-            scr_mean.append(knn_scr.mean())
-            scr_std.append(knn_scr.std())
-        elif alg == 'dtree':
-            dtr_scr = cross_val_score(alg_init, X, Y, scoring=score, cv=CV, n_jobs=njobs)
-            scr_mean.append(dtr_scr.mean())
-            scr_std.append(dtr_scr.std())
-        else:    
-            svr_scr = cross_val_score(alg_init, X, Y, scoring=score, cv=CV, n_jobs=njobs)
-            scr_mean.append(svr_scr.mean())
-            scr_std.append(svr_scr.std())
+            knn_scr = cross_val_score(alg_init, X, Y, scoring=scores, cv=CV, n_jobs=njobs)
+            exv.append(knn_scr['test_'+scores[0]].mean())
+            exv_std.append(knn_scr['test_'+scores[0]].std())
+            mae.append(knn_scr['test_'+scores[1]].mean())
+            mae_std.append(knn_scr['test_'+scores[1]].std())
+            rms.append(knn_scr['test_'+scores[2]].mean())
+            rms_std.append(knn_scr['test_'+scores[2]].std())
+        else:
+            dtr_scr = cross_val_score(alg_init, X, Y, scoring=scores, cv=CV, n_jobs=njobs)
+            exv.append(dtr_scr['test_'+scores[0]].mean())
+            exv_std.append(dtr_scr['test_'+scores[0]].std())
+            mae.append(dtr_scr['test_'+scores[1]].mean())
+            mae_std.append(dtr_scr['test_'+scores[1]].std())
+            rms.append(dtr_scr['test_'+scores[2]].mean())
+            rms_std.append(dtr_scr['test_'+scores[2]].std())
     
-    mean_name = algs[alg] + ' Score'
-    std_name = algs[alg] + ' Std'
     df = pd.DataFrame({'Percent Error' : err_percent, 
-                        mean_name : scr_mean, 
-                        std_name : scr_std
-                        }, 
-                        index = err_percent)
+                        algs[alg]+' ExpVar' : exv,
+                        algs[alg]+' ExpVar Std' : exv_std,
+                        algs[alg]+' MAE' : mae,
+                        algs[alg]+' MAE Std' : mae_std,
+                        algs[alg]+' RMS' : rms,
+                        algs[alg]+' RMS Std' : rms_std
+                        })
     df.to_csv(csv_name + '_random_error.csv')
     return
 
-def validation_curves(X, Y, alg, alg_init, CV, score, csv_name):
+# TODO fix the datframe based on single score --> scores
+def validation_curves(X, Y, alg, alg_init, CV, scores, csv_name):
     """
     
     Given training data, iteratively runs some ML algorithms (currently, this
@@ -258,7 +269,7 @@ def validation_curves(X, Y, alg, alg_init, CV, score, csv_name):
     alg : name of algorithm
     alg_init : initialized learner
     CV : cross-validation generator
-    score : 
+    scores : 
     csv_name : string containing the train set, nuc subset, and parameter being 
                predicted for naming purposes
 
@@ -280,7 +291,7 @@ def validation_curves(X, Y, alg, alg_init, CV, score, csv_name):
     if alg == 'knn':
         train, cv = validation_curve(alg_init, X, Y, param_name='n_neighbors', 
                                      param_range=k_list, cv=CV, 
-                                     scoring=score, n_jobs=njobs)
+                                     scoring=scores, n_jobs=njobs)
         train_mean = np.mean(train, axis=1)
         train_std = np.std(train, axis=1)
         cv_mean = np.mean(cv, axis=1)
@@ -295,7 +306,7 @@ def validation_curves(X, Y, alg, alg_init, CV, score, csv_name):
     elif alg == 'dtree':
         train, cv = validation_curve(alg_init, X, Y, param_name='max_depth', 
                                      param_range=depth_list, cv=CV, 
-                                     scoring=score, n_jobs=njobs)
+                                     scoring=scores, n_jobs=njobs)
         train_mean = np.mean(train, axis=1)
         train_std = np.std(train, axis=1)
         cv_mean = np.mean(cv, axis=1)
@@ -307,7 +318,7 @@ def validation_curves(X, Y, alg, alg_init, CV, score, csv_name):
         
         train, cv = validation_curve(alg_init, X, Y, param_name='max_features', 
                                      param_range=feat_list, cv=CV, 
-                                     scoring=score, n_jobs=njobs)
+                                     scoring=scores, n_jobs=njobs)
         train_mean = np.mean(train, axis=1)
         train_std = np.std(train, axis=1)
         cv_mean = np.mean(cv, axis=1)
@@ -322,7 +333,7 @@ def validation_curves(X, Y, alg, alg_init, CV, score, csv_name):
     else: # svm
         train, cv = validation_curve(alg_init, X, Y, param_name='gamma', 
                                      param_range=gamma_list, cv=CV, 
-                                     scoring=score, n_jobs=njobs)
+                                     scoring=scores, n_jobs=njobs)
         train_mean = np.mean(train, axis=1)
         train_std = np.std(train, axis=1)
         cv_mean = np.mean(cv, axis=1)
@@ -334,7 +345,7 @@ def validation_curves(X, Y, alg, alg_init, CV, score, csv_name):
 
         train, cv = validation_curve(alg_init, X, Y, param_name='C', 
                                      param_range=c_list, cv=CV, 
-                                     scoring=score, n_jobs=njobs)
+                                     scoring=scores, n_jobs=njobs)
         train_mean = np.mean(train, axis=1)
         train_std = np.std(train, axis=1)
         cv_mean = np.mean(cv, axis=1)
@@ -349,7 +360,8 @@ def validation_curves(X, Y, alg, alg_init, CV, score, csv_name):
     vc_data.to_csv(csv_name + '_validation_curve.csv')
     return 
 
-def learning_curves(X, Y, alg, alg_init, CV, score, csv_name):
+# TODO fix the datframe based on single score --> scores
+def learning_curves(X, Y, alg, alg_init, CV, scores, csv_name):
     """
     
     Given training data, iteratively runs some ML algorithms (currently, this
@@ -386,7 +398,7 @@ def learning_curves(X, Y, alg, alg_init, CV, score, csv_name):
 
     if alg == 'knn':
         tsize, train, cv = learning_curve(alg_init, X, Y, train_sizes=trainset_frac, 
-                                          scoring=score, cv=CV, shuffle=True, 
+                                          scoring=scores, cv=CV, shuffle=True, 
                                           n_jobs=njobs)
         train_mean = np.mean(train, axis=1)
         train_std = np.std(train, axis=1)
@@ -397,7 +409,7 @@ def learning_curves(X, Y, alg, alg_init, CV, score, csv_name):
         lc_df['Algorithm'] = 'knn'
     elif alg == 'dtree':
         tsize, train, cv = learning_curve(alg_init, X, Y, train_sizes=trainset_frac, 
-                                          scoring=score, cv=CV, shuffle=True, 
+                                          scoring=scores, cv=CV, shuffle=True, 
                                           n_jobs=njobs)
         train_mean = np.mean(train, axis=1)
         train_std = np.std(train, axis=1)
@@ -408,7 +420,7 @@ def learning_curves(X, Y, alg, alg_init, CV, score, csv_name):
         lc_df['Algorithm'] = 'dtree'
     else: # svm
         tsize, train, cv = learning_curve(alg_init, X, Y, train_sizes=trainset_frac, 
-                                          scoring=score, cv=CV, shuffle=True, 
+                                          scoring=scores, cv=CV, shuffle=True, 
                                           n_jobs=njobs)
         train_mean = np.mean(train, axis=1)
         train_std = np.std(train, axis=1)
