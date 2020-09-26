@@ -8,7 +8,7 @@ def make_paramstxt(train, txtfile):
     algs = ['knn', 'dtree']
     #func_type = ['--track_preds', '--err_n_scores', '--learn_curves', 
     #             '--valid_curves', '--test_compare', '--random_error']
-    func_type = ['--random_error',]# '--test_compare']
+    func_type = ['--test_compare',]# '--random_error']
     tset_frac = [0.1, 0.3, 1.0]
     cv = 5
 
