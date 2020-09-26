@@ -30,9 +30,9 @@ def make_paramstxt(train, txtfile):
                 for frac in tset_frac:
                     # outfile naming
                     if '15' in train:
-                        outfile = param + '_' + alg + '_' + str(frac) + 'tset_nuc15'
+                        outfile = param + '_' + alg + '_tset' + str(frac) + '_nuc15'
                     else:
-                        outfile = param + '_' + alg + '_' + str(frac) + 'tset_nuc29'
+                        outfile = param + '_' + alg + '_tset' + str(frac) + '_nuc29'
                     with open(filename, 'a') as f:
                         w = csv.writer(f)
                         job = [outfile, param, alg, str(frac), str(cv),
