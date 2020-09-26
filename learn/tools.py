@@ -205,7 +205,7 @@ def add_error(percent_err, df):
 
     return df_err
 
-def random_error(X_unscaled, Y, alg, alg_init, CV, scores, csv_name):
+def random_error(X_unscaled, Y, alg, alg_init, CV, scores, csv_name, param):
     """
     """
     err_percent = [0, 0.1, 0.3, 0.6, 0.9, 
@@ -213,42 +213,66 @@ def random_error(X_unscaled, Y, alg, alg_init, CV, scores, csv_name):
                    2.5, 3, 3.5, 4, 4.5, 5,
                    6, 7, 8, 9, 10, 13, 17, 
                    20]
+    # TODO: delete
+    err_percent = [0.1, 1]
+    
+    acc = []
+    acc_std = []
     exv = []
     exv_std = []
     mae = []
     mae_std = []
     rms = []
     rms_std = []
+    
+    acc_name = 'test_score'
+    exv_name = 'test_' + scores[0]
+    mae_name = 'test_' + scores[1]
+    rms_name = 'test_' + scores[2]
     for err in err_percent:
-        
         X = add_error(err, X_unscaled)
         X = scale(X)
-    
         if alg == 'knn':
-            knn_scr = cross_val_score(alg_init, X, Y, scoring=scores, cv=CV, n_jobs=njobs)
-            exv.append(knn_scr['test_'+scores[0]].mean())
-            exv_std.append(knn_scr['test_'+scores[0]].std())
-            mae.append(knn_scr['test_'+scores[1]].mean())
-            mae_std.append(knn_scr['test_'+scores[1]].std())
-            rms.append(knn_scr['test_'+scores[2]].mean())
-            rms_std.append(knn_scr['test_'+scores[2]].std())
+            if param == 'reactor':
+                knn_scr = cross_validate(alg_init, X, Y, scoring=scores, cv=CV, n_jobs=njobs)
+                acc.append(knn_scr[acc_name].mean())
+                acc_std.append(knn_scr[acc_name].std())
+            else:
+                knn_scr = cross_validate(alg_init, X, Y, scoring=scores, cv=CV, n_jobs=njobs)
+                exv.append(knn_scr[exv_name].mean())
+                exv_std.append(knn_scr[exv_name].std())
+                mae.append(knn_scr[mae_name].mean())
+                mae_std.append(knn_scr[mae_name].std())
+                rms.append(knn_scr[rms_name].mean())
+                rms_std.append(knn_scr[rms_name].std())
         else:
-            dtr_scr = cross_val_score(alg_init, X, Y, scoring=scores, cv=CV, n_jobs=njobs)
-            exv.append(dtr_scr['test_'+scores[0]].mean())
-            exv_std.append(dtr_scr['test_'+scores[0]].std())
-            mae.append(dtr_scr['test_'+scores[1]].mean())
-            mae_std.append(dtr_scr['test_'+scores[1]].std())
-            rms.append(dtr_scr['test_'+scores[2]].mean())
-            rms_std.append(dtr_scr['test_'+scores[2]].std())
+            if param == 'reactor':
+                dtr_scr = cross_validate(alg_init, X, Y, scoring=scores, cv=CV, n_jobs=njobs)
+                acc.append(dtr_scr[acc_name].mean())
+                acc_std.append(dtr_scr[acc_name].std())
+            else:
+                dtr_scr = cross_val_score(alg_init, X, Y, scoring=scores, cv=CV, n_jobs=njobs)
+                exv.append(dtr_scr[exv_name].mean())
+                exv_std.append(dtr_scr[exv_name].std())
+                mae.append(dtr_scr[mae_name].mean())
+                mae_std.append(dtr_scr[mae_name].std())
+                rms.append(dtr_scr[rms_name].mean())
+                rms_std.append(dtr_scr[rms_name].std())
     
-    df = pd.DataFrame({'Percent Error' : err_percent, 
-                        algs[alg]+' ExpVar' : exv,
-                        algs[alg]+' ExpVar Std' : exv_std,
-                        algs[alg]+' MAE' : mae,
-                        algs[alg]+' MAE Std' : mae_std,
-                        algs[alg]+' RMS' : rms,
-                        algs[alg]+' RMS Std' : rms_std
-                        })
+    if param == 'reactor':
+        df = pd.DataFrame({'Percent Error' : err_percent, 
+                            algs[alg]+' Acc' : acc,
+                            algs[alg]+' Acc Std' : acc_std
+                            })
+    else:
+        df = pd.DataFrame({'Percent Error' : err_percent, 
+                            algs[alg]+' ExpVar' : exv,
+                            algs[alg]+' ExpVar Std' : exv_std,
+                            algs[alg]+' MAE' : mae,
+                            algs[alg]+' MAE Std' : mae_std,
+                            algs[alg]+' RMSE' : rms,
+                            algs[alg]+' RMSE Std' : rms_std
+                            })
     df.to_csv(csv_name + '_random_error.csv')
     return
 
