@@ -213,9 +213,6 @@ def random_error(X_unscaled, Y, alg, alg_init, CV, scores, csv_name, param):
                    2.5, 3, 3.5, 4, 4.5, 5,
                    6, 7, 8, 9, 10, 13, 17, 
                    20]
-    # TODO: delete
-    err_percent = [0.1, 1]
-    
     acc = []
     acc_std = []
     exv = []
@@ -251,7 +248,7 @@ def random_error(X_unscaled, Y, alg, alg_init, CV, scores, csv_name, param):
                 acc.append(dtr_scr[acc_name].mean())
                 acc_std.append(dtr_scr[acc_name].std())
             else:
-                dtr_scr = cross_val_score(alg_init, X, Y, scoring=scores, cv=CV, n_jobs=njobs)
+                dtr_scr = cross_validate(alg_init, X, Y, scoring=scores, cv=CV, n_jobs=njobs)
                 exv.append(dtr_scr[exv_name].mean())
                 exv_std.append(dtr_scr[exv_name].std())
                 mae.append(dtr_scr[mae_name].mean())
