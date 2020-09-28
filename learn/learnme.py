@@ -112,7 +112,7 @@ def main():
         trainY = rY
 
     # get hyperparams
-    k, depth, feats, g, c = get_hyperparam(args.rxtr_param, pkl)
+    k, depth, feats, g, c = get_hyperparam(args.rxtr_param, pkl, tset_frac)
         
     ## initialize learners
     scores = ['explained_variance', 'neg_mean_absolute_error', 'neg_root_mean_squared_error']
