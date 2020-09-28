@@ -65,24 +65,24 @@ def get_hyperparam(param, train_name, frac):
                     }
     elif frac == 0.5:
         # optimized on 50% trainset
-        nuc15_hp = {'reactor' :    {'k' : 2, 'depth' : 65, 'feats' : 5, 'g' : 0.07, 'c' : 285000},
-                    'burnup' :     {'k' : 2, 'depth' : 34, 'feats' : 14, 'g' : 0.50, 'c' : 100000},
-                    'cooling' :    {'k' : 2, 'depth' : 67, 'feats' : 15, 'g' : 0.10, 'c' : 100000},
-                    'enrichment' : {'k' : 4, 'depth' : 53, 'feats' : 5, 'g' : 0.10, 'c' : 100000},
+        nuc15_hp = {'reactor' :    {'k' : 2, 'depth' : 50, 'feats' : 6, 'g' : 0.07, 'c' : 285000},
+                    'burnup' :     {'k' : 2, 'depth' : 43, 'feats' : 12, 'g' : 0.50, 'c' : 100000},
+                    'cooling' :    {'k' : 2, 'depth' : 46, 'feats' : 15, 'g' : 0.10, 'c' : 100000},
+                    'enrichment' : {'k' : 4, 'depth' : 31, 'feats' : 5, 'g' : 0.10, 'c' : 100000},
                     }
-        nuc29_hp = {'reactor' :    {'k' : 2, 'depth' : 73, 'feats' : 11, 'g' : 0.07, 'c' : 23000},
-                    'burnup' :     {'k' : 2, 'depth' : 77, 'feats' : 27, 'g' : 0.50, 'c' : 40000},
-                    'cooling' :    {'k' : 2, 'depth' : 48, 'feats' : 29, 'g' : 0.01, 'c' : 40000},
+        nuc29_hp = {'reactor' :    {'k' : 2, 'depth' : 60, 'feats' : 9, 'g' : 0.07, 'c' : 23000},
+                    'burnup' :     {'k' : 2, 'depth' : 34, 'feats' : 26, 'g' : 0.50, 'c' : 40000},
+                    'cooling' :    {'k' : 2, 'depth' : 75, 'feats' : 27, 'g' : 0.01, 'c' : 40000},
                     'enrichment' : {'k' : 2, 'depth' : 77, 'feats' : 24, 'g' : 0.00005, 'c' : 40000},
                     }
     else:
         # optimized on 10% trainset
-        nuc15_hp = {'reactor' :    {'k' : 2, 'depth' : 33, 'feats' : 7, 'g' : 0.07, 'c' : 285000},
+        nuc15_hp = {'reactor' :    {'k' : 2, 'depth' : 33, 'feats' : 10, 'g' : 0.07, 'c' : 285000},
                     'burnup' :     {'k' : 9, 'depth' : 54, 'feats' : 14, 'g' : 0.50, 'c' : 100000},
                     'cooling' :    {'k' : 3, 'depth' : 56, 'feats' : 14, 'g' : 0.10, 'c' : 100000},
-                    'enrichment' : {'k' : 2, 'depth' : 42, 'feats' : 6, 'g' : 0.10, 'c' : 100000},
+                    'enrichment' : {'k' : 2, 'depth' : 42, 'feats' : 9, 'g' : 0.10, 'c' : 100000},
                     }
-        nuc29_hp = {'reactor' :    {'k' : 1, 'depth' : 48, 'feats' : 17, 'g' : 0.07, 'c' : 23000},
+        nuc29_hp = {'reactor' :    {'k' : 3, 'depth' : 70, 'feats' : 17, 'g' : 0.07, 'c' : 23000},
                     'burnup' :     {'k' : 6, 'depth' : 42, 'feats' : 29, 'g' : 0.50, 'c' : 40000},
                     'cooling' :    {'k' : 5, 'depth' : 48, 'feats' : 29, 'g' : 0.01, 'c' : 40000},
                     'enrichment' : {'k' : 3, 'depth' : 71, 'feats' : 25, 'g' : 0.00005, 'c' : 40000},
