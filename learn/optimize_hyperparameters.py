@@ -178,7 +178,7 @@ def main():
                 "max_features": np.linspace(5, len(trainXY.columns)-8, iters).astype(int)}
     svr_grid = {'C': np.logspace(0, 6, iters), 'gamma': np.logspace(-7, 1, iters)} 
     
-    score = 'explained_variance'
+    score = 'neg_mean_absolute_error'
     kfold = KFold(n_splits=CV, shuffle=True)
     trainY = pd.Series()
     if args.rxtr_param == 'cooling':
