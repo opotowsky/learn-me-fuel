@@ -51,15 +51,15 @@ def get_hyperparam(param, train_name):
     
     
     """
-    nuc15_hp = {'reactor' :    {'k' : 1, 'depth' : 20, 'feats' : 10, 'g' : 0.50, 'c' : 75000},
-                'burnup' :     {'k' : 3, 'depth' : 20, 'feats' : 10, 'g' : 0.50, 'c' : 75000},
-                'cooling' :    {'k' : 3, 'depth' : 20, 'feats' : 15, 'g' : 0.10, 'c' : 75000},
-                'enrichment' : {'k' : 3, 'depth' : 20, 'feats' : 15, 'g' : 0.10, 'c' : 75000},
+    nuc15_hp = {'reactor' :    {'k' : 1, 'depth' : 33, 'feats' : 9, 'g' : 0.07, 'c' : 285000},
+                'burnup' :     {'k' : 7, 'depth' : 64, 'feats' : 14, 'g' : 0.50, 'c' : 100000},
+                'cooling' :    {'k' : 2, 'depth' : 61, 'feats' : 15, 'g' : 0.10, 'c' : 100000},
+                'enrichment' : {'k' : 4, 'depth' : 36, 'feats' : 5, 'g' : 0.10, 'c' : 100000},
                 }
-    nuc29_hp = {'reactor' :    {'k' : 1, 'depth' : 50, 'feats' : 10, 'g' : 0.10, 'c' : 12500},
-                'burnup' :     {'k' : 3, 'depth' : 50, 'feats' : 10, 'g' : 0.50, 'c' : 12500},
-                'cooling' :    {'k' : 3, 'depth' : 50, 'feats' : 29, 'g' : 0.01, 'c' : 40000},
-                'enrichment' : {'k' : 3, 'depth' : 50, 'feats' : 29, 'g' : 0.00005, 'c' : 40000},
+    nuc29_hp = {'reactor' :    {'k' : 1, 'depth' : 30, 'feats' : 17, 'g' : 0.07, 'c' : 23000},
+                'burnup' :     {'k' : 7, 'depth' : 73, 'feats' : 27, 'g' : 0.50, 'c' : 40000},
+                'cooling' :    {'k' : 4, 'depth' : 58, 'feats' : 28, 'g' : 0.01, 'c' : 40000},
+                'enrichment' : {'k' : 4, 'depth' : 51, 'feats' : 27, 'g' : 0.00005, 'c' : 40000},
                 }
     
     if '15' in train_name:
