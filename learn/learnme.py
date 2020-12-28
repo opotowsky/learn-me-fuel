@@ -117,13 +117,13 @@ def main():
     ## initialize learners
     scores = ['explained_variance', 'neg_mean_absolute_error', 'neg_root_mean_squared_error']
     kfold = KFold(n_splits=CV, shuffle=True)
-    knn_init = KNeighborsRegressor(n_neighbors=k, weights='distance')
+    knn_init = KNeighborsRegressor(n_neighbors=k, weights='distance', p=1, metric='minkowski')
     dtr_init = DecisionTreeRegressor(max_depth=depth, max_features=feats)
     svr_init = SVR(gamma=g, C=c)
     if args.rxtr_param == 'reactor':
         scores = 'accuracy'
         kfold = StratifiedKFold(n_splits=CV, shuffle=True)
-        knn_init = KNeighborsClassifier(n_neighbors=k, weights='distance')
+        knn_init = KNeighborsClassifier(n_neighbors=k, weights='distance', p=1, metric='minkowski')
         dtr_init = DecisionTreeClassifier(max_depth=depth, max_features=feats, class_weight='balanced')
         svr_init = SVC(gamma=g, C=c, class_weight='balanced')
     
@@ -167,11 +167,11 @@ def main():
     # validation curves 
     if args.valid_curves == True:
         # VC needs different inits
-        knn_init = KNeighborsRegressor(weights='distance')
+        knn_init = KNeighborsRegressor(weights='distance', p=1, metric='minkowski')
         dtr_init = DecisionTreeRegressor()
         svr_init = SVR(gamma='scale', C=c)
         if args.rxtr_param == 'reactor':
-            knn_init = KNeighborsClassifier(weights='distance')
+            knn_init = KNeighborsClassifier(weights='distance', p=1, metric='minkowski')
             dtr_init = DecisionTreeClassifier(class_weight='balanced')
             svr_init = SVC(gamma='scale', C=c, class_weight='balanced')
         if alg == 'knn':
