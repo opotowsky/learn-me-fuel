@@ -28,9 +28,9 @@ def opt_knn(grid, trainX, trainY, arg):
     arg : a dict of various parameters needed for GridSearchCV and output file
 
     """
-    knn_init = KNeighborsRegressor(weights='distance')
+    knn_init = KNeighborsRegressor(weights='distance', p=1, metric='minkowski')
     if arg['pred'] == 'reactor': 
-        knn_init = KNeighborsClassifier(weights='distance')
+        knn_init = KNeighborsClassifier(weights='distance', p=1, metric='minkowski')
     knn_opt = GridSearchCV(estimator=knn_init, param_grid=grid, 
                            scoring=arg['score'], n_jobs=arg['jobs'], 
                            cv=arg['kfold'], return_train_score=True)
@@ -161,7 +161,7 @@ def main():
     tset_frac = args.tset_frac
     
     iters = 32
-    jobs = -1
+    jobs = 8
     c = 50000
     
     # get data set
