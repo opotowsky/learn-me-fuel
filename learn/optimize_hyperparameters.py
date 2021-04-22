@@ -160,8 +160,8 @@ def main():
     CV = args.cv
     tset_frac = args.tset_frac
     
-    iters = 12
-    jobs = 4
+    iters = 32
+    jobs = -1
     c = 50000
     
     # get data set
