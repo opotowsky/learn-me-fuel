@@ -1,0 +1,12 @@
+reactor,knn,0.1,5,test.pkl
+reactor,dtree,0.1,5,test.pkl
+reactor,svm,0.1,5,test.pkl
+cooling,knn,0.1,5,test.pkl
+cooling,dtree,0.1,5,test.pkl
+cooling,svm,0.1,5,test.pkl
+enrichment,knn,0.1,5,test.pkl
+enrichment,dtree,0.1,5,test.pkl
+enrichment,svm,0.1,5,test.pkl
+burnup,knn,0.1,5,test.pkl
+burnup,dtree,0.1,5,test.pkl
+burnup,svm,0.1,5,test.pkl
