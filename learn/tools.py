@@ -87,11 +87,43 @@ def get_hyperparam(param, train_name, frac):
                     'cooling' :    {'k' : 5, 'depth' : 48, 'feats' : 29, 'g' : 0.01, 'c' : 40000},
                     'enrichment' : {'k' : 3, 'depth' : 71, 'feats' : 25, 'g' : 0.00005, 'c' : 40000},
                     }
-    
+    # multiple opt runs on diff sized trainsets for nuc conc trainsets
     if '15' in train_name:
         hp = nuc15_hp
-    else:
+    elif '29' in train_name:
         hp = nuc29_hp
+    # processed gamma spec are optimized on 20% trainset. no SVM opt done.
+    elif 'd1' in train_name:
+        hp = {'reactor' :    {'k' : 4, 'depth' : 41, 'feats' : 109, 'g' : 0.10, 'c' : 100000},
+              'burnup' :     {'k' : 3, 'depth' : 53, 'feats' : 99, 'g' : 0.10, 'c' : 100000},
+              'cooling' :    {'k' : 3, 'depth' : 31, 'feats' : 106, 'g' : 0.10, 'c' : 100000},
+              'enrichment' : {'k' : 6, 'depth' : 67, 'feats' : 109, 'g' : 0.10, 'c' : 100000},
+              }
+    elif 'd2' in train_name:
+        hp = {'reactor' :    {'k' : 4, 'depth' : 41, 'feats' : 109, 'g' : 0.10, 'c' : 100000},
+              'burnup' :     {'k' : 3, 'depth' : 53, 'feats' : 100, 'g' : 0.10, 'c' : 100000},
+              'cooling' :    {'k' : 3, 'depth' : 31, 'feats' : 106, 'g' : 0.10, 'c' : 100000},
+              'enrichment' : {'k' : 6, 'depth' : 67, 'feats' : 109, 'g' : 0.10, 'c' : 100000},
+              }
+    elif 'd3' in train_name:
+        hp = {'reactor' :    {'k' : 4, 'depth' : 41, 'feats' : 109, 'g' : 0.10, 'c' : 100000},
+              'burnup' :     {'k' : 3, 'depth' : 53, 'feats' : 100, 'g' : 0.10, 'c' : 100000},
+              'cooling' :    {'k' : 3, 'depth' : 31, 'feats' : 106, 'g' : 0.10, 'c' : 100000},
+              'enrichment' : {'k' : 6, 'depth' : 67, 'feats' : 109, 'g' : 0.10, 'c' : 100000},
+              }
+    elif 'd6' in train_name:
+        hp = {'reactor' :    {'k' : 4, 'depth' : 41, 'feats' : 109, 'g' : 0.10, 'c' : 100000},
+              'burnup' :     {'k' : 3, 'depth' : 53, 'feats' : 100, 'g' : 0.10, 'c' : 100000},
+              'cooling' :    {'k' : 3, 'depth' : 31, 'feats' : 106, 'g' : 0.10, 'c' : 100000},
+              'enrichment' : {'k' : 6, 'depth' : 67, 'feats' : 109, 'g' : 0.10, 'c' : 100000},
+              }
+    else:
+        # or should I sys exit?
+        hp = {'reactor' :    {'k' : 2, 'depth' : None, 'feats' : None, 'g' : 0.10, 'c' : 100000},
+              'burnup' :     {'k' : 2, 'depth' : None, 'feats' : None, 'g' : 0.10, 'c' : 100000},
+              'cooling' :    {'k' : 2, 'depth' : None, 'feats' : None, 'g' : 0.10, 'c' : 100000},
+              'enrichment' : {'k' : 2, 'depth' : None, 'feats' : None, 'g' : 0.10, 'c' : 100000},
+              }
 
     k = hp[param]['k']
     depth = hp[param]['depth']
