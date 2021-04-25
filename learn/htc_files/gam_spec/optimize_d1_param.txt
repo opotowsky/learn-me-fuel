@@ -1,8 +1,8 @@
-reactor,knn,0.2,5,d1_hpge_spectra_peaks_trainset.pkl
-reactor,dtree,0.2,5,d1_hpge_spectra_peaks_trainset.pkl
-cooling,knn,0.2,5,d1_hpge_spectra_peaks_trainset.pkl
-cooling,dtree,0.2,5,d1_hpge_spectra_peaks_trainset.pkl
-enrichment,knn,0.2,5,d1_hpge_spectra_peaks_trainset.pkl
-enrichment,dtree,0.2,5,d1_hpge_spectra_peaks_trainset.pkl
-burnup,knn,0.2,5,d1_hpge_spectra_peaks_trainset.pkl
-burnup,dtree,0.2,5,d1_hpge_spectra_peaks_trainset.pkl
+reactor,knn,0.6,5,d1_hpge_spectra_peaks_trainset.pkl
+reactor,dtree,0.6,5,d1_hpge_spectra_peaks_trainset.pkl
+cooling,knn,0.6,5,d1_hpge_spectra_peaks_trainset.pkl
+cooling,dtree,0.6,5,d1_hpge_spectra_peaks_trainset.pkl
+enrichment,knn,0.6,5,d1_hpge_spectra_peaks_trainset.pkl
+enrichment,dtree,0.6,5,d1_hpge_spectra_peaks_trainset.pkl
+burnup,knn,0.6,5,d1_hpge_spectra_peaks_trainset.pkl
+burnup,dtree,0.6,5,d1_hpge_spectra_peaks_trainset.pkl
