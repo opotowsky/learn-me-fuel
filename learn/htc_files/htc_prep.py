@@ -13,7 +13,9 @@ def make_paramstxt(train, txtfile, file_descrip):
     #func_type = ['--test_compare', '--random_error']
     # funcs ran for gamma spec scenario:
     func_type = ['--random_error',]
-    tset_frac = [0.1, 0.3, 1.0]
+    #tset_frac = [0.1, 0.3, 1.0]
+    #tset_frac = [0.2, 0.6]
+    tset_frac = [0.2,]
     cv = 5
 
     for param in rxtr_param:
@@ -53,7 +55,7 @@ def main():
     #outfile = ['_nuc15', '_nuc29']
     
     # activity lists
-    dblist = ['test.pkl',]
+    dblist = ['d1_hpge_spectra_peaks_trainset.pkl',]
     txtfile = ['_d1_param.txt',]
     outfile = ['_d1_hpge',]
 

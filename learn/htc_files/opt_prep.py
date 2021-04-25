@@ -6,7 +6,7 @@ def make_paramstxt(train, txtfile):
     
     rxtr_param = ['reactor', 'cooling', 'enrichment', 'burnup']
     algs = ['knn', 'dtree']#, 'svm']
-    tset_frac = 0.2
+    tset_frac = 0.6
     cv = 5
 
     with open(txtfile, 'w') as f:
