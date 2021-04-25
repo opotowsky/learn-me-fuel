@@ -87,14 +87,14 @@ def main():
     lbls = ['ReactorType', 'CoolingTime', 'Enrichment', 'Burnup', 'OrigenReactor']
     nonlbls = ['AvgPowerDensity', 'ModDensity', 'UiWeight']
     
-    # locally, pkl file location should be: '../../sims_n_results/desc_dir/file.pkl'
     pkl = args.train_db  
     trainXY = pd.read_pickle(pkl)
     trainXY.reset_index(inplace=True, drop=True) 
     # ensure hyperparam optimization was done on correct tset_frac
     trainXY = trainXY.sample(frac=tset_frac)
     trainX_unscaled, rY, cY, eY, bY = splitXY(trainXY)
-    trainX = scale(trainX_unscaled)
+    if args.random_error == False:
+        trainX = scale(trainX_unscaled)
     
     # set ground truth 
     trainY = pd.Series()
