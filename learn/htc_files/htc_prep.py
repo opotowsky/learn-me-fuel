@@ -12,10 +12,10 @@ def make_paramstxt(train, txtfile, file_descrip):
     # funcs ran for nuc conc scenario:
     #func_type = ['--test_compare', '--random_error']
     # funcs ran for gamma spec scenario:
-    func_type = ['--random_error',]
+    func_type = ['--err_n_scores',]
     #tset_frac = [0.1, 0.3, 1.0]
     #tset_frac = [0.2, 0.6]
-    tset_frac = [0.2,]
+    tset_frac = [0.1, 0.2, 0.3, 0.5, 1.0]
     cv = 5
 
     for param in rxtr_param:
@@ -55,9 +55,15 @@ def main():
     #outfile = ['_nuc15', '_nuc29']
     
     # activity lists
-    dblist = ['d1_hpge_spectra_peaks_trainset.pkl',]
-    txtfile = ['_d1_param.txt',]
-    outfile = ['_d1_hpge',]
+    dblist = ['d1_hpge_spectra_peaks_trainset.pkl',
+              'd2_hpge_spectra_peaks_trainset.pkl',
+              ]
+    txtfile = ['_d1_param.txt',
+               '_d2_param.txt',
+               ]
+    outfile = ['_d1_hpge',
+               '_d2_hpge',
+               ]
 
     for i, traindb in enumerate(dblist):
         make_paramstxt(traindb, txtfile[i], outfile[i])
