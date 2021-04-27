@@ -1,8 +1,0 @@
-reactor_knn_tset0.2_d1_hpge,reactor,knn,0.2,5,d1_hpge_spectra_peaks_trainset.pkl,--random_error, , 
-reactor_dtree_tset0.2_d1_hpge,reactor,dtree,0.2,5,d1_hpge_spectra_peaks_trainset.pkl,--random_error, , 
-cooling_knn_tset0.2_d1_hpge,cooling,knn,0.2,5,d1_hpge_spectra_peaks_trainset.pkl,--random_error, , 
-cooling_dtree_tset0.2_d1_hpge,cooling,dtree,0.2,5,d1_hpge_spectra_peaks_trainset.pkl,--random_error, , 
-enrichment_knn_tset0.2_d1_hpge,enrichment,knn,0.2,5,d1_hpge_spectra_peaks_trainset.pkl,--random_error, , 
-enrichment_dtree_tset0.2_d1_hpge,enrichment,dtree,0.2,5,d1_hpge_spectra_peaks_trainset.pkl,--random_error, , 
-burnup_knn_tset0.2_d1_hpge,burnup,knn,0.2,5,d1_hpge_spectra_peaks_trainset.pkl,--random_error, , 
-burnup_dtree_tset0.2_d1_hpge,burnup,dtree,0.2,5,d1_hpge_spectra_peaks_trainset.pkl,--random_error, , 
