@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 import sys
 
-njobs = -1
+njobs = 5
 
 algs = {'knn' : 'kNN', 'dtree' : 'DTree', 'svm' : 'SVM'}
 
@@ -100,22 +100,22 @@ def get_hyperparam(param, train_name, frac):
               'enrichment' : {'k' : 6, 'depth' : 67, 'feats' : 109, 'g' : 0.10, 'c' : 100000},
               }
     elif 'd2' in train_name:
-        hp = {'reactor' :    {'k' : 4, 'depth' : 41, 'feats' : 109, 'g' : 0.10, 'c' : 100000},
-              'burnup' :     {'k' : 3, 'depth' : 53, 'feats' : 100, 'g' : 0.10, 'c' : 100000},
-              'cooling' :    {'k' : 3, 'depth' : 31, 'feats' : 106, 'g' : 0.10, 'c' : 100000},
-              'enrichment' : {'k' : 6, 'depth' : 67, 'feats' : 109, 'g' : 0.10, 'c' : 100000},
+        hp = {'reactor' :    {'k' : 8, 'depth' : 58, 'feats' : 106, 'g' : 0.10, 'c' : 100000},
+              'burnup' :     {'k' : 4, 'depth' : 70, 'feats' : 106, 'g' : 0.10, 'c' : 100000},
+              'cooling' :    {'k' : 4, 'depth' : 26, 'feats' : 95, 'g' : 0.10, 'c' : 100000},
+              'enrichment' : {'k' : 6, 'depth' : 63, 'feats' : 109, 'g' : 0.10, 'c' : 100000},
               }
     elif 'd3' in train_name:
-        hp = {'reactor' :    {'k' : 4, 'depth' : 41, 'feats' : 109, 'g' : 0.10, 'c' : 100000},
-              'burnup' :     {'k' : 3, 'depth' : 53, 'feats' : 100, 'g' : 0.10, 'c' : 100000},
-              'cooling' :    {'k' : 3, 'depth' : 31, 'feats' : 106, 'g' : 0.10, 'c' : 100000},
-              'enrichment' : {'k' : 6, 'depth' : 67, 'feats' : 109, 'g' : 0.10, 'c' : 100000},
+        hp = {'reactor' :    {'k' : 6, 'depth' : 53, 'feats' : 26, 'g' : 0.10, 'c' : 100000},
+              'burnup' :     {'k' : 4, 'depth' : 67, 'feats' : 30, 'g' : 0.10, 'c' : 100000},
+              'cooling' :    {'k' : 4, 'depth' : 26, 'feats' : 27, 'g' : 0.10, 'c' : 100000},
+              'enrichment' : {'k' : 7, 'depth' : 38, 'feats' : 24, 'g' : 0.10, 'c' : 100000},
               }
     elif 'd6' in train_name:
-        hp = {'reactor' :    {'k' : 4, 'depth' : 41, 'feats' : 109, 'g' : 0.10, 'c' : 100000},
-              'burnup' :     {'k' : 3, 'depth' : 53, 'feats' : 100, 'g' : 0.10, 'c' : 100000},
-              'cooling' :    {'k' : 3, 'depth' : 31, 'feats' : 106, 'g' : 0.10, 'c' : 100000},
-              'enrichment' : {'k' : 6, 'depth' : 67, 'feats' : 109, 'g' : 0.10, 'c' : 100000},
+        hp = {'reactor' :    {'k' : 6, 'depth' : 53, 'feats' : 26, 'g' : 0.10, 'c' : 100000},
+              'burnup' :     {'k' : 4, 'depth' : 67, 'feats' : 30, 'g' : 0.10, 'c' : 100000},
+              'cooling' :    {'k' : 4, 'depth' : 26, 'feats' : 27, 'g' : 0.10, 'c' : 100000},
+              'enrichment' : {'k' : 7, 'depth' : 38, 'feats' : 24, 'g' : 0.10, 'c' : 100000},
               }
     else:
         # or should I sys exit?
