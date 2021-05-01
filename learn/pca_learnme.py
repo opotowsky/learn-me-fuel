@@ -113,18 +113,25 @@ def main():
         trainY = rY
 
     # get hyperparams
-    k, depth, feats, g, c = get_hyperparam(args.rxtr_param, pkl)
+    #k, depth, feats, g, c = get_hyperparam(args.rxtr_param, pkl)
+    ### TODO for testing pca on spectra, not tuning hyperparams for now
+    k = 3
+    depth = 50
+    g = 0.1
+    c = 10000
+    ### PCA SPECIFIC ##
+    feats = 3
         
     ## initialize learners
     scores = ['explained_variance', 'neg_mean_absolute_error', 'neg_root_mean_squared_error']
     kfold = KFold(n_splits=CV, shuffle=True)
-    knn_init = KNeighborsRegressor(n_neighbors=k, weights='distance')
+    knn_init = KNeighborsRegressor(n_neighbors=k, weights='distance', p=1, metric='minkowski')
     dtr_init = DecisionTreeRegressor(max_depth=depth, max_features=feats)
     svr_init = SVR(gamma=g, C=c)
     if args.rxtr_param == 'reactor':
         scores = 'accuracy'
         kfold = StratifiedKFold(n_splits=CV, shuffle=True)
-        knn_init = KNeighborsClassifier(n_neighbors=k, weights='distance')
+        knn_init = KNeighborsClassifier(n_neighbors=k, weights='distance', p=1, metric='minkowski')
         dtr_init = DecisionTreeClassifier(max_depth=depth, max_features=feats, class_weight='balanced')
         svr_init = SVC(gamma=g, C=c, class_weight='balanced')
     
@@ -142,6 +149,11 @@ def main():
 
     ## calculate errors and scores
     if args.err_n_scores == True:
+        scaler = MinMaxScaler().fit(trainX_unscaled)
+        trainX = scaler.transform(trainX_unscaled)
+        pca = PCA(n_components=feats)
+        pca.fit(trainX)
+        trainX = pd.DataFrame(pca.transform(trainX), index=trainX_unscaled.index, columns=['comp1', 'comp2', 'comp3'])
         errors_and_scores(trainX, trainY, alg, init, scores, kfold, csv_name)
 
     # learning curves
@@ -166,10 +178,6 @@ def main():
         pca.fit(trainX)
         trainX = pd.DataFrame(pca.transform(trainX), index=trainX_unscaled.index, columns=['comp1', 'comp2', 'comp3'])
         testX = pd.DataFrame(pca.transform(testX), index=testX_unscaled.index, columns=['comp1', 'comp2', 'comp3'])
-        # re-init dtr
-        dtr_init = DecisionTreeRegressor(max_depth=depth, max_features=3)
-        if args.rxtr_param == 'reactor':
-            dtr_init = DecisionTreeClassifier(max_depth=depth, max_features=3, class_weight='balanced')
         ######################################################
         # scale testset using scale fit from trainset
         #scaler = StandardScaler().fit(trainX_unscaled)
