@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 
-from tools import splitXY, get_testsetXY, convert_g_to_mgUi, get_hyperparam
+from tools import splitXY, get_testsetXY, convert_g_to_mgUi, add_error
 from tools import track_predictions, errors_and_scores, validation_curves, learning_curves, ext_test_compare, random_error
 
 from sklearn.preprocessing import scale, StandardScaler, MinMaxScaler
@@ -10,6 +10,7 @@ from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
 from sklearn.svm import SVR, SVC
 from sklearn.model_selection import KFold, StratifiedKFold
 
+import numpy as np
 import pandas as pd
 import argparse
 import sys
@@ -95,7 +96,8 @@ def main():
     # ensure hyperparam optimization was done on correct tset_frac
     trainXY = trainXY.sample(frac=tset_frac)
     trainX_unscaled, rY, cY, eY, bY = splitXY(trainXY)
-    trainX = scale(trainX_unscaled)
+    if ((args.random_error == False) and (args.err_n_scores == False)):
+        trainX = scale(trainX_unscaled)
     
     # set ground truth 
     trainY = pd.Series()
@@ -116,7 +118,7 @@ def main():
     #k, depth, feats, g, c = get_hyperparam(args.rxtr_param, pkl)
     ### TODO for testing pca on spectra, not tuning hyperparams for now
     k = 3
-    depth = 50
+    depth = None
     g = 0.1
     c = 10000
     ### PCA SPECIFIC ##
@@ -149,12 +151,17 @@ def main():
 
     ## calculate errors and scores
     if args.err_n_scores == True:
+        # Need to inject error here, before PCA fitting and scaling
+        if 'spectra' in pkl:
+            trainX_unscaled = np.random.uniform(trainX_unscaled - np.sqrt(trainX_unscaled), trainX_unscaled + np.sqrt(trainX_unscaled))
+        else:
+            trainX_unscaled = add_error(5.0, trainX_unscaled)
         scaler = MinMaxScaler().fit(trainX_unscaled)
         trainX = scaler.transform(trainX_unscaled)
         pca = PCA(n_components=feats)
         pca.fit(trainX)
         trainX = pd.DataFrame(pca.transform(trainX), index=trainX_unscaled.index, columns=['comp1', 'comp2', 'comp3'])
-        errors_and_scores(trainX, trainY, alg, init, scores, kfold, csv_name)
+        errors_and_scores(trainX, trainY, alg, init, scores, kfold, csv_name, 'pca')
 
     # learning curves
     if args.learn_curves == True:

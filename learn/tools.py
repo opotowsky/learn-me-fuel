@@ -563,9 +563,10 @@ def errors_and_scores(X_u, Y, alg, alg_init, scores, CV, csv_name, tset_name):
     alg_init : initialized learner
     scores : list of scoring types (from sckikit-learn)
     CV : cross-validation generator
-    csv_name : string containing the train set, nuc subset, and parameter being 
+    csv_name : string containing the train set, nuc subset, and parameter being
                predicted for naming purposes
-    tset_name : string of the trainset name, to distinguish random error injection
+    tset_name : string of the trainset name, to distinguish random error 
+                injection. Or in case of PCA, string indicating such
 
     Returns
     -------
@@ -574,9 +575,12 @@ def errors_and_scores(X_u, Y, alg, alg_init, scores, CV, csv_name, tset_name):
     """
     if 'spectra' in tset_name:
         X = np.random.uniform(X_u - np.sqrt(X_u), X_u + np.sqrt(X_u))
+        X = scale(X)
+    elif 'pca' in tset_name:
+        X = X_u
     else:
         X = add_error(5.0, X_u)
-    X = scale(X)
+        X = scale(X)
 
     if alg == 'knn':
         cv_scr = cross_validate(alg_init, X, Y, scoring=scores, cv=CV, 
