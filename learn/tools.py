@@ -93,36 +93,36 @@ def get_hyperparam(param, train_name, frac):
     elif '29' in train_name:
         hp = nuc29_hp
     # processed gamma spec are optimized on 20% trainset. no SVM opt done.
-    elif 'd1' in train_name:
-        hp = {'reactor' :    {'k' : 4, 'depth' : 41, 'feats' : 109, 'g' : 0.10, 'c' : 100000},
-              'burnup' :     {'k' : 3, 'depth' : 53, 'feats' : 99, 'g' : 0.10, 'c' : 100000},
-              'cooling' :    {'k' : 3, 'depth' : 31, 'feats' : 106, 'g' : 0.10, 'c' : 100000},
-              'enrichment' : {'k' : 6, 'depth' : 67, 'feats' : 109, 'g' : 0.10, 'c' : 100000},
-              }
-    elif 'd2' in train_name:
-        hp = {'reactor' :    {'k' : 8, 'depth' : 58, 'feats' : 106, 'g' : 0.10, 'c' : 100000},
-              'burnup' :     {'k' : 4, 'depth' : 70, 'feats' : 106, 'g' : 0.10, 'c' : 100000},
-              'cooling' :    {'k' : 4, 'depth' : 26, 'feats' : 95, 'g' : 0.10, 'c' : 100000},
-              'enrichment' : {'k' : 6, 'depth' : 63, 'feats' : 109, 'g' : 0.10, 'c' : 100000},
-              }
-    elif 'd3' in train_name:
-        hp = {'reactor' :    {'k' : 6, 'depth' : 53, 'feats' : 26, 'g' : 0.10, 'c' : 100000},
-              'burnup' :     {'k' : 4, 'depth' : 67, 'feats' : 30, 'g' : 0.10, 'c' : 100000},
-              'cooling' :    {'k' : 4, 'depth' : 26, 'feats' : 27, 'g' : 0.10, 'c' : 100000},
-              'enrichment' : {'k' : 7, 'depth' : 38, 'feats' : 24, 'g' : 0.10, 'c' : 100000},
-              }
-    elif 'd6' in train_name:
-        hp = {'reactor' :    {'k' : 6, 'depth' : 53, 'feats' : 26, 'g' : 0.10, 'c' : 100000},
-              'burnup' :     {'k' : 4, 'depth' : 67, 'feats' : 30, 'g' : 0.10, 'c' : 100000},
-              'cooling' :    {'k' : 4, 'depth' : 26, 'feats' : 27, 'g' : 0.10, 'c' : 100000},
-              'enrichment' : {'k' : 7, 'depth' : 38, 'feats' : 24, 'g' : 0.10, 'c' : 100000},
-              }
+    #elif 'd1' in train_name:
+    #    hp = {'reactor' :    {'k' : 4, 'depth' : 41, 'feats' : 109, 'g' : 0.10, 'c' : 100000},
+    #          'burnup' :     {'k' : 3, 'depth' : 53, 'feats' : 99, 'g' : 0.10, 'c' : 100000},
+    #          'cooling' :    {'k' : 3, 'depth' : 31, 'feats' : 106, 'g' : 0.10, 'c' : 100000},
+    #          'enrichment' : {'k' : 6, 'depth' : 67, 'feats' : 109, 'g' : 0.10, 'c' : 100000},
+    #          }
+    #elif 'd2' in train_name:
+    #    hp = {'reactor' :    {'k' : 8, 'depth' : 58, 'feats' : 106, 'g' : 0.10, 'c' : 100000},
+    #          'burnup' :     {'k' : 4, 'depth' : 70, 'feats' : 106, 'g' : 0.10, 'c' : 100000},
+    #          'cooling' :    {'k' : 4, 'depth' : 26, 'feats' : 95, 'g' : 0.10, 'c' : 100000},
+    #          'enrichment' : {'k' : 6, 'depth' : 63, 'feats' : 109, 'g' : 0.10, 'c' : 100000},
+    #          }
+    #elif 'd3' in train_name:
+    #    hp = {'reactor' :    {'k' : 6, 'depth' : 53, 'feats' : 26, 'g' : 0.10, 'c' : 100000},
+    #          'burnup' :     {'k' : 4, 'depth' : 67, 'feats' : 30, 'g' : 0.10, 'c' : 100000},
+    #          'cooling' :    {'k' : 4, 'depth' : 26, 'feats' : 27, 'g' : 0.10, 'c' : 100000},
+    #          'enrichment' : {'k' : 7, 'depth' : 38, 'feats' : 24, 'g' : 0.10, 'c' : 100000},
+    #          }
+    #elif 'd6' in train_name:
+    #    hp = {'reactor' :    {'k' : 6, 'depth' : 53, 'feats' : 26, 'g' : 0.10, 'c' : 100000},
+    #          'burnup' :     {'k' : 4, 'depth' : 67, 'feats' : 30, 'g' : 0.10, 'c' : 100000},
+    #          'cooling' :    {'k' : 4, 'depth' : 26, 'feats' : 27, 'g' : 0.10, 'c' : 100000},
+    #          'enrichment' : {'k' : 7, 'depth' : 38, 'feats' : 24, 'g' : 0.10, 'c' : 100000},
+    #          }
     else:
         # or should I sys exit?
-        hp = {'reactor' :    {'k' : 2, 'depth' : None, 'feats' : None, 'g' : 0.10, 'c' : 100000},
-              'burnup' :     {'k' : 2, 'depth' : None, 'feats' : None, 'g' : 0.10, 'c' : 100000},
-              'cooling' :    {'k' : 2, 'depth' : None, 'feats' : None, 'g' : 0.10, 'c' : 100000},
-              'enrichment' : {'k' : 2, 'depth' : None, 'feats' : None, 'g' : 0.10, 'c' : 100000},
+        hp = {'reactor' :    {'k' : 5, 'depth' : None, 'feats' : None, 'g' : 0.10, 'c' : 100000},
+              'burnup' :     {'k' : 3, 'depth' : None, 'feats' : None, 'g' : 0.10, 'c' : 100000},
+              'cooling' :    {'k' : 3, 'depth' : None, 'feats' : None, 'g' : 0.10, 'c' : 100000},
+              'enrichment' : {'k' : 5, 'depth' : None, 'feats' : None, 'g' : 0.10, 'c' : 100000},
               }
 
     k = hp[param]['k']
@@ -237,6 +237,7 @@ def filter_nucs(df, nuc_set, top_n):
     top_n_df.fillna(value=0, inplace=True)
     return top_n_df
 
+# TODO this func may be able to be reduced to a single line in the random error func for speediness
 def add_error(percent_err, df):
     """
     Given a dataframe of nuclide vectors, add error to each element in each
@@ -548,7 +549,7 @@ def track_predictions(X, Y, alg, alg_init, CV, csv_name, X_cols):
     X.to_csv(csv_name + '_predictions.csv')
     return
 
-def errors_and_scores(X, Y, alg, alg_init, scores, CV, csv_name):
+def errors_and_scores(X_u, Y, alg, alg_init, scores, CV, csv_name, tset_name):
     """
     Saves csv's with each reactor parameter regression wrt scoring metric and 
     algorithm
@@ -556,7 +557,7 @@ def errors_and_scores(X, Y, alg, alg_init, scores, CV, csv_name):
     Parameters 
     ---------- 
     
-    X : dataframe that includes all training data
+    X_u : dataframe that includes all training data before scaling
     Y : series with labels for training data
     alg : name of algorithm
     alg_init : initialized learner
@@ -564,13 +565,19 @@ def errors_and_scores(X, Y, alg, alg_init, scores, CV, csv_name):
     CV : cross-validation generator
     csv_name : string containing the train set, nuc subset, and parameter being 
                predicted for naming purposes
+    tset_name : string of the trainset name, to distinguish random error injection
 
     Returns
     -------
     *scores.csv : csv file with scores for each CV fold
     
     """
-    
+    if 'spectra' in tset_name:
+        X = np.random.uniform(X_u - np.sqrt(X_u), X_u + np.sqrt(X_u))
+    else:
+        X = add_error(5.0, X_u)
+    X = scale(X)
+
     if alg == 'knn':
         cv_scr = cross_validate(alg_init, X, Y, scoring=scores, cv=CV, 
                                 return_train_score=False, n_jobs=njobs)

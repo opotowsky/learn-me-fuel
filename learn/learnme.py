@@ -93,7 +93,7 @@ def main():
     # ensure hyperparam optimization was done on correct tset_frac
     trainXY = trainXY.sample(frac=tset_frac)
     trainX_unscaled, rY, cY, eY, bY = splitXY(trainXY)
-    if args.random_error == False:
+    if ((args.random_error == False) and (args.err_n_scores == False)):
         trainX = scale(trainX_unscaled)
     
     # set ground truth 
@@ -141,7 +141,7 @@ def main():
 
     ## calculate errors and scores
     if args.err_n_scores == True:
-        errors_and_scores(trainX, trainY, alg, init, scores, kfold, csv_name)
+        errors_and_scores(trainX_unscaled, trainY, alg, init, scores, kfold, csv_name, pkl)
 
     # learning curves
     if args.learn_curves == True:
