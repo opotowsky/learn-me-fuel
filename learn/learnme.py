@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 
 from tools import splitXY, get_testsetXY, convert_g_to_mgUi, get_hyperparam
-from tools import track_predictions, errors_and_scores, validation_curves, learning_curves, ext_test_compare, random_error
+from tools import int_test_compare, errors_and_scores, validation_curves, learning_curves, ext_test_compare, random_error
 
 from sklearn.preprocessing import scale, StandardScaler
 from sklearn.neighbors import KNeighborsRegressor, KNeighborsClassifier
@@ -42,20 +42,20 @@ def parse_args(args):
                         help='number of cross validation folds')
     parser.add_argument('train_db', metavar='reactor-db', 
                         help='file path to a training set')
-    parser.add_argument('-tp', '--track_preds', action='store_true', 
-                        default=False, help='run the track_predictions function')
     parser.add_argument('-es', '--err_n_scores', action='store_true', 
                         default=False, help='run the errors_and_scores function')
     parser.add_argument('-lc', '--learn_curves', action='store_true', 
                         default=False, help='run the learning_curves function')
     parser.add_argument('-vc', '--valid_curves', action='store_true', 
                         default=False, help='run the validation_curves function')
-    parser.add_argument('-tc', '--test_compare', action='store_true', 
+    parser.add_argument('-re', '--random_error', action='store_true', 
+                        default=False, help='run the random_error function')
+    parser.add_argument('-itc', '--int_test_compare', action='store_true', 
+                        default=False, help='run the int_test_compare function')
+    parser.add_argument('-etc', '--ext_test_compare', action='store_true', 
                         default=False, help='run the ext_test_compare function')
     parser.add_argument('-testset', '--testing_set', 
                         help='file path to an external testing set')
-    parser.add_argument('-re', '--random_error', action='store_true', 
-                        default=False, help='run the random_error function')
 
     return parser.parse_args(args)
 
@@ -87,13 +87,12 @@ def main():
     lbls = ['ReactorType', 'CoolingTime', 'Enrichment', 'Burnup', 'OrigenReactor']
     nonlbls = ['AvgPowerDensity', 'ModDensity', 'UiWeight']
     
-    pkl = args.train_db  
-    trainXY = pd.read_pickle(pkl)
+    trainXY = pd.read_pickle(args.train_db)
     trainXY.reset_index(inplace=True, drop=True) 
     # ensure hyperparam optimization was done on correct tset_frac
     trainXY = trainXY.sample(frac=tset_frac)
     trainX_unscaled, rY, cY, eY, bY = splitXY(trainXY)
-    if ((args.random_error == False) and (args.err_n_scores == False)):
+    if ((args.random_error == False) and (args.err_n_scores == False)) and (args.int_test_compare == False):
         trainX = scale(trainX_unscaled)
     
     # set ground truth 
@@ -112,7 +111,7 @@ def main():
         trainY = rY
 
     # get hyperparams
-    k, depth, feats, g, c = get_hyperparam(args.rxtr_param, pkl, tset_frac)
+    k, depth, feats, g, c = get_hyperparam(args.rxtr_param, args.train_db, tset_frac)
         
     ## initialize learners
     scores = ['explained_variance', 'neg_mean_absolute_error', 'neg_root_mean_squared_error']
@@ -134,21 +133,21 @@ def main():
     else:
         init = svr_init
 
-    ## track predictions
-    if args.track_preds == True:
-        cols = trainX_unscaled.columns.values.tolist()
-        track_predictions(trainX, trainY, alg, init, kfold, csv_name, cols)
+    ## create test set from train set (no CV)
+    if args.int_test_compare == True:
+        #cols = trainX_unscaled.columns.values.tolist()
+        int_test_compare(trainX_unscaled, trainY, alg, init, csv_name, args.train_db, args.rxtr_param)
 
     ## calculate errors and scores
     if args.err_n_scores == True:
-        errors_and_scores(trainX_unscaled, trainY, alg, init, scores, kfold, csv_name, pkl)
+        errors_and_scores(trainX_unscaled, trainY, alg, init, scores, kfold, csv_name, args.train_db)
 
     # learning curves
     if args.learn_curves == True:
         learning_curves(trainX, trainY, alg, init, kfold, scores, csv_name)
     
     # compare against external test set
-    if args.test_compare == True:
+    if args.ext_test_compare == True:
         # convert trainset to be same units as testset
         trainX_unscaled = convert_g_to_mgUi(trainX_unscaled)
         xy_cols = trainXY.columns.tolist()

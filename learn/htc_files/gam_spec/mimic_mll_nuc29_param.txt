@@ -1,0 +1,8 @@
+reactor_knn_tset1.0_nuc29,reactor,knn,1.0,5,sim_grams_nuc29.pkl,--int_test_compare,--testing_set,null
+reactor_dtree_tset1.0_nuc29,reactor,dtree,1.0,5,sim_grams_nuc29.pkl,--int_test_compare,--testing_set,null
+cooling_knn_tset1.0_nuc29,cooling,knn,1.0,5,sim_grams_nuc29.pkl,--int_test_compare,--testing_set,null
+cooling_dtree_tset1.0_nuc29,cooling,dtree,1.0,5,sim_grams_nuc29.pkl,--int_test_compare,--testing_set,null
+enrichment_knn_tset1.0_nuc29,enrichment,knn,1.0,5,sim_grams_nuc29.pkl,--int_test_compare,--testing_set,null
+enrichment_dtree_tset1.0_nuc29,enrichment,dtree,1.0,5,sim_grams_nuc29.pkl,--int_test_compare,--testing_set,null
+burnup_knn_tset1.0_nuc29,burnup,knn,1.0,5,sim_grams_nuc29.pkl,--int_test_compare,--testing_set,null
+burnup_dtree_tset1.0_nuc29,burnup,dtree,1.0,5,sim_grams_nuc29.pkl,--int_test_compare,--testing_set,null

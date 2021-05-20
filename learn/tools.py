@@ -1,13 +1,13 @@
 #! /usr/bin/env python3
 
-from sklearn.preprocessing import scale
+from sklearn.preprocessing import scale, StandardScaler
 from sklearn.model_selection import cross_val_score, cross_val_predict, cross_validate, learning_curve, validation_curve
 
 import pandas as pd
 import numpy as np
 import sys
 
-njobs = 5
+njobs = 4
 
 algs = {'knn' : 'kNN', 'dtree' : 'DTree', 'svm' : 'SVM'}
 
@@ -48,8 +48,27 @@ def splitXY(dfXY):
 
 def get_hyperparam(param, train_name, frac):
     """
+    This has gotten messy, but the original intention was to keep track of
+    optimization of hyperparameters on training sets of various sizes. The
+    nuc_conc opts remain, but it was not feasible to run an optimization on
+    every single detector trainset (several energy window lists for each
+    detector), so a base one was chosen. If perfecting scikit predictions
+    becomes the goal, this will be fixed up.
     
-    
+    Parameters
+    ----------
+    param :  
+    train_name : 
+    frac : 
+
+    Returns
+    -------
+    k : 
+    depth : 
+    feats : 
+    g : 
+    c : 
+
     """
     if frac == 1.0:
         # optimized on 100% trainset
@@ -118,7 +137,6 @@ def get_hyperparam(param, train_name, frac):
     #          'enrichment' : {'k' : 7, 'depth' : 38, 'feats' : 24, 'g' : 0.10, 'c' : 100000},
     #          }
     else:
-        # or should I sys exit?
         hp = {'reactor' :    {'k' : 5, 'depth' : None, 'feats' : None, 'g' : 0.10, 'c' : 100000},
               'burnup' :     {'k' : 3, 'depth' : None, 'feats' : None, 'g' : 0.10, 'c' : 100000},
               'cooling' :    {'k' : 3, 'depth' : None, 'feats' : None, 'g' : 0.10, 'c' : 100000},
@@ -515,40 +533,6 @@ def learning_curves(X, Y, alg, alg_init, CV, scores, csv_name):
     return 
 
 
-def track_predictions(X, Y, alg, alg_init, CV, csv_name, X_cols):
-    """
-    Saves csv's with predictions of each reactor parameter instance.
-    
-    Parameters 
-    ---------- 
-    
-    X : numpy array that includes all training data
-    Y : series with labels for training data
-    alg : name of algorithm
-    alg_init : initialized learner
-    CV : cross-validation generator
-    csv_name : string containing the train set, nuc subset, and parameter being 
-               predicted for naming purposes
-    X_cols : list of nuclide columns
-
-    Returns
-    -------
-    *predictions.csv : csv file with prediction results 
-
-    """
-    X = pd.DataFrame(X, index=Y.index, columns=X_cols)
-    if alg == 'knn':
-        knn = cross_val_predict(alg_init, X, y=Y, cv=CV, n_jobs=njobs)
-        X[algs[alg]] = knn 
-    elif alg == 'dtree':
-        dtr = cross_val_predict(alg_init, X, y=Y, cv=CV, n_jobs=njobs)
-        X[algs[alg]] = dtr 
-    else: # svm
-        svr = cross_val_predict(alg_init, X, y=Y, cv=CV, n_jobs=njobs)
-        X[algs[alg]] = svr
-    X.to_csv(csv_name + '_predictions.csv')
-    return
-
 def errors_and_scores(X_u, Y, alg, alg_init, scores, CV, csv_name, tset_name):
     """
     Saves csv's with each reactor parameter regression wrt scoring metric and 
@@ -573,6 +557,7 @@ def errors_and_scores(X_u, Y, alg, alg_init, scores, CV, csv_name, tset_name):
     *scores.csv : csv file with scores for each CV fold
     
     """
+    # add "counting" error to summed bins or uniform error to nuc masses
     if 'spectra' in tset_name:
         X = np.random.uniform(X_u - np.sqrt(X_u), X_u + np.sqrt(X_u))
         X = scale(X)
@@ -623,4 +608,51 @@ def ext_test_compare(X, Y, testX, testY, alg, alg_init, csv_name):
     alg_preds = pd.DataFrame({'TrueY': testY, algs[alg]: preds}, 
                               index=testY.index)
     alg_preds.to_csv(csv_name + '_ext_test_compare.csv')
+    return
+
+def int_test_compare(X_u, Y, alg, alg_init, csv_name, tset_name, pred_param):
+    """
+    Saves csv's with predictions of each reactor parameter instance for a test
+    set fraction defined in main()
+    
+    Update: this is designed to mimic MLL, understanding the loss of CV
+    and method generalization. 
+    
+    Parameters 
+    ---------- 
+    
+    X_u : dataframe that includes all training data (pre-scaled)
+    Y : series with labels for training data
+    alg : name of algorithm
+    alg_init : initialized learner
+    csv_name : string containing the train set, nuc subset, and parameter being 
+               predicted for naming purposes
+    tset_name : string of the trainset name, to distinguish random error 
+                injection. Or in case of PCA, string indicating such
+    pred_param : reactor parameter being predicted
+
+    Returns
+    -------
+    *predictions.csv : csv file with prediction results 
+
+    """
+    # add "counting" error to summed bins or uniform error to nuc masses
+    if 'spectra' in tset_name:
+        X = np.random.uniform(X_u - np.sqrt(X_u), X_u + np.sqrt(X_u))
+    else:
+        X = add_error(5.0, X_u)
+    X = scale(X)
+    # split train and test set to mimic MLL process
+    test_frac = 0.067
+    if pred_param == 'reactor': 
+        trainX, testX, trainY, testY = train_test_split(X, Y, test_size=test_frac, shuffle=True, stratify=Y)
+    else:
+        trainX, testX, trainY, testY = train_test_split(X, Y, test_size=test_frac, shuffle=True)
+    
+    alg_init.fit(trainX, trainY)
+    preds = alg_init.predict(testX)
+    df = pd.DataFrame({'TrueY': testY, algs[alg]: preds}, 
+                       index=testY.index) 
+    df.to_csv(csv_name + '_mimic_mll.csv')
+    
     return
