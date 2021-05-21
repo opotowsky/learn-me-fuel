@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 
-from sklearn.preprocessing import scale, StandardScaler
+from sklearn.preprocessing import scale
 from sklearn.model_selection import cross_val_score, cross_val_predict, cross_validate, learning_curve, validation_curve
 
 import pandas as pd
@@ -651,7 +651,11 @@ def int_test_compare(X_u, Y, alg, alg_init, csv_name, tset_name, pred_param):
     
     alg_init.fit(trainX, trainY)
     preds = alg_init.predict(testX)
-    df = pd.DataFrame({'TrueY': testY, algs[alg]: preds}, 
+    if pred_param == 'reactor':
+        errcol = np.where(testY == preds], True, False)
+    else:
+        errcol = np.abs(testY - preds)
+    df = pd.DataFrame({'TrueY': testY, algs[alg]: preds, 'AbsError': errcol},
                        index=testY.index) 
     df.to_csv(csv_name + '_mimic_mll.csv')
     
