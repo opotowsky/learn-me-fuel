@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 
 from sklearn.preprocessing import scale
-from sklearn.model_selection import cross_val_score, cross_val_predict, cross_validate, learning_curve, validation_curve
+from sklearn.model_selection import cross_val_score, cross_val_predict, cross_validate, learning_curve, validation_curve, train_test_split
 
 import pandas as pd
 import numpy as np
@@ -652,7 +652,7 @@ def int_test_compare(X_u, Y, alg, alg_init, csv_name, tset_name, pred_param):
     alg_init.fit(trainX, trainY)
     preds = alg_init.predict(testX)
     if pred_param == 'reactor':
-        errcol = np.where(testY == preds], True, False)
+        errcol = np.where(testY == preds, True, False)
     else:
         errcol = np.abs(testY - preds)
     df = pd.DataFrame({'TrueY': testY, algs[alg]: preds, 'AbsError': errcol},
