@@ -282,70 +282,68 @@ def add_error(percent_err, df):
 
     return df_err
 
-def random_error(X_unscaled, Y, alg, alg_init, CV, scores, csv_name, param):
+def random_error(X_unscaled, Y, alg, alg_init, csv_name, param):
     """
+    This function has been updated to better mimic the MLL method, by using
+    train_test_split for a similar test set fraction. Then, for several values
+    of a randomly applied error, the prediction performance is measured. 
+
+    [Old func used cross_validate, but that doesn't allow for apples-to-apples
+    comparison against the MLL results.]
+    
+    Parameters 
+    ---------- 
+    X : dataframe that includes all training data
+    Y : series with labels for training data
+    alg : name of algorithm
+    alg_init : initialized learner
+    csv_name : string containing the train set, nuc subset, and parameter being 
+               predicted for naming purposes
+    param : reactor parameter being predicted
+
+    Returns
+    -------
+    *random_error.csv : csv file with prediction performace with respect to 
+                        random error magnitude
+
     """
     err_percent = [0, 0.1, 0.3, 0.6, 0.9, 
                    1, 1.3, 1.6, 1.9, 2, 
                    2.5, 3, 3.5, 4, 4.5, 5,
                    6, 7, 8, 9, 10, 13, 17, 
                    20]
-    acc = []
-    acc_std = []
-    exv = []
-    exv_std = []
-    mae = []
-    mae_std = []
-    rms = []
-    rms_std = []
+    prederr = []
+    prederr_std = []
     
-    acc_name = 'test_score'
-    exv_name = 'test_' + scores[0]
-    mae_name = 'test_' + scores[1]
-    rms_name = 'test_' + scores[2]
     for err in err_percent:
         X = add_error(err, X_unscaled)
         X = scale(X)
-        if alg == 'knn':
-            if param == 'reactor':
-                knn_scr = cross_validate(alg_init, X, Y, scoring=scores, cv=CV, n_jobs=njobs)
-                acc.append(knn_scr[acc_name].mean())
-                acc_std.append(knn_scr[acc_name].std())
-            else:
-                knn_scr = cross_validate(alg_init, X, Y, scoring=scores, cv=CV, n_jobs=njobs)
-                exv.append(knn_scr[exv_name].mean())
-                exv_std.append(knn_scr[exv_name].std())
-                mae.append(knn_scr[mae_name].mean())
-                mae_std.append(knn_scr[mae_name].std())
-                rms.append(knn_scr[rms_name].mean())
-                rms_std.append(knn_scr[rms_name].std())
+        # split train and test set to mimic MLL process
+        # frac is different than the other func bc MLL sampling was lower for nuc conc
+        test_frac = 0.055
+        if param == 'reactor': 
+            trainX, testX, trainY, testY = train_test_split(X, Y, test_size=test_frac, shuffle=True, stratify=Y)
         else:
-            if param == 'reactor':
-                dtr_scr = cross_validate(alg_init, X, Y, scoring=scores, cv=CV, n_jobs=njobs)
-                acc.append(dtr_scr[acc_name].mean())
-                acc_std.append(dtr_scr[acc_name].std())
-            else:
-                dtr_scr = cross_validate(alg_init, X, Y, scoring=scores, cv=CV, n_jobs=njobs)
-                exv.append(dtr_scr[exv_name].mean())
-                exv_std.append(dtr_scr[exv_name].std())
-                mae.append(dtr_scr[mae_name].mean())
-                mae_std.append(dtr_scr[mae_name].std())
-                rms.append(dtr_scr[rms_name].mean())
-                rms_std.append(dtr_scr[rms_name].std())
-    
+            trainX, testX, trainY, testY = train_test_split(X, Y, test_size=test_frac, shuffle=True)
+        alg_init.fit(trainX, trainY)
+        preds = alg_init.predict(testX)
+        # keeping rand_err output the same by post processing here
+        if param == 'reactor':
+            errcol = np.where(testY == preds, True, False)
+        else:
+            errcol = np.abs(testY - preds)
+        prederr.append(errcol.mean())
+        prederr_std.append(errcol.std())
+
     if param == 'reactor':
         df = pd.DataFrame({'Percent Error' : err_percent, 
-                            algs[alg]+' Acc' : acc,
-                            algs[alg]+' Acc Std' : acc_std
+                            algs[alg]+' Acc' : prederr,
+                            algs[alg]+' Acc Std' : prederr_std
                             })
     else:
         df = pd.DataFrame({'Percent Error' : err_percent, 
-                            algs[alg]+' ExpVar' : exv,
-                            algs[alg]+' ExpVar Std' : exv_std,
                             algs[alg]+' MAE' : mae,
                             algs[alg]+' MAE Std' : mae_std,
-                            algs[alg]+' RMSE' : rms,
-                            algs[alg]+' RMSE Std' : rms_std
                             })
     df.to_csv(csv_name + '_random_error.csv')
     return

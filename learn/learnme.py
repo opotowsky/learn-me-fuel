@@ -161,7 +161,7 @@ def main():
 
     # pred results wrt random error
     if args.random_error == True:
-        random_error(trainX_unscaled, trainY, alg, init, kfold, scores, csv_name, args.rxtr_param)
+        random_error(trainX_unscaled, trainY, alg, init, csv_name, args.rxtr_param)
 
     # validation curves 
     if args.valid_curves == True:
