@@ -46,6 +46,58 @@ def splitXY(dfXY):
     #o_dfY = dfXY.loc[:, lbls[4]]
     return dfX, r_dfY, c_dfY, e_dfY, b_dfY
 
+def get_sfco_hyperparam(idx, d_or_f):
+    """
+    This is the most embarassingly hacky thing to do, but it's just for a quick
+    test and I don't want to update all the CHTC files
+
+    Using the cv and test_set frac parameters from main() (via script argument)
+    as indexing of sorts, since they aren't used at all for the ext_test_set
+    func, this func will grab different hyperparameters so that there can be a
+    very rough manual adaptation of a validation curve made using real-world
+    data.
+
+    Parameters
+    ----------
+    idx : index of hyperparameters (float b/c this is a bad hack)
+    d_or_f : which hyperparam gets varied, where the other is held constant 
+             (values of 2 or 3, because this is also a bad hack)
+
+    Returns
+    -------
+    k : number of nearest neighbors
+    depth : depth of decision tree
+    feats : number of features in decision tree
+    g : gamma for SVM
+    c : C for SVM
+    
+    """
+    steps = 10
+    k_list = np.linspace(1, 10, steps).astype(int)
+    depth_list = np.linspace(25, 85, steps).astype(int)
+    #using nuc29 trainset only, max feats is thus 29
+    feats_list = np.linspace(9, 29, steps).astype(int)
+    gamma_list = [0.01] * steps
+    c_list = [10000] * steps
+    
+    # tfrac-->idx must be 1+, so correcting back to 0 indexing
+    i = int(idx) - 1
+    k = k_list[i]
+    depth = depth_list[i] 
+    feats = feats_list[i]
+    g = gamma_list[i]
+    c = c_list[i]
+    
+    #cv-->d_or_f needs to be 2+, so magic-coding in 2 v 3 comparison
+    if d_or_f == 2:
+        # vary d, not f
+        feats = None 
+    else:
+        # vary f, not d
+        depth = None
+        
+    return k, depth, feats, g, c
+
 def get_hyperparam(param, train_name, frac):
     """
     This has gotten messy, but the original intention was to keep track of
@@ -57,17 +109,17 @@ def get_hyperparam(param, train_name, frac):
     
     Parameters
     ----------
-    param :  
-    train_name : 
-    frac : 
+    param : reactor parameter being predicted
+    train_name : name of training set
+    frac : training set fraction to use
 
     Returns
     -------
-    k : 
-    depth : 
-    feats : 
-    g : 
-    c : 
+    k : number of nearest neighbors
+    depth : depth of decision tree
+    feats : number of features in decision tree
+    g : gamma for SVM
+    c : C for SVM
 
     """
     if frac == 1.0:
@@ -348,24 +400,20 @@ def random_error(X_unscaled, Y, alg, alg_init, csv_name, param):
     df.to_csv(csv_name + '_random_error.csv')
     return
 
-# TODO fix the datframe based on single score --> scores
-def validation_curves(X, Y, alg, alg_init, CV, scores, csv_name):
+def validation_curves(X, Y, alg, alg_init, CV, score, csv_name):
     """
-    
-    Given training data, iteratively runs some ML algorithms (currently, this
-    is nearest neighbor, decision tree, and support vector methods), varying
-    the training set size for each prediction category: reactor type, cooling
-    time, enrichment, and burnup
+    Given training set, runs an ML algorithm (currently, this is nearest
+    neighbor, decision tree, or support vector), varying the hyperparameters of
+    the algorithm over a range. 
 
     Parameters 
     ---------- 
-    
     X : dataframe that includes all training data
     Y : series with labels for training data
     alg : name of algorithm
     alg_init : initialized learner
     CV : cross-validation generator
-    scores : 
+    score : string of scoring type (from sckikit-learn)
     csv_name : string containing the train set, nuc subset, and parameter being 
                predicted for naming purposes
 
@@ -375,104 +423,56 @@ def validation_curves(X, Y, alg, alg_init, CV, scores, csv_name):
                             prediction category
 
     """    
-    
-    # TODO settle on lists!
     steps = 15
-    k_list = np.linspace(1, 30, steps).astype(int)
-    depth_list = np.linspace(3, 30, steps).astype(int)
-    feat_list = np.linspace(1, 15, steps).astype(int)
+    k_list = np.linspace(1, 20, steps).astype(int)
+    depth_list = np.linspace(10, 90, steps).astype(int)
+    feat_list = np.linspace(10, len(X.columns), steps).astype(int)
     gamma_list = np.logspace(-4, 0, steps)
     c_list = np.logspace(0, 5, steps)
 
     if alg == 'knn':
-        train, cv = validation_curve(alg_init, X, Y, param_name='n_neighbors', 
-                                     param_range=k_list, cv=CV, 
-                                     scoring=scores, n_jobs=njobs)
-        train_mean = np.mean(train, axis=1)
-        train_std = np.std(train, axis=1)
-        cv_mean = np.mean(cv, axis=1)
-        cv_std = np.std(cv, axis=1)
-        df1 = pd.DataFrame({'ParamList' : k_list, 'TrainScore' : train_mean, 
-                            'TrainStd' : train_std, 'CV-Score' : cv_mean, 
-                            'CV-Std' : cv_std})
-        df1['Algorithm'] = 'knn'
-
-        vc_data = df1
-
+        hparam = ['n_neighbors']
+        hp_range = [k_list]
     elif alg == 'dtree':
-        train, cv = validation_curve(alg_init, X, Y, param_name='max_depth', 
-                                     param_range=depth_list, cv=CV, 
-                                     scoring=scores, n_jobs=njobs)
-        train_mean = np.mean(train, axis=1)
-        train_std = np.std(train, axis=1)
-        cv_mean = np.mean(cv, axis=1)
-        cv_std = np.std(cv, axis=1)
-        df2 = pd.DataFrame({'ParamList' : depth_list, 'TrainScore' : train_mean, 
-                            'TrainStd' : train_std, 'CV-Score' : cv_mean, 
-                            'CV-Std' : cv_std})
-        df2['Algorithm'] = 'dtree'
-        
-        train, cv = validation_curve(alg_init, X, Y, param_name='max_features', 
-                                     param_range=feat_list, cv=CV, 
-                                     scoring=scores, n_jobs=njobs)
-        train_mean = np.mean(train, axis=1)
-        train_std = np.std(train, axis=1)
-        cv_mean = np.mean(cv, axis=1)
-        cv_std = np.std(cv, axis=1)
-        df3 = pd.DataFrame({'ParamList' : feat_list, 'TrainScore' : train_mean, 
-                            'TrainStd' : train_std, 'CV-Score' : cv_mean, 
-                            'CV-Std' : cv_std})
-        df3['Algorithm'] = 'dtree'
-        
-        vc_data = pd.concat([df2, df3])
+        hparam = ['max_depth', 'max_features']
+        hp_range = [depth_list, feat_list]
+    else: #svm
+        hparam = ['gamma', 'C']
+        hp_range = [gamma_list, c_list]
 
-    else: # svm
-        train, cv = validation_curve(alg_init, X, Y, param_name='gamma', 
-                                     param_range=gamma_list, cv=CV, 
-                                     scoring=scores, n_jobs=njobs)
+    df_list = []
+    for hp, hp_list in zip(hparam, hp_range):
+        train, cv = validation_curve(alg_init, X, Y, param_name=hp,
+                                     param_range=hp_range, cv=CV, 
+                                     scoring=score, n_jobs=njobs)
         train_mean = np.mean(train, axis=1)
         train_std = np.std(train, axis=1)
         cv_mean = np.mean(cv, axis=1)
         cv_std = np.std(cv, axis=1)
-        df4 = pd.DataFrame({'ParamList' : gamma_list, 'TrainScore' : train_mean, 
-                            'TrainStd' : train_std, 'CV-Score' : cv_mean, 
-                            'CV-Std' : cv_std})
-        df4['Algorithm'] = 'svm'
+        df = pd.DataFrame({'ParamList' : hp_range, 'TrainScore' : train_mean, 
+                           'TrainStd' : train_std, 'CV-Score' : cv_mean, 
+                           'CV-Std' : cv_std})
+        df['Algorithm'] = alg
+        df_list.append(df)
 
-        train, cv = validation_curve(alg_init, X, Y, param_name='C', 
-                                     param_range=c_list, cv=CV, 
-                                     scoring=scores, n_jobs=njobs)
-        train_mean = np.mean(train, axis=1)
-        train_std = np.std(train, axis=1)
-        cv_mean = np.mean(cv, axis=1)
-        cv_std = np.std(cv, axis=1)
-        df5 = pd.DataFrame({'ParamList' : c_list, 'TrainScore' : train_mean, 
-                            'TrainStd' : train_std, 'CV-Score' : cv_mean, 
-                            'CV-Std' : cv_std})
-        df5['Algorithm'] = 'svm'
-        
-        vc_data = pd.concat([df4, df5])
-
-    vc_data.to_csv(csv_name + '_validation_curve.csv')
+    all_vcs = pd.concat(df_list)
+    all_vcs.to_csv(csv_name + '_validation_curve.csv')
     return 
 
-# TODO fix the datframe based on single score --> scores
-def learning_curves(X, Y, alg, alg_init, CV, scores, csv_name):
+def learning_curves(X, Y, alg, alg_init, CV, score, csv_name):
     """
-    
-    Given training data, iteratively runs some ML algorithms (currently, this
-    is nearest neighbor, decision tree, and support vector methods), varying
-    the training set size for each prediction category: reactor type, cooling
-    time, enrichment, and burnup
+    Given training data, runs an ML algorithm (currently, this is nearest
+    neighbor, decision tree, or support vector), varying the training set size
+    from 5% to 100%
 
     Parameters 
     ---------- 
-    
     X : dataframe that includes all training data
     Y : series with labels for training data
     alg : name of algorithm
     alg_init : initialized learner
     CV : cross-validation generator
+    score : string of scoring type (from sckikit-learn)
     csv_name : string containing the train set, nuc subset, and parameter being 
                predicted for naming purposes
 
@@ -482,9 +482,8 @@ def learning_curves(X, Y, alg, alg_init, CV, scores, csv_name):
                           prediction category
 
     """    
-    
-    trainset_frac = np.array( [0.1, 0.2, 0.3, 0.4, 0.5, 0.55, 0.6, 0.65, 
-                               0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0] )
+    trainset_frac = np.array( [0.05, 0.07, 0.1, 0.2, 0.3, 0.4, 
+                               0.5, 0.6, 0.7, 0.8, 0.9, 1.0] )
     col_names = ['AbsTrainSize', 'TrainScore', 'CV-Score']
     tsze = 'AbsTrainSize'
     tscr = 'TrainScore'
@@ -492,38 +491,20 @@ def learning_curves(X, Y, alg, alg_init, CV, scores, csv_name):
     tstd = 'TrainStd'
     cstd = 'CV-Std'
 
+    tsize, train, cv = learning_curve(alg_init, X, Y, train_sizes=trainset_frac, 
+                                      scoring=score, cv=CV, shuffle=True, 
+                                      n_jobs=njobs)
+    train_mean = np.mean(train, axis=1)
+    train_std = np.std(train, axis=1)
+    cv_mean = np.mean(cv, axis=1)
+    cv_std = np.std(cv, axis=1)
+    lc_df = pd.DataFrame({tsze : tsize, tscr : train_mean, tstd : train_std, 
+                          cscr : cv_mean, cstd : cv_std}, index=trainset_frac)
     if alg == 'knn':
-        tsize, train, cv = learning_curve(alg_init, X, Y, train_sizes=trainset_frac, 
-                                          scoring=scores, cv=CV, shuffle=True, 
-                                          n_jobs=njobs)
-        train_mean = np.mean(train, axis=1)
-        train_std = np.std(train, axis=1)
-        cv_mean = np.mean(cv, axis=1)
-        cv_std = np.std(cv, axis=1)
-        lc_df = pd.DataFrame({tsze : tsize, tscr : train_mean, tstd : train_std, 
-                              cscr : cv_mean, cstd : cv_std}, index=trainset_frac)
         lc_df['Algorithm'] = 'knn'
     elif alg == 'dtree':
-        tsize, train, cv = learning_curve(alg_init, X, Y, train_sizes=trainset_frac, 
-                                          scoring=scores, cv=CV, shuffle=True, 
-                                          n_jobs=njobs)
-        train_mean = np.mean(train, axis=1)
-        train_std = np.std(train, axis=1)
-        cv_mean = np.mean(cv, axis=1)
-        cv_std = np.std(cv, axis=1)
-        lc_df = pd.DataFrame({tsze : tsize, tscr : train_mean, tstd : train_std, 
-                              cscr : cv_mean, cstd : cv_std}, index=trainset_frac)
         lc_df['Algorithm'] = 'dtree'
     else: # svm
-        tsize, train, cv = learning_curve(alg_init, X, Y, train_sizes=trainset_frac, 
-                                          scoring=scores, cv=CV, shuffle=True, 
-                                          n_jobs=njobs)
-        train_mean = np.mean(train, axis=1)
-        train_std = np.std(train, axis=1)
-        cv_mean = np.mean(cv, axis=1)
-        cv_std = np.std(cv, axis=1)
-        lc_df = pd.DataFrame({tsze : tsize, tscr : train_mean, tstd : train_std, 
-                              cscr : cv_mean, cstd : cv_std}, index=trainset_frac)
         lc_df['Algorithm'] = 'svm'
 
     lc_df.index.name = 'TrainSizeFrac'
@@ -531,7 +512,7 @@ def learning_curves(X, Y, alg, alg_init, CV, scores, csv_name):
     return 
 
 
-def errors_and_scores(X_u, Y, alg, alg_init, scores, CV, csv_name, tset_name):
+def errors_and_scores(X_u, Y, alg, alg_init, score, CV, csv_name, tset_name):
     """
     Saves csv's with each reactor parameter regression wrt scoring metric and 
     algorithm
@@ -543,7 +524,7 @@ def errors_and_scores(X_u, Y, alg, alg_init, scores, CV, csv_name, tset_name):
     Y : series with labels for training data
     alg : name of algorithm
     alg_init : initialized learner
-    scores : list of scoring types (from sckikit-learn)
+    score : string of scoring type (from sckikit-learn)
     CV : cross-validation generator
     csv_name : string containing the train set, nuc subset, and parameter being
                predicted for naming purposes
@@ -566,17 +547,17 @@ def errors_and_scores(X_u, Y, alg, alg_init, scores, CV, csv_name, tset_name):
         X = scale(X)
 
     if alg == 'knn':
-        cv_scr = cross_validate(alg_init, X, Y, scoring=scores, cv=CV, 
+        cv_scr = cross_validate(alg_init, X, Y, scoring=score, cv=CV, 
                                 return_train_score=False, n_jobs=njobs)
         df = pd.DataFrame(cv_scr)
         df['Algorithm'] = 'knn'
     elif alg == 'dtree':
-        cv_scr = cross_validate(alg_init, X, Y, scoring=scores, cv=CV, 
+        cv_scr = cross_validate(alg_init, X, Y, scoring=score, cv=CV, 
                                 return_train_score=False, n_jobs=njobs)
         df = pd.DataFrame(cv_scr)
         df['Algorithm'] = 'dtree'
     else: # svm
-        cv_scr = cross_validate(alg_init, X, Y, scoring=scores, cv=CV, 
+        cv_scr = cross_validate(alg_init, X, Y, scoring=score, cv=CV, 
                                 return_train_score=False, n_jobs=njobs)
         df = pd.DataFrame(cv_scr)
         df['Algorithm'] = 'svm'
@@ -585,8 +566,13 @@ def errors_and_scores(X_u, Y, alg, alg_init, scores, CV, csv_name, tset_name):
     
     return
 
-def ext_test_compare(X, Y, testX, testY, alg, alg_init, csv_name):
+def ext_test_compare(X, Y, testX, testY, alg, alg_init, csv_name, pred_param):
     """
+    Given training set and an external test set (currently designed for
+    sfcompo), tracks the prediction results for a given alg_init.
+    
+    Parameters 
+    ---------- 
     X : dataframe that includes all training data
     Y : series with labels for training data
     testX : dataframe that includes all testing data measurements
@@ -603,9 +589,13 @@ def ext_test_compare(X, Y, testX, testY, alg, alg_init, csv_name):
     """
     alg_init.fit(X, Y)
     preds = alg_init.predict(testX)
-    alg_preds = pd.DataFrame({'TrueY': testY, algs[alg]: preds}, 
-                              index=testY.index)
-    alg_preds.to_csv(csv_name + '_ext_test_compare.csv')
+    if pred_param == 'reactor':
+        errcol = np.where(testY == preds, True, False)
+    else:
+        errcol = np.abs(testY - preds)
+    df = pd.DataFrame({'TrueY': testY, algs[alg]: preds, 'AbsError': errcol},
+                       index=testY.index) 
+    df.to_csv(csv_name + '_ext_test_compare.csv')
     return
 
 def int_test_compare(X_u, Y, alg, alg_init, csv_name, tset_name, pred_param):
@@ -613,12 +603,11 @@ def int_test_compare(X_u, Y, alg, alg_init, csv_name, tset_name, pred_param):
     Saves csv's with predictions of each reactor parameter instance for a test
     set fraction defined in main()
     
-    Update: this is designed to mimic MLL, understanding the loss of CV
-    and method generalization. 
+    Update: this is designed to mimic MLL, understanding the loss of CV and
+    method generalization. 
     
     Parameters 
     ---------- 
-    
     X_u : dataframe that includes all training data (pre-scaled)
     Y : series with labels for training data
     alg : name of algorithm

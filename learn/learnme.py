@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 
-from tools import splitXY, get_testsetXY, convert_g_to_mgUi, get_hyperparam
+from tools import splitXY, get_testsetXY, convert_g_to_mgUi, get_hyperparam, get_sfco_hyperparam
 from tools import int_test_compare, errors_and_scores, validation_curves, learning_curves, ext_test_compare, random_error
 
 from sklearn.preprocessing import scale, StandardScaler
@@ -89,10 +89,10 @@ def main():
     
     trainXY = pd.read_pickle(args.train_db)
     trainXY.reset_index(inplace=True, drop=True) 
-    # ensure hyperparam optimization was done on correct tset_frac
-    trainXY = trainXY.sample(frac=tset_frac)
+    if tset_frac < 1.0:
+        trainXY = trainXY.sample(frac=tset_frac)
     trainX_unscaled, rY, cY, eY, bY = splitXY(trainXY)
-    if ((args.random_error == False) and (args.err_n_scores == False)) and (args.int_test_compare == False):
+    if ((args.learn_curves == True) or (args.valid_curves == True)):
         trainX = scale(trainX_unscaled)
     
     # set ground truth 
@@ -111,16 +111,20 @@ def main():
         trainY = rY
 
     # get hyperparams
-    k, depth, feats, g, c = get_hyperparam(args.rxtr_param, args.train_db, tset_frac)
+    if args.ext_test_compare == True:
+        # hacking the use of these arguments, sorry future me
+        k, depth, feats, g, c = get_sfco_hyperparam(tset_frac, CV)
+    else:
+        k, depth, feats, g, c = get_hyperparam(args.rxtr_param, args.train_db, tset_frac)
         
     ## initialize learners
-    scores = ['explained_variance', 'neg_mean_absolute_error', 'neg_root_mean_squared_error']
+    score = 'neg_mean_absolute_error'
     kfold = KFold(n_splits=CV, shuffle=True)
     knn_init = KNeighborsRegressor(n_neighbors=k, weights='distance', p=1, metric='minkowski')
     dtr_init = DecisionTreeRegressor(max_depth=depth, max_features=feats)
     svr_init = SVR(gamma=g, C=c)
     if args.rxtr_param == 'reactor':
-        scores = 'accuracy'
+        score = 'accuracy'
         kfold = StratifiedKFold(n_splits=CV, shuffle=True)
         knn_init = KNeighborsClassifier(n_neighbors=k, weights='distance', p=1, metric='minkowski')
         dtr_init = DecisionTreeClassifier(max_depth=depth, max_features=feats, class_weight='balanced')
@@ -135,16 +139,15 @@ def main():
 
     ## create test set from train set (no CV)
     if args.int_test_compare == True:
-        #cols = trainX_unscaled.columns.values.tolist()
         int_test_compare(trainX_unscaled, trainY, alg, init, csv_name, args.train_db, args.rxtr_param)
 
     ## calculate errors and scores
     if args.err_n_scores == True:
-        errors_and_scores(trainX_unscaled, trainY, alg, init, scores, kfold, csv_name, args.train_db)
+        errors_and_scores(trainX_unscaled, trainY, alg, init, score, kfold, csv_name, args.train_db)
 
     # learning curves
     if args.learn_curves == True:
-        learning_curves(trainX, trainY, alg, init, kfold, scores, csv_name)
+        learning_curves(trainX, trainY, alg, init, kfold, score, csv_name)
     
     # compare against external test set
     if args.ext_test_compare == True:
@@ -157,7 +160,7 @@ def main():
         scaler = StandardScaler().fit(trainX_unscaled)
         trainX = scaler.transform(trainX_unscaled)
         testX = scaler.transform(testX_unscaled)
-        ext_test_compare(trainX, trainY, testX, testY, alg, init, csv_name)
+        ext_test_compare(trainX, trainY, testX, testY, alg, init, csv_name, args.rxtr_param)
 
     # pred results wrt random error
     if args.random_error == True:
@@ -179,7 +182,7 @@ def main():
             init = dtr_init
         else:
             init = svr_init
-        validation_curves(trainX, trainY, alg, init, kfold, scores, csv_name)
+        validation_curves(trainX, trainY, alg, init, kfold, score, csv_name)
     
     return
 

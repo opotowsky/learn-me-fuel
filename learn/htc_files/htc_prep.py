@@ -6,18 +6,21 @@ def make_paramstxt(train, txtfile, file_descrip):
     
     rxtr_param = ['reactor', 'cooling', 'enrichment', 'burnup']
     algs = ['knn', 'dtree']
+    tset_frac = [1.0]
+    cv = 5
+    
     # all funcs:
     #func_type = ['--int_test_compare', '--err_n_scores', '--learn_curves', 
     #             '--valid_curves', '--ext_test_compare', '--random_error']
-    # funcs ran for nuc conc scenario:
-    #func_type = ['--ext_test_compare', '--random_error']
-    # funcs ran for gamma spec scenario:
-    #func_type = ['--err_n_scores',]
-    func_type = ['--int_test_compare',]
-    tset_frac = [1.0]
-    #tset_frac = [0.1, 0.3, 1.0]
-    #tset_frac = [0.1, 0.2, 0.3, 0.5, 1.0]
-    cv = 5
+    # funcs ran for nuc conc scenario: ['--ext_test_compare', '--random_error']
+    # funcs ran for gamma spec scenario: ['--err_n_scores', '--int_test_compare',]
+    
+    # changes unique to special sfco expmt
+    #func_type = ['--ext_test_compare']
+    #tset_frac = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]
+    #outfile = param + '_' + alg + '_idx' + str(int(frac)) + '_df' + str(cv)  + file_descrip
+
+    func_type = ['xxx']
 
     for param in rxtr_param:
         for func in func_type:
@@ -26,10 +29,7 @@ def make_paramstxt(train, txtfile, file_descrip):
             testset = 'null'
             if 'ext_test_compare' in func:
                 filename = 'sfco_compare' + txtfile
-                if '15' in train:
-                    testset = 'sfcompo_nuc15.pkl'
-                else:
-                    testset = 'sfcompo_nuc29.pkl'
+                testset = 'sfcompo_nuc29.pkl'
             elif 'int_test_compare' in func:
                 filename = 'mimic_mll' + txtfile
             else:
@@ -51,9 +51,11 @@ def main():
     
     """
     # nuclide concentration lists
-    #dblist = ['sim_grams_nuc15.pkl', 'sim_grams_nuc29.pkl']
-    #txtfile = ['_nuc15_param.txt', '_nuc29_param.txt']
-    #outfile = ['_nuc15', '_nuc29']
+    dblist = ['sim_grams_nuc29.pkl']
+    txtfiles = ['_nuc29_param.txt']
+    outfiles = ['_nuc29']
+    #for i, traindb in enumerate(dblist):
+    #    make_paramstxt(traindb, txtfiles[i], outfiles[i])
     
     # activity lists
     dblist = ['d1_hpge_spectra_31peaks_trainset.pkl',
@@ -89,8 +91,8 @@ def main():
                ]
     outfiles = [i for i in outfile for j in range (0, 3)]
     
-    for i, traindb in enumerate(dblist):
-        make_paramstxt(traindb, txtfiles[i], outfiles[i])
+    #for i, traindb in enumerate(dblist):
+    #    make_paramstxt(traindb, txtfiles[i], outfiles[i])
     
     dblist2 = ['nuc4_activities_scaled_1g_reindex.pkl',
                'nuc9_activities_scaled_1g_reindex.pkl',
@@ -108,9 +110,10 @@ def main():
                 '_nuc29',    
                 ]
     
-    for i, traindb in enumerate(dblist2):
-        make_paramstxt(traindb, txtfiles[i], outfiles[i])
+    #for i, traindb in enumerate(dblist2):
+    #    make_paramstxt(traindb, txtfiles[i], outfiles[i])
     
+
     return
     
 if __name__ == "__main__":
