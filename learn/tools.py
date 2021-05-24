@@ -342,8 +342,8 @@ def random_error(X_unscaled, Y, alg, alg_init, csv_name, param):
                             })
     else:
         df = pd.DataFrame({'Percent Error' : err_percent, 
-                            algs[alg]+' MAE' : mae,
-                            algs[alg]+' MAE Std' : mae_std,
+                            algs[alg]+' MAE' : prederr,
+                            algs[alg]+' MAE Std' : prederr_std,
                             })
     df.to_csv(csv_name + '_random_error.csv')
     return
