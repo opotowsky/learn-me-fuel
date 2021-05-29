@@ -139,7 +139,7 @@ def main():
 
     ## create test set from train set (no CV)
     if args.int_test_compare == True:
-        int_test_compare(trainX_unscaled, trainY, alg, init, csv_name, args.train_db, args.rxtr_param)
+        int_test_compare(trainX_unscaled, trainY, alg, init, csv_name, tset_frac, args.train_db, args.rxtr_param)
 
     ## calculate errors and scores
     if args.err_n_scores == True:

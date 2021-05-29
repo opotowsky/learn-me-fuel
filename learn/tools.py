@@ -598,7 +598,7 @@ def ext_test_compare(X, Y, testX, testY, alg, alg_init, csv_name, pred_param):
     df.to_csv(csv_name + '_ext_test_compare.csv')
     return
 
-def int_test_compare(X_u, Y, alg, alg_init, csv_name, tset_name, pred_param):
+def int_test_compare(X_u, Y, alg, alg_init, csv_name, tset_frac, tset_name, pred_param):
     """
     Saves csv's with predictions of each reactor parameter instance for a test
     set fraction defined in main()
@@ -614,6 +614,7 @@ def int_test_compare(X_u, Y, alg, alg_init, csv_name, tset_name, pred_param):
     alg_init : initialized learner
     csv_name : string containing the train set, nuc subset, and parameter being 
                predicted for naming purposes
+    tset_frac : TEMP HACKY THING DON'T LOOK AT ME
     tset_name : string of the trainset name, to distinguish random error 
                 injection. Or in case of PCA, string indicating such
     pred_param : reactor parameter being predicted
@@ -630,7 +631,7 @@ def int_test_compare(X_u, Y, alg, alg_init, csv_name, tset_name, pred_param):
         X = add_error(5.0, X_u)
     X = scale(X)
     # split train and test set to mimic MLL process
-    test_frac = 0.067
+    test_frac = tset_frac - 1
     if pred_param == 'reactor': 
         trainX, testX, trainY, testY = train_test_split(X, Y, test_size=test_frac, shuffle=True, stratify=Y)
     else:

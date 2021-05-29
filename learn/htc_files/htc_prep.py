@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 
 import csv
+import numpy as np
 
 def make_paramstxt(train, txtfile, file_descrip):
     
@@ -20,11 +21,13 @@ def make_paramstxt(train, txtfile, file_descrip):
     #tset_frac = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]
     #outfile = param + '_' + alg + '_idx' + str(int(frac)) + '_df' + str(cv)  + file_descrip
 
-    func_type = ['xxx']
+    fracs = np.array([0.05, 0.06, 0.07, 0.08, 0.09, 0.1, 0.12, 0.14, 0.16, 0.18, 
+                      0.2, 0.23, 0.25, 0.27, 0.3])
+    tset_frac = np.around(1 + fracs, 2)
+    func_type = ['--int_test_compare']
 
     for param in rxtr_param:
         for func in func_type:
-            # ext_test_compare or blank args
             # only applicable in nuc conc scenario so leaving as-is
             testset = 'null'
             if 'ext_test_compare' in func:
@@ -35,9 +38,10 @@ def make_paramstxt(train, txtfile, file_descrip):
             else:
                 filename = func[2:] + txtfile
             for alg in algs:
-                for frac in tset_frac:
-                    # outfile naming
-                    outfile = param + '_' + alg + '_tset' + str(frac) + file_descrip
+                #for frac in tset_frac:
+                for i, frac in enumerate(tset_frac):
+                    #outfile = param + '_' + alg + '_tset' + str(frac) + file_descrip
+                    outfile = param + '_' + alg + '_tset' + str(fracs[i]) + file_descrip
                     with open(filename, 'a') as f:
                         w = csv.writer(f)
                         job = [outfile, param, alg, str(frac), str(cv),
@@ -91,8 +95,8 @@ def main():
                ]
     outfiles = [i for i in outfile for j in range (0, 3)]
     
-    #for i, traindb in enumerate(dblist):
-    #    make_paramstxt(traindb, txtfiles[i], outfiles[i])
+    for i, traindb in enumerate(dblist):
+        make_paramstxt(traindb, txtfiles[i], outfiles[i])
     
     dblist2 = ['nuc4_activities_scaled_1g_reindex.pkl',
                'nuc9_activities_scaled_1g_reindex.pkl',
@@ -110,8 +114,8 @@ def main():
                 '_nuc29',    
                 ]
     
-    #for i, traindb in enumerate(dblist2):
-    #    make_paramstxt(traindb, txtfiles[i], outfiles[i])
+    for i, traindb in enumerate(dblist2):
+        make_paramstxt(traindb, txtfiles[i], outfiles[i])
     
 
     return
