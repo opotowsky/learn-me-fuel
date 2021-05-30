@@ -21,10 +21,14 @@ def make_paramstxt(train, txtfile, file_descrip):
     #tset_frac = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]
     #outfile = param + '_' + alg + '_idx' + str(int(frac)) + '_df' + str(cv)  + file_descrip
 
-    fracs = np.array([0.05, 0.06, 0.07, 0.08, 0.09, 0.1, 0.12, 0.14, 0.16, 0.18, 
-                      0.2, 0.23, 0.25, 0.27, 0.3])
-    tset_frac = np.around(1 + fracs, 2)
-    func_type = ['--int_test_compare']
+    # for "learning curve" expmt
+    #fracs = np.array([0.05, 0.06, 0.07, 0.08, 0.09, 0.1, 0.12, 0.14, 0.16, 0.18, 
+    #                  0.2, 0.23, 0.25, 0.27, 0.3])
+    #tset_frac = np.around(1 + fracs, 2)
+    
+    # next mini exmpt, high CV to have 15 7% test sets:
+    cv = 15
+    func_type = ['--err_n_scores']
 
     for param in rxtr_param:
         for func in func_type:
@@ -38,10 +42,8 @@ def make_paramstxt(train, txtfile, file_descrip):
             else:
                 filename = func[2:] + txtfile
             for alg in algs:
-                #for frac in tset_frac:
-                for i, frac in enumerate(tset_frac):
-                    #outfile = param + '_' + alg + '_tset' + str(frac) + file_descrip
-                    outfile = param + '_' + alg + '_tset' + str(fracs[i]) + file_descrip
+                for frac in tset_frac:
+                    outfile = param + '_' + alg + '_tset' + str(frac) + file_descrip
                     with open(filename, 'a') as f:
                         w = csv.writer(f)
                         job = [outfile, param, alg, str(frac), str(cv),

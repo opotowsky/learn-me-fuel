@@ -524,7 +524,7 @@ def errors_and_scores(X_u, Y, alg, alg_init, score, CV, csv_name, tset_name):
     Y : series with labels for training data
     alg : name of algorithm
     alg_init : initialized learner
-    score : string of scoring type (from sckikit-learn)
+    score : string of scoring type (from sckikit-learn), or pre-initialized scorer
     CV : cross-validation generator
     csv_name : string containing the train set, nuc subset, and parameter being
                predicted for naming purposes
@@ -545,23 +545,11 @@ def errors_and_scores(X_u, Y, alg, alg_init, score, CV, csv_name, tset_name):
     else:
         X = add_error(5.0, X_u)
         X = scale(X)
-
-    if alg == 'knn':
-        cv_scr = cross_validate(alg_init, X, Y, scoring=score, cv=CV, 
-                                return_train_score=False, n_jobs=njobs)
-        df = pd.DataFrame(cv_scr)
-        df['Algorithm'] = 'knn'
-    elif alg == 'dtree':
-        cv_scr = cross_validate(alg_init, X, Y, scoring=score, cv=CV, 
-                                return_train_score=False, n_jobs=njobs)
-        df = pd.DataFrame(cv_scr)
-        df['Algorithm'] = 'dtree'
-    else: # svm
-        cv_scr = cross_validate(alg_init, X, Y, scoring=score, cv=CV, 
-                                return_train_score=False, n_jobs=njobs)
-        df = pd.DataFrame(cv_scr)
-        df['Algorithm'] = 'svm'
     
+    cv_scr = cross_validate(alg_init, X, Y, scoring=score, cv=CV, 
+                            return_train_score=False, n_jobs=njobs)
+    df = pd.DataFrame(cv_scr)
+    df['Algorithm'] = alg
     df.to_csv(csv_name + '_scores.csv')
     
     return

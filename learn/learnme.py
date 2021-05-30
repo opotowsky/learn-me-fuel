@@ -3,6 +3,7 @@
 from tools import splitXY, get_testsetXY, convert_g_to_mgUi, get_hyperparam, get_sfco_hyperparam
 from tools import int_test_compare, errors_and_scores, validation_curves, learning_curves, ext_test_compare, random_error
 
+from sklearn.metrics import make_scorer, balanced_accuracy_score
 from sklearn.preprocessing import scale, StandardScaler
 from sklearn.neighbors import KNeighborsRegressor, KNeighborsClassifier
 from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
@@ -124,7 +125,7 @@ def main():
     dtr_init = DecisionTreeRegressor(max_depth=depth, max_features=feats)
     svr_init = SVR(gamma=g, C=c)
     if args.rxtr_param == 'reactor':
-        score = 'accuracy'
+        score = make_scorer(balanced_accuracy_score, adjusted=True)
         kfold = StratifiedKFold(n_splits=CV, shuffle=True)
         knn_init = KNeighborsClassifier(n_neighbors=k, weights='distance', p=1, metric='minkowski')
         dtr_init = DecisionTreeClassifier(max_depth=depth, max_features=feats, class_weight='balanced')
