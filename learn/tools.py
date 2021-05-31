@@ -554,6 +554,43 @@ def errors_and_scores(X_u, Y, alg, alg_init, score, CV, csv_name, tset_name):
     
     return
 
+def cv_predict(X_u, Y, alg, alg_init, CV, csv_name, tset_name):
+    """
+    Saves csv's with each prediction from when the sample was in the
+    testing CV fold
+
+    Parameters 
+    ---------- 
+    
+    X_u : dataframe that includes all training data before scaling
+    Y : series with labels for training data
+    alg : name of algorithm
+    alg_init : initialized learner
+    CV : cross-validation generator
+    csv_name : string containing the train set, nuc subset, and parameter being
+               predicted for naming purposes
+    tset_name : string of the trainset name, to distinguish random error 
+                injection. 
+
+    Returns
+    -------
+    *predictions.csv : csv file with predictions from entire train set
+    
+    """
+    # add "counting" error to summed bins or uniform error to nuc masses
+    if 'spectra' in tset_name:
+        X = np.random.uniform(X_u - np.sqrt(X_u), X_u + np.sqrt(X_u))
+    else:
+        X = add_error(5.0, X_u)
+    X = scale(X)
+    
+    preds = cross_val_predict(alg_init, X, Y, cv=CV, n_jobs=njobs)
+    df = pd.DataFrame(preds)
+    df['Algorithm'] = alg
+    df.to_csv(csv_name + '_predictions.csv')
+    
+    return
+
 def ext_test_compare(X, Y, testX, testY, alg, alg_init, csv_name, pred_param):
     """
     Given training set and an external test set (currently designed for

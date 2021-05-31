@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 
 from tools import splitXY, get_testsetXY, convert_g_to_mgUi, get_hyperparam, get_sfco_hyperparam
-from tools import int_test_compare, errors_and_scores, validation_curves, learning_curves, ext_test_compare, random_error
+from tools import int_test_compare, errors_and_scores, validation_curves, learning_curves, ext_test_compare, random_error, cv_predict
 
 from sklearn.metrics import make_scorer, balanced_accuracy_score
 from sklearn.preprocessing import scale, StandardScaler
@@ -55,6 +55,8 @@ def parse_args(args):
                         default=False, help='run the int_test_compare function')
     parser.add_argument('-etc', '--ext_test_compare', action='store_true', 
                         default=False, help='run the ext_test_compare function')
+    parser.add_argument('-cvp', '--cv_pred', action='store_true',
+                        default=False, help='run the cv_predict function')
     parser.add_argument('-testset', '--testing_set', 
                         help='file path to an external testing set')
 
@@ -65,17 +67,20 @@ def main():
     Given training data, this script performs a user-defined number of ML 
     tasks for three algorithms (kNN, decision trees, SVR), saving the results
     as .csv files:
-    1. track_predictions provides the prediction of each training instance
+    1. cv_predict provides the prediction of each training instance from when
+       it was in the CV fold for testing
     2. errors_and_scores provides the prediction accuracy for each algorithm
-    for each CV fold
+       for each CV fold
     3. learning_curves provides the prediction accuracy with respect to
-    training set size
+       training set size
     4. validation_curves provides the prediction accuracy with respect to
-    algorithm hyperparameter variations
+       algorithm hyperparameter variations
     5. ext_test_compare provides the predictions of each algorithm of an 
-    external test set
-    6. random_error calculates prediction performance with respect to 
-    increasing error
+       external test set
+    6. int_test_compare provides the predictions of each algorithm of an 
+       from a single split-off-from-DB test set
+    7. random_error calculates prediction performance with respect to 
+       increasing error
 
     """
     
@@ -145,6 +150,10 @@ def main():
     ## calculate errors and scores
     if args.err_n_scores == True:
         errors_and_scores(trainX_unscaled, trainY, alg, init, score, kfold, csv_name, args.train_db)
+
+    ## return all CV predictions
+    if args.cv_pred == True:
+        cv_predict(trainX_unscaled, trainY, alg, init, kfold, csv_name, args.train_db)
 
     # learning curves
     if args.learn_curves == True:
