@@ -554,7 +554,7 @@ def errors_and_scores(X_u, Y, alg, alg_init, score, CV, csv_name, tset_name):
     
     return
 
-def cv_predict(X_u, Y, alg, alg_init, CV, csv_name, tset_name):
+def cv_predict(X_u, Y, alg, alg_init, CV, csv_name, tset_name, pred_param):
     """
     Saves csv's with each prediction from when the sample was in the
     testing CV fold
@@ -571,6 +571,7 @@ def cv_predict(X_u, Y, alg, alg_init, CV, csv_name, tset_name):
                predicted for naming purposes
     tset_name : string of the trainset name, to distinguish random error 
                 injection. 
+    pred_param : reactor parameter being predicted
 
     Returns
     -------
@@ -585,8 +586,12 @@ def cv_predict(X_u, Y, alg, alg_init, CV, csv_name, tset_name):
     X = scale(X)
     
     preds = cross_val_predict(alg_init, X, Y, cv=CV, n_jobs=njobs)
-    df = pd.DataFrame(preds)
-    df['Algorithm'] = alg
+    if pred_param == 'reactor':
+        errcol = np.where(Y == preds, True, False)
+    else:
+        errcol = np.abs(Y - preds)
+    df = pd.DataFrame({'TrueY': Y, algs[alg]: preds, 'AbsError': errcol},
+                       index=Y.index) 
     df.to_csv(csv_name + '_predictions.csv')
     
     return
@@ -606,6 +611,7 @@ def ext_test_compare(X, Y, testX, testY, alg, alg_init, csv_name, pred_param):
     alg_init : initialized learner
     csv_name : string containing the train set, nuc subset, and parameter being 
                predicted for naming purposes
+    pred_param : reactor parameter being predicted
 
     Returns
     -------

@@ -153,7 +153,7 @@ def main():
 
     ## return all CV predictions
     if args.cv_pred == True:
-        cv_predict(trainX_unscaled, trainY, alg, init, kfold, csv_name, args.train_db)
+        cv_predict(trainX_unscaled, trainY, alg, init, kfold, csv_name, args.train_db, args.rxtr_param)
 
     # learning curves
     if args.learn_curves == True:
