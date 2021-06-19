@@ -6,7 +6,7 @@ def make_paramstxt(train, txtfile):
     
     rxtr_param = ['reactor', 'cooling', 'enrichment', 'burnup']
     algs = ['knn', 'dtree']#, 'svm']
-    tset_frac = 0.6
+    tset_frac = 1.0
     cv = 5
 
     with open(txtfile, 'w') as f:
@@ -23,12 +23,12 @@ def main():
     
     """
     # nuclide concentration lists
-    #train_db = ['sim_grams_nuc15.pkl', 'sim_grams_nuc29.pkl']
-    #txtfile = ['optimize_nuc15_param.txt', 'optimize_nuc29_param.txt']
+    train_db = ['sim_grams_nuc29.pkl']
+    txtfile = ['optimize_nuc29_param.txt']
 
     # processed spectra lists
-    train_db = ['d1_hpge_spectra_peaks_trainset.pkl']
-    txtfile = ['optimize_d1_param.txt']
+    #train_db = ['d1_hpge_spectra_peaks_trainset.pkl']
+    #txtfile = ['optimize_d1_param.txt']
 
     for train, tfile in zip(train_db, txtfile):
         make_paramstxt(train, tfile)

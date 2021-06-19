@@ -9,7 +9,8 @@ def make_paramstxt(train, txtfile, file_descrip):
     algs = ['knn', 'dtree']
     tset_frac = [1.0]
     cv = [5]
-    
+    func_type = ['int_test_compare']
+
     # all funcs:
     #func_type = ['--int_test_compare', '--err_n_scores', '--learn_curves', 
     #             '--valid_curves', '--ext_test_compare', '--random_error',
@@ -28,9 +29,9 @@ def make_paramstxt(train, txtfile, file_descrip):
     #tset_frac = np.around(1 + fracs, 2)
     
     # next mini exmpt, high CV to have 15 7% test sets:
-    frac = 1.0
-    cvs = [5, 10, 15]
-    func_type = ['--cv_pred']
+    #frac = 1.0
+    #cvs = [5, 10, 15]
+    #func_type = ['--cv_pred']
 
     for param in rxtr_param:
         for func in func_type:
@@ -44,10 +45,10 @@ def make_paramstxt(train, txtfile, file_descrip):
             else:
                 filename = func[2:] + txtfile
             for alg in algs:
-                #for frac in tset_frac:
-                for cv in cvs:
-                    #outfile = param + '_' + alg + '_tset' + str(frac) + file_descrip
-                    outfile = param + '_' + alg + '_tset' + str(frac) + '_cv' + str(cv)  + file_descrip
+                for frac in tset_frac:
+                #for cv in cvs:
+                    outfile = param + '_' + alg + '_tset' + str(frac) + file_descrip
+                    #outfile = param + '_' + alg + '_tset' + str(frac) + '_cv' + str(cv)  + file_descrip
                     with open(filename, 'a') as f:
                         w = csv.writer(f)
                         job = [outfile, param, alg, str(frac), str(cv),
