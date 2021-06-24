@@ -117,11 +117,11 @@ def main():
         trainY = rY
 
     # get hyperparams
-    if args.ext_test_compare == True:
-        # hacking the use of these arguments, sorry future me
-        k, depth, feats, g, c = get_sfco_hyperparam(tset_frac, CV)
-    else:
-        k, depth, feats, g, c = get_hyperparam(args.rxtr_param, args.train_db, tset_frac)
+    #if args.ext_test_compare == True:
+    #    # hacking the use of these arguments, sorry future me
+    #    k, depth, feats, g, c = get_sfco_hyperparam(tset_frac, CV)
+    #else:
+    k, depth, feats, g, c = get_hyperparam(args.rxtr_param, args.train_db)
         
     ## initialize learners
     score = 'neg_mean_absolute_error'
@@ -164,7 +164,7 @@ def main():
         # convert trainset to be same units as testset
         trainX_unscaled = convert_g_to_mgUi(trainX_unscaled)
         xy_cols = trainXY.columns.tolist()
-        for col in nonlbls+['total']: xy_cols.remove(col)
+        for col in nonlbls: xy_cols.remove(col)
         testX_unscaled, testY = get_testsetXY(args.testing_set, xy_cols, args.rxtr_param)
         # scale testset using scale fit from trainset
         scaler = StandardScaler().fit(trainX_unscaled)

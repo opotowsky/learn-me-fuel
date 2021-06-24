@@ -98,7 +98,7 @@ def get_sfco_hyperparam(idx, d_or_f):
         
     return k, depth, feats, g, c
 
-def get_hyperparam(param, train_name, frac):
+def get_hyperparam(param, train_name):
     """
     This has gotten messy, but the original intention was to keep track of
     optimization of hyperparameters on training sets of various sizes. The
@@ -111,7 +111,6 @@ def get_hyperparam(param, train_name, frac):
     ----------
     param : reactor parameter being predicted
     train_name : name of training set
-    frac : training set fraction to use
 
     Returns
     -------
@@ -122,30 +121,12 @@ def get_hyperparam(param, train_name, frac):
     c : C for SVM
 
     """
-    if frac == 1.0:
-        # optimized on 100% trainset
-        nuc29_hp = {'reactor' :    {'k' : 2, 'depth' : 73, 'feats' : 11, 'g' : 0.07, 'c' : 23000},
-                    'burnup' :     {'k' : 2, 'depth' : 77, 'feats' : 27, 'g' : 0.50, 'c' : 40000},
-                    'cooling' :    {'k' : 2, 'depth' : 48, 'feats' : 29, 'g' : 0.01, 'c' : 40000},
-                    'enrichment' : {'k' : 2, 'depth' : 77, 'feats' : 24, 'g' : 0.00005, 'c' : 40000},
-                    }
-    elif frac == 0.5:
-        # optimized on 50% trainset
-        nuc29_hp = {'reactor' :    {'k' : 2, 'depth' : 60, 'feats' : 9, 'g' : 0.07, 'c' : 23000},
-                    'burnup' :     {'k' : 2, 'depth' : 34, 'feats' : 26, 'g' : 0.50, 'c' : 40000},
-                    'cooling' :    {'k' : 2, 'depth' : 75, 'feats' : 27, 'g' : 0.01, 'c' : 40000},
-                    'enrichment' : {'k' : 2, 'depth' : 77, 'feats' : 24, 'g' : 0.00005, 'c' : 40000},
-                    }
-    else:
-        # optimized on 10% trainset
-        nuc29_hp = {'reactor' :    {'k' : 3, 'depth' : 70, 'feats' : 17, 'g' : 0.07, 'c' : 23000},
-                    'burnup' :     {'k' : 6, 'depth' : 42, 'feats' : 29, 'g' : 0.50, 'c' : 40000},
-                    'cooling' :    {'k' : 5, 'depth' : 48, 'feats' : 29, 'g' : 0.01, 'c' : 40000},
-                    'enrichment' : {'k' : 3, 'depth' : 71, 'feats' : 25, 'g' : 0.00005, 'c' : 40000},
-                    }
-    # multiple opt runs on diff sized trainsets for nuc conc trainsets
     if '29' in train_name:
-        hp = nuc29_hp
+        hp = {'reactor' :    {'k' : 2, 'depth' : 73, 'feats' : 11, 'g' : 0.07, 'c' : 23000},
+              'burnup' :     {'k' : 2, 'depth' : 77, 'feats' : 27, 'g' : 0.50, 'c' : 40000},
+              'cooling' :    {'k' : 2, 'depth' : 48, 'feats' : 29, 'g' : 0.01, 'c' : 40000},
+              'enrichment' : {'k' : 2, 'depth' : 77, 'feats' : 24, 'g' : 0.00005, 'c' : 40000},
+              }
     # processed gamma spec are optimized on 20% trainset. no SVM opt done.
     #elif 'd1' in train_name:
     #    hp = {'reactor' :    {'k' : 4, 'depth' : 41, 'feats' : 109, 'g' : 0.10, 'c' : 100000},
@@ -328,7 +309,7 @@ def random_error(X_unscaled, Y, alg, alg_init, csv_name, param):
     
     Parameters 
     ---------- 
-    X : dataframe that includes all training data
+    X_unscaled : dataframe that includes all training data features (pre-scaled)
     Y : series with labels for training data
     alg : name of algorithm
     alg_init : initialized learner
@@ -353,8 +334,7 @@ def random_error(X_unscaled, Y, alg, alg_init, csv_name, param):
     for err in err_percent:
         X = add_error(err, X_unscaled)
         X = scale(X)
-        # split train and test set to mimic MLL process
-        # frac is different than the other func bc MLL sampling was lower for nuc conc
+        # TODO update train-test-split to be LOOV
         test_frac = 0.055
         if param == 'reactor': 
             trainX, testX, trainY, testY = train_test_split(X, Y, test_size=test_frac, shuffle=True, stratify=Y)
