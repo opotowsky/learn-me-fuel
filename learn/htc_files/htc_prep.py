@@ -8,8 +8,8 @@ def make_paramstxt(train, txtfile, file_descrip):
     rxtr_param = ['reactor', 'cooling', 'enrichment', 'burnup']
     algs = ['knn', 'dtree']
     tset_frac = [1.0]
-    cv = [5]
-    func_type = ['int_test_compare']
+    cv = 5
+    func_type = ['--cv_pred']
 
     # all funcs:
     #func_type = ['--int_test_compare', '--err_n_scores', '--learn_curves', 
@@ -69,27 +69,27 @@ def main():
     #    make_paramstxt(traindb, txtfiles[i], outfiles[i])
     
     # activity lists
-    dblist = ['d1_hpge_spectra_31peaks_trainset.pkl',
-              'd1_hpge_spectra_113peaks_trainset.pkl',
+    dblist = ['d1_hpge_spectra_short_peaks_trainset.pkl',
+              'd1_hpge_spectra_long_peaks_trainset.pkl',
               'd1_hpge_spectra_auto_peaks_trainset.pkl',
-              'd2_hpge_spectra_31peaks_trainset.pkl',
-              'd2_hpge_spectra_113peaks_trainset.pkl',
+              'd2_hpge_spectra_short_peaks_trainset.pkl',
+              'd2_hpge_spectra_long_peaks_trainset.pkl',
               'd2_hpge_spectra_auto_peaks_trainset.pkl',
-              'd3_czt_spectra_31peaks_trainset.pkl',
-              'd3_czt_spectra_113peaks_trainset.pkl',
+              'd3_czt_spectra_short_peaks_trainset.pkl',
+              'd3_czt_spectra_long_peaks_trainset.pkl',
               'd3_czt_spectra_auto_peaks_trainset.pkl',
-              'd4_nai_spectra_31peaks_trainset.pkl',
-              'd4_nai_spectra_113peaks_trainset.pkl',
+              'd4_nai_spectra_short_peaks_trainset.pkl',
+              'd4_nai_spectra_long_peaks_trainset.pkl',
               'd4_nai_spectra_auto_peaks_trainset.pkl',
-              'd5_labr3_spectra_31peaks_trainset.pkl',
-              'd5_labr3_spectra_113peaks_trainset.pkl',
+              'd5_labr3_spectra_short_peaks_trainset.pkl',
+              'd5_labr3_spectra_long_peaks_trainset.pkl',
               'd5_labr3_spectra_auto_peaks_trainset.pkl',
-              'd6_sri2_spectra_31peaks_trainset.pkl',
-              'd6_sri2_spectra_113peaks_trainset.pkl',
+              'd6_sri2_spectra_short_peaks_trainset.pkl',
+              'd6_sri2_spectra_long_peaks_trainset.pkl',
               'd6_sri2_spectra_auto_peaks_trainset.pkl',
               ]
-    txtfile = ['_n31_param.txt',
-               '_n113_param.txt',
+    txtfile = ['_short_param.txt',
+               '_long_param.txt',
                '_auto_param.txt',
                ]
     txtfiles = txtfile * 6
@@ -105,18 +105,18 @@ def main():
     for i, traindb in enumerate(dblist):
         make_paramstxt(traindb, txtfiles[i], outfiles[i])
     
-    dblist2 = ['nuc4_activities_scaled_1g_reindex.pkl',
-               'nuc9_activities_scaled_1g_reindex.pkl',
+    dblist2 = ['nuc7_activities_scaled_1g_reindex.pkl',
+               'nuc12_activities_scaled_1g_reindex.pkl',
                'nuc32_activities_scaled_1g_reindex.pkl',
                'sim_grams_nuc29.pkl',
                ]
-    txtfiles = ['_act4_param.txt',
-                '_act9_param.txt',
+    txtfiles = ['_act7_param.txt',
+                '_act12_param.txt',
                 '_act32_param.txt',
                 '_nuc29_param.txt',
                 ]
-    outfiles = ['_act4',
-                '_act9',    
+    outfiles = ['_act7',
+                '_act12',    
                 '_act32',    
                 '_nuc29',    
                 ]
