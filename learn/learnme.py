@@ -108,10 +108,6 @@ def main():
     elif args.rxtr_param == 'enrichment': 
         trainY = eY
     elif args.rxtr_param == 'burnup':
-        # burnup needs much less training data
-        #trainXY = trainXY.sample(frac=0.4)
-        #trainX, rY, cY, eY, bY = splitXY(trainXY)
-        #trainX = scale(trainX)
         trainY = bY
     else:
         trainY = rY
@@ -174,7 +170,7 @@ def main():
 
     # pred results wrt random error
     if args.random_error == True:
-        random_error(trainX_unscaled, trainY, alg, init, csv_name, args.rxtr_param)
+        random_error(trainX_unscaled, trainY, alg, init, kfold, csv_name, args.rxtr_param)
 
     # validation curves 
     if args.valid_curves == True:

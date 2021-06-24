@@ -298,8 +298,10 @@ def add_error(percent_err, df):
 
     return df_err
 
-def random_error(X_unscaled, Y, alg, alg_init, csv_name, param):
+def random_error(X_unscaled, Y, alg, alg_init, CV, csv_name, param):
     """
+    UPDATE: returning to cross validation prediction
+
     This function has been updated to better mimic the MLL method, by using
     train_test_split for a similar test set fraction. Then, for several values
     of a randomly applied error, the prediction performance is measured. 
@@ -313,6 +315,7 @@ def random_error(X_unscaled, Y, alg, alg_init, csv_name, param):
     Y : series with labels for training data
     alg : name of algorithm
     alg_init : initialized learner
+    CV : cross-validation generator
     csv_name : string containing the train set, nuc subset, and parameter being 
                predicted for naming purposes
     param : reactor parameter being predicted
@@ -323,44 +326,20 @@ def random_error(X_unscaled, Y, alg, alg_init, csv_name, param):
                         random error magnitude
 
     """
-    err_percent = [0, 0.1, 0.3, 0.6, 0.9, 
-                   1, 1.3, 1.6, 1.9, 2, 
-                   2.5, 3, 3.5, 4, 4.5, 5,
-                   6, 7, 8, 9, 10, 13, 17, 
-                   20]
-    prederr = []
-    prederr_std = []
-    
+    err_percent = [0, 0.3, 0.7, 1, 2, 
+                   4, 6, 8, 10, 13, 
+                   17, 20]
     for err in err_percent:
         X = add_error(err, X_unscaled)
         X = scale(X)
-        # TODO update train-test-split to be LOOV
-        test_frac = 0.055
-        if param == 'reactor': 
-            trainX, testX, trainY, testY = train_test_split(X, Y, test_size=test_frac, shuffle=True, stratify=Y)
-        else:
-            trainX, testX, trainY, testY = train_test_split(X, Y, test_size=test_frac, shuffle=True)
-        alg_init.fit(trainX, trainY)
-        preds = alg_init.predict(testX)
-        # keeping rand_err output the same by post processing here
+        preds = cross_val_predict(alg_init, X, Y, cv=CV, n_jobs=njobs)
         if param == 'reactor':
             errcol = np.where(testY == preds, True, False)
         else:
             errcol = np.abs(testY - preds)
-        prederr.append(errcol.mean())
-        prederr_std.append(errcol.std())
-
-    if param == 'reactor':
-        df = pd.DataFrame({'Percent Error' : err_percent, 
-                            algs[alg]+' Acc' : prederr,
-                            algs[alg]+' Acc Std' : prederr_std
-                            })
-    else:
-        df = pd.DataFrame({'Percent Error' : err_percent, 
-                            algs[alg]+' MAE' : prederr,
-                            algs[alg]+' MAE Std' : prederr_std,
-                            })
-    df.to_csv(csv_name + '_random_error.csv')
+        df = pd.DataFrame({'TrueY': Y, algs[alg]: preds, 'AbsError': errcol},
+                           index=Y.index) 
+        df.to_csv(csv_name + '_err' + str(err) + '_random_error.csv')
     return
 
 def validation_curves(X, Y, alg, alg_init, CV, score, csv_name):
