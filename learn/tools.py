@@ -100,12 +100,9 @@ def get_sfco_hyperparam(idx, d_or_f):
 
 def get_hyperparam(param, train_name):
     """
-    This has gotten messy, but the original intention was to keep track of
-    optimization of hyperparameters on training sets of various sizes. The
-    nuc_conc opts remain, but it was not feasible to run an optimization on
-    every single detector trainset (several energy window lists for each
-    detector), so a base one was chosen. If perfecting scikit predictions
-    becomes the goal, this will be fixed up.
+    Optimization isn't really possible with the many many training sets.
+    These are some generalized values based on looking at different runs over
+    the years. 
     
     Parameters
     ----------
@@ -121,49 +118,18 @@ def get_hyperparam(param, train_name):
     c : C for SVM
 
     """
-    if '29' in train_name:
-        hp = {'reactor' :    {'k' : 2, 'depth' : 73, 'feats' : 11, 'g' : 0.07, 'c' : 23000},
-              'burnup' :     {'k' : 2, 'depth' : 77, 'feats' : 27, 'g' : 0.50, 'c' : 40000},
-              'cooling' :    {'k' : 2, 'depth' : 48, 'feats' : 29, 'g' : 0.01, 'c' : 40000},
-              'enrichment' : {'k' : 2, 'depth' : 77, 'feats' : 24, 'g' : 0.00005, 'c' : 40000},
-              }
-    # processed gamma spec are optimized on 20% trainset. no SVM opt done.
-    #elif 'd1' in train_name:
-    #    hp = {'reactor' :    {'k' : 4, 'depth' : 41, 'feats' : 109, 'g' : 0.10, 'c' : 100000},
-    #          'burnup' :     {'k' : 3, 'depth' : 53, 'feats' : 99, 'g' : 0.10, 'c' : 100000},
-    #          'cooling' :    {'k' : 3, 'depth' : 31, 'feats' : 106, 'g' : 0.10, 'c' : 100000},
-    #          'enrichment' : {'k' : 6, 'depth' : 67, 'feats' : 109, 'g' : 0.10, 'c' : 100000},
-    #          }
-    #elif 'd2' in train_name:
-    #    hp = {'reactor' :    {'k' : 8, 'depth' : 58, 'feats' : 106, 'g' : 0.10, 'c' : 100000},
-    #          'burnup' :     {'k' : 4, 'depth' : 70, 'feats' : 106, 'g' : 0.10, 'c' : 100000},
-    #          'cooling' :    {'k' : 4, 'depth' : 26, 'feats' : 95, 'g' : 0.10, 'c' : 100000},
-    #          'enrichment' : {'k' : 6, 'depth' : 63, 'feats' : 109, 'g' : 0.10, 'c' : 100000},
-    #          }
-    #elif 'd3' in train_name:
-    #    hp = {'reactor' :    {'k' : 6, 'depth' : 53, 'feats' : 26, 'g' : 0.10, 'c' : 100000},
-    #          'burnup' :     {'k' : 4, 'depth' : 67, 'feats' : 30, 'g' : 0.10, 'c' : 100000},
-    #          'cooling' :    {'k' : 4, 'depth' : 26, 'feats' : 27, 'g' : 0.10, 'c' : 100000},
-    #          'enrichment' : {'k' : 7, 'depth' : 38, 'feats' : 24, 'g' : 0.10, 'c' : 100000},
-    #          }
-    #elif 'd6' in train_name:
-    #    hp = {'reactor' :    {'k' : 6, 'depth' : 53, 'feats' : 26, 'g' : 0.10, 'c' : 100000},
-    #          'burnup' :     {'k' : 4, 'depth' : 67, 'feats' : 30, 'g' : 0.10, 'c' : 100000},
-    #          'cooling' :    {'k' : 4, 'depth' : 26, 'feats' : 27, 'g' : 0.10, 'c' : 100000},
-    #          'enrichment' : {'k' : 7, 'depth' : 38, 'feats' : 24, 'g' : 0.10, 'c' : 100000},
-    #          }
+    if 'nuc29' in train_name or 'act' in train_name:
+        k = 2
+        depth = 60
+        feats = None
+        g = 0.1
+        c = 100000
     else:
-        hp = {'reactor' :    {'k' : 5, 'depth' : None, 'feats' : None, 'g' : 0.10, 'c' : 100000},
-              'burnup' :     {'k' : 3, 'depth' : None, 'feats' : None, 'g' : 0.10, 'c' : 100000},
-              'cooling' :    {'k' : 3, 'depth' : None, 'feats' : None, 'g' : 0.10, 'c' : 100000},
-              'enrichment' : {'k' : 5, 'depth' : None, 'feats' : None, 'g' : 0.10, 'c' : 100000},
-              }
-
-    k = hp[param]['k']
-    depth = hp[param]['depth']
-    feats = hp[param]['feats']
-    g = hp[param]['g']
-    c = hp[param]['c']
+        k = 4
+        depth = 70
+        feats = None  
+        g = 0.1
+        c = 100000
 
     return k, depth, feats, g, c
 
