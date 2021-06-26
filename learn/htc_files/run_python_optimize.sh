@@ -10,4 +10,4 @@ export PYTHONPATH=$PWD/packages
 export HOME=$PWD
 
 # run your script
-python3 optimize_hyperparameters.py $1 $2 $3 $4 $5
+python3 optimize_hyperparameters.py $1 $2 $3 $4 $5 $6
