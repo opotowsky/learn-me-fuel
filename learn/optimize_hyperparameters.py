@@ -136,6 +136,8 @@ def parse_args(args):
     parser.add_argument('alg', choices=['knn', 'dtree', 'svm'], 
                         metavar='aglortithm', 
                         help='which algorithm to optimize [knn, dtree, svm]')
+    parser.add_argument('db_desc', metavar='db-description', 
+                        help='decsription of the database, e.g., d1_short')
     parser.add_argument('tset_frac', metavar='trainset-fraction', type=float,
                         help='fraction of training set to use in algorithms')
     parser.add_argument('cv', metavar='cv-folds', type=int,
@@ -159,22 +161,23 @@ def main():
     
     CV = args.cv
     tset_frac = args.tset_frac
-    
-    iters = 20
-    jobs = 4
+
+    iters = 10
+    jobs = 5
     c = 50000
     
     # get data set
     trainset = args.train_db
     trainXY = pd.read_pickle(trainset)
-    trainXY.reset_index(inplace=True, drop=True) 
-    trainXY = trainXY.sample(frac=tset_frac)
+    #trainXY.reset_index(inplace=True, drop=True)
+    if tset_frac < 1.0:
+        trainXY = trainXY.sample(frac=tset_frac)
     trainX, rY, cY, eY, bY = splitXY(trainXY)
     trainX = scale(trainX)
     
     # define search breadth
-    knn_grid = {'n_neighbors': np.linspace(1, 41, iters).astype(int)}
-    dtr_grid = {"max_depth": np.linspace(5, 80, iters).astype(int),
+    knn_grid = {'n_neighbors': np.linspace(1, 21, iters).astype(int)}
+    dtr_grid = {"max_depth": np.linspace(20, 80, iters).astype(int),
                 "max_features": np.linspace(5, len(trainXY.columns)-8, iters).astype(int)}
     svr_grid = {'C': np.logspace(0, 6, iters), 'gamma': np.logspace(-7, 1, iters)} 
     
@@ -193,9 +196,9 @@ def main():
         kfold = StratifiedKFold(n_splits=CV, shuffle=True)
     
     # save results
-    outfile = args.rxtr_param + '_' + args.alg + '_tfrac' + str(args.tset_frac) + '_hyperparameters.txt'
+    outfile = args.rxtr_param + '_' + args.alg + '_' + args.db_desc + '_hyperparameters.txt'
     with open(outfile, 'a') as of:
-        of.write(args.alg + ' hyperparameter optimization for ' + args.rxtr_param + ':')
+        of.write(args.alg + ' hyperparameter optimization for ' + args.rxtr_param + ', ' + args.db_desc  + ':')
     
     arg_dict = {'score' : score, 'jobs' : jobs, 'kfold' : kfold,
                 'pred' : args.rxtr_param, 'file' : outfile, 'c' : c}
