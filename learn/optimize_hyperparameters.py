@@ -72,11 +72,11 @@ def opt_dtr(grid, trainX, trainY, arg):
 '''
 score: $score
 max_depth: $d
-max_features: $f
 ''')
+#max_features: $f
     txt = tmpl.substitute(score = dtr_opt.best_score_,
-                          d = dtr_opt.best_params_['max_depth'],
-                          f = dtr_opt.best_params_['max_features'])
+                          d = dtr_opt.best_params_['max_depth'])#,
+                          #f = dtr_opt.best_params_['max_features'])
     with open(arg['file'], 'a') as f:
         f.write(txt)
     return
@@ -176,11 +176,15 @@ def main():
     trainX = scale(trainX)
     
     # define search breadth
-    knn_grid = {'n_neighbors': np.linspace(1, 21, iters).astype(int)}
-    dtr_grid = {"max_depth": np.linspace(20, 80, iters).astype(int),
-                "max_features": np.linspace(5, len(trainXY.columns)-8, iters).astype(int)}
+    #knn_grid = {'n_neighbors': np.linspace(1, 21, iters).astype(int)}
+    #dtr_grid = {"max_depth": np.linspace(20, 80, iters).astype(int),
+    #            "max_features": np.linspace(5, len(trainXY.columns)-8, iters).astype(int)}
     svr_grid = {'C': np.logspace(0, 6, iters), 'gamma': np.logspace(-7, 1, iters)} 
     
+    #2nd round of opt:
+    knn_grid = {'n_neighbors': np.array([1, 2, 3, 4, 5, 6, 7])}
+    dtr_grid = {"max_depth": np.linspace(40, 80, 30).astype(int)}
+
     score = 'neg_mean_absolute_error'
     kfold = KFold(n_splits=CV, shuffle=True)
     trainY = pd.Series()
