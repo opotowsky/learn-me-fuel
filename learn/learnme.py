@@ -118,7 +118,6 @@ def main():
     #    k, depth, feats, g, c = get_sfco_hyperparam(tset_frac, CV)
     #else:
     k, depth, feats, g, c = get_hyperparam(args.rxtr_param, args.train_db)
-    feats = int(len(trainX_unscaled.columns)*0.9)
         
     ## initialize learners
     score = 'neg_mean_absolute_error'
