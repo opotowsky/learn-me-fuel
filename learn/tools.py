@@ -339,9 +339,9 @@ def random_error(X_unscaled, Y, alg, alg_init, CV, csv_name, param):
         X = scale(X)
         preds = cross_val_predict(alg_init, X, Y, cv=CV, n_jobs=njobs)
         if param == 'reactor':
-            errcol = np.where(testY == preds, True, False)
+            errcol = np.where(Y == preds, True, False)
         else:
-            errcol = np.abs(testY - preds)
+            errcol = np.abs(Y - preds)
         df = pd.DataFrame({'TrueY': Y, algs[alg]: preds, 'AbsError': errcol},
                            index=Y.index) 
         df.to_csv(csv_name + '_err' + str(err) + '_random_error.csv')
