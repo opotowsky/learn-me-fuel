@@ -118,18 +118,57 @@ def get_hyperparam(param, train_name):
     c : C for SVM
 
     """
-    if 'nuc29' in train_name or 'act' in train_name:
-        k = 2
-        depth = 60
-        feats = None
-        g = 0.1
-        c = 100000
+    g = 0.1
+    c = 100000
+
+    feats = None
+    if 'nuc29' in train_name:
+        hp = {'reactor' :    {'k' : 4, 'depth' : 56},
+              'burnup' :     {'k' : 1, 'depth' : 77},
+              'cooling' :    {'k' : 2, 'depth' : 45},
+              'enrichment' : {'k' : 1, 'depth' : 73},
+              }
+    elif 'act' in train_name:
+        hp = {'reactor' :    {'k' : 1, 'depth' : 67},
+              'burnup' :     {'k' : 1, 'depth' : 78},
+              'cooling' :    {'k' : 4, 'depth' : 68},
+              'enrichment' : {'k' : 1, 'depth' : 60},
+              }
+    elif 'act32' in train_name:
+        hp = {'reactor' :    {'k' : 1, 'depth' : 41},
+              'burnup' :     {'k' : 1, 'depth' : 49},
+              'cooling' :    {'k' : 7, 'depth' : 56},
+              'enrichment' : {'k' : 1, 'depth' : 67},
+              }
+    elif 'short' in train_name:
+        hp = {'reactor' :    {'k' : 1, 'depth' : 62},
+              'burnup' :     {'k' : 1, 'depth' : 62},
+              'cooling' :    {'k' : 2, 'depth' : 54},
+              'enrichment' : {'k' : 4, 'depth' : 64},
+              }
+    elif 'long' in train_name:
+        hp = {'reactor' :    {'k' : 4, 'depth' : 62},
+              'burnup' :     {'k' : 1, 'depth' : 51},
+              'cooling' :    {'k' : 2, 'depth' : 64},
+              'enrichment' : {'k' : 5, 'depth' : 73},
+              }
+    elif 'auto' in train_name: # difficult to generalize for some preds
+        hp = {'reactor' :    {'k' : 2, 'depth' : 61}, 
+              'burnup' :     {'k' : 1, 'depth' : 52},
+              'cooling' :    {'k' : 2, 'depth' : 58},
+              'enrichment' : {'k' : 4, 'depth' : 67},
+              }
+        if 'd1_hpge' in train_name:
+            feats = 150
     else:
-        k = 4
-        depth = 70
-        feats = None  
-        g = 0.1
-        c = 100000
+        hp = {'reactor' :    {'k' : 1, 'depth' : 70},
+              'burnup' :     {'k' : 1, 'depth' : 70},
+              'cooling' :    {'k' : 1, 'depth' : 70},
+              'enrichment' : {'k' : 1, 'depth' : 70},
+              }
+    
+    k = hp[param]['k']
+    depth = hp[param]['depth']
 
     return k, depth, feats, g, c
 
