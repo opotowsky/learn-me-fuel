@@ -490,7 +490,7 @@ def errors_and_scores(X_u, Y, alg, alg_init, score, CV, csv_name, tset_name):
     elif 'pca' in tset_name:
         X = X_u
     else:
-        X = add_error(5.0, X_u)
+        X = add_error(1.0, X_u)
         X = scale(X)
     
     cv_scr = cross_validate(alg_init, X, Y, scoring=score, cv=CV, 
@@ -529,7 +529,7 @@ def cv_predict(X_u, Y, alg, alg_init, CV, csv_name, tset_name, pred_param):
     if 'spectra' in tset_name:
         X = np.random.uniform(X_u - np.sqrt(X_u), X_u + np.sqrt(X_u))
     else:
-        X = add_error(5.0, X_u)
+        X = add_error(1.0, X_u)
     X = scale(X)
     
     preds = cross_val_predict(alg_init, X, Y, cv=CV, n_jobs=njobs)
@@ -606,7 +606,7 @@ def int_test_compare(X_u, Y, alg, alg_init, csv_name, tset_frac, tset_name, pred
     if 'spectra' in tset_name:
         X = np.random.uniform(X_u - np.sqrt(X_u), X_u + np.sqrt(X_u))
     else:
-        X = add_error(5.0, X_u)
+        X = add_error(1.0, X_u)
     X = scale(X)
     # split train and test set to mimic MLL process
     test_frac = tset_frac - 1

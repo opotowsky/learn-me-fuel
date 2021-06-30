@@ -94,7 +94,7 @@ def main():
     nonlbls = ['AvgPowerDensity', 'ModDensity', 'UiWeight']
     
     trainXY = pd.read_pickle(args.train_db)
-    trainXY.reset_index(inplace=True, drop=True) 
+    #trainXY.reset_index(inplace=True, drop=True) 
     if tset_frac < 1.0:
         trainXY = trainXY.sample(frac=tset_frac)
     trainX_unscaled, rY, cY, eY, bY = splitXY(trainXY)
