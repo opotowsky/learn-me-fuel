@@ -331,9 +331,7 @@ def random_error(X_unscaled, Y, alg, alg_init, CV, csv_name, param):
                         random error magnitude
 
     """
-    err_percent = [0, 0.3, 0.7, 1, 2, 
-                   4, 6, 8, 10, 13, 
-                   17, 20]
+    err_percent = [0, 1, 2, 5, 8, 10, 12, 15, 18, 20]
     for err in err_percent:
         X = add_error(err, X_unscaled)
         X = scale(X)
